@@ -65,7 +65,16 @@ class MistralAIEngine implements iAIEngineInterface
 		$model = $configuration['model'] ?? 'mistral-large-latest';
 		$languages = $configuration['translate_languages'] ?? ['German', 'English', 'French'];
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model, $languages);
+		$aSystemPrompts = $configuration['system_prompts'] ?? ['translate' =>
+			'You are a professional translator. \
+			You translate any given text into the language that is being indicated to you. \
+			If no language is indicated, you translate into German.',
+			'improveText' =>
+				'You are a helpful professional writing assistant. \
+			You improve any given text by making it polite and professional, without changing its meaning nor its original language. ',
+			'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
+		      Your responses are in the same language as the question.'];
+		return new self($url, $apiKey, $model, $languages, $aSystemPrompts );
 	}
 
 	/**
@@ -89,24 +98,40 @@ class MistralAIEngine implements iAIEngineInterface
 	protected $languages;
 
 	/**
+	 * @var array $aSystemPrompts
+	 */
+	protected $aSystemPrompts;
+
+	/**
 	 * @param string $url
 	 * @param string $apiKey
 	 * @param string $model
 	 * @param string[] $languages
 	 */
-	public function __construct($url, $apiKey, $model, $languages)
+	public function __construct($url, $apiKey, $model, $languages, $aSystemPrompts = array (
+		'translate' =>
+			'You are a professional translator. \
+			You translate any given text into the language that is being indicated to you. \
+			If no language is indicated, you translate into German.',
+		'improveText' =>
+			'You are a helpful professional writing assistant. \
+			You improve any given text by making it polite and professional, without changing its meaning or its original language. ',
+		'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
+		      Your responses are in the same language as the question.'
+	))
 	{
 		$this->url = $url;
 		$this->apiKey = $apiKey;
 		$this->model = $model;
 		$this->languages = $languages;
+		$this->aSystemPRompts = $aSystemPrompts;
 	}
 
 	/**
 	 * @inheritDoc
 	 * @throws AIResponseException
 	 */
-	public function PerformPrompt($prompt, $text): string
+	public function PerformPrompt($prompt, $text, $object): string
 	{
 		switch ($prompt)
 		{

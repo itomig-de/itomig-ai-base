@@ -48,9 +48,10 @@ interface iAIEngineInterface
 
 	/**
 	 * Perform prompt and return result
-	 * @param $prompt
-	 * @param $text
+	 * @param string $prompt
+	 * @param string $text
+	 * @param \DBObject|null $object
 	 * @return string
 	 */
-	public function PerformPrompt($prompt, $text) : string;
+	public function PerformPrompt($prompt, $text, $object) : string;
 }

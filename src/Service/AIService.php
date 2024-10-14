@@ -98,7 +98,7 @@ class AIService
 	{
 		if($this->AIEngine instanceof iAIEngineInterface)
 		{
-			return $this->AIEngine->PerformPrompt($prompt, $text);
+			return $this->AIEngine->PerformPrompt($prompt, $text, $srcObject);
 		}
 		return '';
 	}
