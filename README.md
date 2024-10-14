@@ -37,7 +37,7 @@ Example of using OpenAI API against custom endpoint: :
 	'itomig-ai-base' => array (
 		'ai_engine.configuration' => array (
 		  'api_key' => '***',
-		  'url' => 'https://your.ollama-or-openwebui-werver.com',
+		  'url' => 'https://your.ollama-or-openwebui-server.com',
 		  'model' => 'your-model-name', // e.g. llama3:latest, see ollama.com -> models
 		),
 		'ai_engine.name' => 'OpenAI',
