@@ -1,0 +1,33 @@
+name: Extension packaging
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current collector
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.repository }}
+      - name: Create package
+        uses: thedoctor0/zip-release@0.7.6
+        with:
+          filename: ../${{ github.repository }}_${{ github.ref_name }}.zip
+          path: '*'
+          directory: ${{ github.repository_owner }}
+          exclusions: '*.git* README.md'
+      - name: Create draft release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: ${{ github.repository }}_${{ github.ref_name }}.zip
+          artifactErrorsFailBuild: true
+          draft: true
+          generateReleaseNotes: true
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          updateOnlyUnreleased: true

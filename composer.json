@@ -1,0 +1,15 @@
+{
+  "config": {
+    "classmap-authoritative": true
+  },
+  "autoload": {
+    "psr-4": {
+      "Itomig\\iTop\\Extension\\AIBase\\": "src"
+    }
+  },
+  "name": "itomig-de/itomig-ai-base",
+  "description": "AI Base Extension",
+  "require": {
+    "composer-runtime-api": "^2.0"
+  }
+}
