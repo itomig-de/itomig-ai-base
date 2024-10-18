@@ -66,6 +66,10 @@ class OpenAIEngine implements iAIEngineInterface
 			[
 				'label' => 'UI:AIResponse:OpenAI:Prompt:autoRecategorizeTicket',
 				'prompt' => 'autoRecategorizeTicket'
+			],
+			[
+				'label' => 'UI:AIResponse:OpenAI:Prompt:determineType',
+				'prompt' => 'determineType'
 			]
 		];
 	}
@@ -151,15 +155,14 @@ class OpenAIEngine implements iAIEngineInterface
 			* to briefly explain why this subcategory seems to be the best fit
 			Now take the information about the ticket and the list of subcategories, and create your answer with a thematic description of the ticket and the most appropriate subcategory.
 			Your answer does not include an analysis of the list and no further instructions or information. You must answer with a subcategory included in the list.',
-		'autoRecategorizeTicket' => '```json
+		'autoRecategorizeTicket' => '
 			{
 			  "subcategory": {
 				"ID": "<ID>",
-				"Name": "<Name>"
+				"Name": "<Name>",
 			  },
-			  "rationale": "<Brief explanation of why this subcategory is the best fit>"
+			   "rationale": "<Brief explanation of why this subcategory is the best fit>"
 			}
-			```
 			
 			You are a helpdesk manager. You receive a list of subcategories in JSON format, which includes the following information for each subcategory: ID (the unique ID of the subcategory), Name (the name of the subcategory), Service (the name of the superordinate service), and Description (a textual description of the subcategory), if available. 
 			
@@ -171,6 +174,42 @@ class OpenAIEngine implements iAIEngineInterface
 			3. Return only the best-fitting subcategory with its ID and name, and provide a brief explanation of why this subcategory is the best fit.
 			
 			Your response must strictly adhere to the JSON format provided above and contain no additional analysis or information.',
+		'determineType' => 'You are a staff member in the User Helpdesk and receive incoming reports from users. 
+				Each report consists of a title and a description. Your task is to determine based on this information whether it is a "Service Request" or an "Incident."
+			
+			**Typical characteristics of an Incident:**
+			- Unplanned interruption or degradation of an IT service
+			- Urgent and requires immediate attention
+			- The goal is to restore normal operations as quickly as possible
+			- High pressure on IT staff for a quick resolution
+			- **Examples:** Printer failures, server outages, non-functioning Wi-Fi
+			
+			**Typical characteristics of a Service Request:**
+			- Formal request from a user for information, advice, or a standard change
+			- Planned, predictable, and typically involves low-risk changes or standard services
+			- Often can be resolved using knowledge bases or FAQs
+			- Lower time pressure on IT staff
+			- Typically does not affect other services or staff
+			- **Examples:** Requests for new software installations, hardware upgrades, or system access
+			
+			Please analyze the title and description of the incoming report and return the result in the following JSON format:
+			
+			{
+			"type": "incident" or "service_request",
+			"rationale": "brief justification for your classification"
+			}
+			
+			
+			**Example Input:**
+			- Title: "Printer not working"
+			- Description: "The printer in the department has failed and cannot print documents."
+			
+			**Example Output:**
+			{
+			"type": "incident",
+			"rationale": "Unplanned interruption of an IT service"
+			}
+	',
 		'default' => 'You are a helpful assistant. You answer politely and professionally and keep your answers short.
 			Your answers are in the same language as the question.',
 	  ))
@@ -206,6 +245,9 @@ class OpenAIEngine implements iAIEngineInterface
 
 			case 'autoRecategorizeTicket':
 				return $this->autoRecategorizeTicket($object);
+
+			case 'determineType' :
+				return $this->determineType($object);
 
 			default:
 				return $this->getCompletions($text);
@@ -315,18 +357,25 @@ class OpenAIEngine implements iAIEngineInterface
 		
 	}
 
-
+     /**
+     * Determines the type of ticket using AI analysis.
+     *
+     * This method sends the ticket data to an AI model to analyze and categorize it as either an incident or a service request. If the AI determines neither, it returns "failure".
+     *
+     * @param Ticket $oTicket The ticket object to be analyzed.
+     * @return string The type of ticket ('incident', 'service_request', or 'failure').
+     */
 	protected function determineType($oTicket) {
-		// TODO: Check type
-
+    	// Initialize AI helper and fetch ticket data
 		$oHelper = new AIBaseHelper();
 		$aTicket = $oHelper->getTicketData($oTicket);
 		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
 		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['determineType']);
 		$aResult = json_decode ( $jResult , true );
+
 		if (($aResult['type']) == 'incident') return "incident";
 		if (($aResult['type']) == 'service_request') return "service_request";
-		
+		return "Failure: ". print_r($aResult, true);
 
 	}
 
