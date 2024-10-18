@@ -49,14 +49,16 @@ class AIBaseHelper
 			while ($oServiceSubcategory = $oResultSet->Fetch()) {
 				$sService = $oServiceSubcategory->Get('service_name');
 				$sServiceSubcategory = $oServiceSubcategory->Get('name');
+				$iServiceID = $oServiceSubcategory->Get('service_id');
 				$sServiceSCDescription = $oServiceSubcategory->Get('description');
-				$sServiceSCID = $oServiceSubcategory->GetKey();
+				$iServiceSCID = $oServiceSubcategory->GetKey();
 				$sTextualSerCat .= "Service-Subcategory-ID: $sServiceSCID #### Service-Subcategory-Name: $sServiceSubcategory #### Service-Name: $sService #### Service-Subcategory-Description: $sServiceSCDescription \n";
 
 				// using [] shorthand for array_push()
 				$aSerCat[] = [
-					'ID' => $sServiceSCID,
+					'ID' => $iServiceSCID,
 					'Service' => $sService,
+					'Service ID' => $iServiceID,
 					'Name' => $sServiceSubcategory,
 					'Description' => $sServiceSCDescription
 				];

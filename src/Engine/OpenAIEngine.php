@@ -62,6 +62,10 @@ class OpenAIEngine implements iAIEngineInterface
 			[
 				'label' => 'UI:AIResponse:OpenAI:Prompt:recategorizeTicket',
 				'prompt' => 'recategorizeTicket'
+			],
+			[
+				'label' => 'UI:AIResponse:OpenAI:Prompt:autoRecategorizeTicket',
+				'prompt' => 'autoRecategorizeTicket'
 			]
 		];
 	}
@@ -180,6 +184,9 @@ class OpenAIEngine implements iAIEngineInterface
 			case 'recategorizeTicket':
 				return $this->recategorizeTicket($object);
 
+			case 'autoRecategorizeTicket':
+				return $this->autoRecategorizeTicket($object);
+
 			default:
 				return $this->getCompletions($text);
 		}
@@ -238,6 +245,43 @@ class OpenAIEngine implements iAIEngineInterface
 		$sPrompt .= json_encode ( $aSerCat );
 		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
 		return $this->getCompletions($sPrompt, $this->aSystemPrompts['recategorizeTicket']);
+	}
+
+		/**
+	 * Ask OpenAI to automatically Re-Categorize Ticket
+	 *
+	 * @param \DBObject $oTicket
+	 * @return string the textual response
+	 * @throws AIResponseException
+	 * @throws \CoreException
+	 */
+	protected function autoRecategorizeTicket($oTicket) {
+		// TODO: Check type
+
+		$oHelper = new AIBaseHelper();
+		$aTicket = $oHelper->getTicketData($oTicket);
+
+		$aSerCat = $oHelper->getServiceCatalogue($oTicket->Get('org_id'), true);
+		$sPrompt = "\n#########################\n";
+
+		$sPrompt .= json_encode ( $aSerCat );
+		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
+		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['autoRecategorizeTicket']);
+		$aResult = json_decode ( $jResult , true );
+		
+		// check if Service Subcategory is technically valid for the Ticket
+		$iSubCatID = $aResult['subcategory']['ID'];
+		foreach ($aSerCat as $aSSC) {
+			if ($aSSC['ID'] == $iSubCatID) {
+				$aResult = [
+					'service_id' => $aSCC['Service ID'],
+					'servicesubcategory_id' => $iSubCatID
+				];
+				return $aResult;
+			}
+		}
+		return "Failure. AI chose ID: ".$iSubCatID. "but the Service Catalogue does not contain it. Please optimize your Catalogue and / or your prompt.";
+		
 	}
 
 
