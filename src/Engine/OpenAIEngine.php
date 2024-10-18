@@ -151,6 +151,26 @@ class OpenAIEngine implements iAIEngineInterface
 			* to briefly explain why this subcategory seems to be the best fit
 			Now take the information about the ticket and the list of subcategories, and create your answer with a thematic description of the ticket and the most appropriate subcategory.
 			Your answer does not include an analysis of the list and no further instructions or information. You must answer with a subcategory included in the list.',
+		'autoRecategorizeTicket' => '```json
+			{
+			  "subcategory": {
+				"ID": "<ID>",
+				"Name": "<Name>"
+			  },
+			  "rationale": "<Brief explanation of why this subcategory is the best fit>"
+			}
+			```
+			
+			You are a helpdesk manager. You receive a list of subcategories in JSON format, which includes the following information for each subcategory: ID (the unique ID of the subcategory), Name (the name of the subcategory), Service (the name of the superordinate service), and Description (a textual description of the subcategory), if available. 
+			
+			After the characters ################, you receive information about a ticket in JSON format, including the caller, title, and description. 
+			
+			Your tasks are:
+			1. Briefly describe the content of the ticket thematically.
+			2. Find the subcategory from the list that best matches the content of the ticket.
+			3. Return only the best-fitting subcategory with its ID and name, and provide a brief explanation of why this subcategory is the best fit.
+			
+			Your response must strictly adhere to the JSON format provided above and contain no additional analysis or information.',
 		'default' => 'You are a helpful assistant. You answer politely and professionally and keep your answers short.
 			Your answers are in the same language as the question.',
 	  ))
@@ -273,15 +293,41 @@ class OpenAIEngine implements iAIEngineInterface
 		$iSubCatID = $aResult['subcategory']['ID'];
 		foreach ($aSerCat as $aSSC) {
 			if ($aSSC['ID'] == $iSubCatID) {
-				$aResult = [
-					'service_id' => $aSCC['Service ID'],
-					'servicesubcategory_id' => $iSubCatID
+				$aResultData = [
+					'service_id' => $aSSC['Service ID'],
+					'servicesubcategory_id' => $iSubCatID,
+					'type' => $aResult['Type'],
+					'rationale' => $aResult['rationale'],
 				];
-				return $aResult;
+				$oTicket->Set('service_id',$aResultData['service_id']);
+				$oTicket->Set('servicesubcategory_id',$aResultData['servicesubcategory_id']);
+				$oTicket->Set('request_type',$aResultData['type']);
+				$oTicket->Set('private_log', "I made AI recategorize this Ticket. Rationale: ".$aResultData['rationale']);
+				$oTicket->DBUpdate();
+				return "Updated the Ticket, with rationale: ".$aSSC['rationale']. "
+				Dump of AI analysis result: ". print_r($aResult, true) . "
+				Dump of AI analysis resultData: ".print_r($aResultData, true);
 			}
 		}
-		return "Failure. AI chose ID: ".$iSubCatID. "but the Service Catalogue does not contain it. Please optimize your Catalogue and / or your prompt.";
+		// Failure - do nothing with the ticket, return a message.
+		return "Failure. AI chose ID: ".$iSubCatID. "but the Service Catalogue does not contain it. 
+		Please optimize your Catalogue and / or your prompt.";
 		
+	}
+
+
+	protected function determineType($oTicket) {
+		// TODO: Check type
+
+		$oHelper = new AIBaseHelper();
+		$aTicket = $oHelper->getTicketData($oTicket);
+		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
+		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['determineType']);
+		$aResult = json_decode ( $jResult , true );
+		if (($aResult['type']) == 'incident') return "incident";
+		if (($aResult['type']) == 'service_request') return "service_request";
+		
+
 	}
 
 

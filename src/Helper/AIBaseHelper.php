@@ -52,6 +52,7 @@ class AIBaseHelper
 				$iServiceID = $oServiceSubcategory->Get('service_id');
 				$sServiceSCDescription = $oServiceSubcategory->Get('description');
 				$iServiceSCID = $oServiceSubcategory->GetKey();
+				$sRequestType = $oServiceSubcategory->Get('request_type');
 				$sTextualSerCat .= "Service-Subcategory-ID: $sServiceSCID #### Service-Subcategory-Name: $sServiceSubcategory #### Service-Name: $sService #### Service-Subcategory-Description: $sServiceSCDescription \n";
 
 				// using [] shorthand for array_push()
@@ -60,7 +61,8 @@ class AIBaseHelper
 					'Service' => $sService,
 					'Service ID' => $iServiceID,
 					'Name' => $sServiceSubcategory,
-					'Description' => $sServiceSCDescription
+					'Description' => $sServiceSCDescription,
+					'Type'=> $sRequestType,
 				];
 			}
 		}
