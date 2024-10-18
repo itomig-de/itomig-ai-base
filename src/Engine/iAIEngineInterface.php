@@ -3,6 +3,7 @@
  * @copyright Copyright (C) 2024 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
+ * @author David Gümbel <david.guembel@itomig.de>
  *
  * This file is part of iTop.
  *
