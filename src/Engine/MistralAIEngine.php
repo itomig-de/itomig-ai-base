@@ -1,8 +1,9 @@
 <?php
 /*
- * @copyright Copyright (C) 2024 ITOMIG GmbH
+ * @copyright Copyright (C) 2024,2025 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
+ * @author David Gümbel <david.guembel@itomig.de>
  *
  * This file is part of iTop.
  *
@@ -22,9 +23,11 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\OpenAIConfig;
+use LLPhant\Chat\MistralAIChat;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
-class MistralAIEngine implements iAIEngineInterface
+class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
 
 	/**
@@ -40,20 +43,9 @@ class MistralAIEngine implements iAIEngineInterface
 	 */
 	public static function GetPrompts(): array
 	{
-		return [
-			[
-				'label' => 'UI:AIResponse:MistralAI:Prompt:GetCompletions',
-				'prompt' => 'getCompletions'
-			],
-			[
-				'label' => 'UI:AIResponse:MistralAI:Prompt:Translate',
-				'prompt' => 'translate'
-			],
-			[
-				'label' => 'UI:AIResponse:MistralAI:Prompt:improveText',
-				'prompt' => 'improveText'
-			]
-		];
+		$aGenericPrompts = GenericAIEngine::GetPrompts();
+		// TODO add more prompts once they are implemented :)
+		return $aGenericPrompts;
 	}
 
 	/**
@@ -63,18 +55,14 @@ class MistralAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
-		$languages = $configuration['translate_languages'] ?? ['German', 'English', 'French'];
+		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? ['translate' =>
-			'You are a professional translator. \
-			You translate any given text into the language that is being indicated to you. \
-			If no language is indicated, you translate into German.',
-			'improveText' =>
-				'You are a helpful professional writing assistant. \
-			You improve any given text by making it polite and professional, without changing its meaning nor its original language. ',
-			'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
-		      Your responses are in the same language as the question.'];
-		return new self($url, $apiKey, $model, $languages, $aSystemPrompts );
+		$aSystemPrompts = $configuration['system_prompts'] ?? null;
+		if (empty($aSystemPrompts)) {
+            return new self($url, $apiKey, $model, $aLanguages);
+        }
+        
+        return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
 	}
 
 	/**
@@ -100,32 +88,8 @@ class MistralAIEngine implements iAIEngineInterface
 	/**
 	 * @var array $aSystemPrompts
 	 */
-	protected $aSystemPrompts;
+	public $aSystemPrompts;
 
-	/**
-	 * @param string $url
-	 * @param string $apiKey
-	 * @param string $model
-	 * @param string[] $languages
-	 */
-	public function __construct($url, $apiKey, $model, $languages, $aSystemPrompts = array (
-		'translate' =>
-			'You are a professional translator. \
-			You translate any given text into the language that is being indicated to you. \
-			If no language is indicated, you translate into German.',
-		'improveText' =>
-			'You are a helpful professional writing assistant. \
-			You improve any given text by making it polite and professional, without changing its meaning or its original language. ',
-		'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
-		      Your responses are in the same language as the question.'
-	))
-	{
-		$this->url = $url;
-		$this->apiKey = $apiKey;
-		$this->model = $model;
-		$this->languages = $languages;
-		$this->aSystemPRompts = $aSystemPrompts;
-	}
 
 	/**
 	 * @inheritDoc
@@ -139,121 +103,37 @@ class MistralAIEngine implements iAIEngineInterface
 				return $this->translate($text);
 
 			case 'improveText':
-				return $this->improveText($text);
+				return $this->improveText($text); 
 
 			default:
-				return $this->getCompletions($text);
+			return parent::PerformPrompt($prompt, $text, $object);
 		}
-	}
-
-	/**
-	 * Ask Mistral AI to translate text
-	 *
-	 * @param string $sMessage
-	 * @param string $language
-	 * @return string the textual response
-	 * @throws AIResponseException
-	 */
-	protected function translate($sMessage, $language = "English") {
-		// is the language supported?
-		if (!in_array($language, $this->languages)) {
-			throw new AIResponseException("Invalid language \"$language\"");
-		}
-		return $this->getCompletions("Translate the following text into the language ".$language.". Only translate the text, do not make any comment about the translation, do not add any placeholders. Text: ".$sMessage );
-	}
-
-	/**
-	 * Ask Mistral AI to improve text
-	 *
-	 * @param $sMessage
-	 * @return string the textual response
-	 * @throws AIResponseException
-	 */
-	protected function improveText($sMessage) {
-		return $this->getCompletions("Improve the following text, without changing its original language, by making it more polite and correcting grammatical and orthographic errors. Do not provide explanations about the improvements or changes you made: ".$sMessage);
 	}
 
 	/**
 	 * Ask Mistral AI a question, retrieve the answer and return it in text form
 	 *
-	 * @param $sMessage
+	 * @param string $sMessage
+	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	protected function getCompletions($sMessage) {
-		$oResult = $this->sendRequest([
-			'model' => $this->model,
-			'messages' => [
-				[
-					'role' => 'user',
-				//	'response_format' => ['type' => 'json_object'], /* Jul24: Mistral API no longer permits this parameter */
-					'content' => $sMessage
-				]
-			]
-		]);
-		//TODO Check result
+	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-		// access key information of response
-		$oResultMessage = $oResult->choices[0]->message;
+		$config = new OpenAIConfig();
+		$config->apiKey = $this->apiKey;
+		$config->url = $this->url;
+		$config->model=$this->model;
+		$chat = new MistralAIChat($config);
 
-		// error handling
-		if ($oResultMessage->role != "assistant") {
-			throw new AIResponseException("Invalid AI response");
-		}
-		// body of response
-		return $oResultMessage->content;
-	}
+		$chat->setSystemMessage ($sSystemPrompt);
+		$response = $chat->generateText($sMessage);
 
-	/**
-	 * send post request via curl to mistral
-	 *
-	 * @param array $postData
-	 * @return mixed
-	 * @throws AIResponseException
-	 */
-	protected function sendRequest($postData)
-	{
-		/*
-		 '{
-            "model": '.$sModel.',
-            "messages": [
-            {
-                "role": "user",
-                "response_format": {"type": "json_object"},
-                "content": '.$sMessage.'
-            }
-            ]
-        }'
-		 */
+		\IssueLog::Debug(__METHOD__);
+		\IssueLog::Debug($response);
 
-		$curl = curl_init();
-
-		curl_setopt_array($curl, array(
-			CURLOPT_URL => $this->url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => 'POST',
-			CURLOPT_POSTFIELDS => json_encode($postData),
-			CURLOPT_HTTPHEADER => array(
-				'Content-Type: application/json',
-				'Accept: application/json',
-				'Authorization: Bearer '.$this->apiKey,
-			),
-		));
-
-		$response = curl_exec($curl);
-		\IssueLog::Info(__METHOD__);
-		\IssueLog::Info($response);
-		$iErr = curl_errno($curl);
-		$sErrMsg = curl_error($curl);
-		if ($iErr !== 0) {
-			throw new AIResponseException("Problem opening URL: $this->url, $sErrMsg");
-		}
-		return json_decode($response,false);
+		// TODO error handling in LLPhant (#2 )
+		return $response;
 	}
 
 }

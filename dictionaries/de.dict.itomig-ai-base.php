@@ -1,0 +1,36 @@
+<?php
+/*
+ * @copyright Copyright (C) 2024 ITOMIG GmbH
+ * @license http://opensource.org/licenses/AGPL-3.0
+ * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
+ * @author DavidM. Gümbel <david.guembel@itomig.de>
+ *
+ * This file is part of iTop.
+ *
+ * iTop is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * iTop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with iTop. If not, see <http://www.gnu.org/licenses/>
+ */
+
+Dict::Add('DE DE', 'Deutsch', 'Deutsch', array(
+ 'UI:AIResponse:GenericAI:Prompt:GetCompletions' => 'Antwort (Standard)',
+ 'UI:AIResponse:GenericAI:Prompt:Translate' => 'Übersetzen',
+ 'UI:AIResponse:GenericAI:Prompt:improveText' => 'Text verbessern',
+ 'UI:AIResponse:GenericAI:Prompt:summarizeTicket' => 'Ticket zusammenfassen',
+ 'UI:AIResponse:GenericAI:Prompt:rephraseTicket' => 'Ticket in anderen Worten formulieren',
+ 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket' => 'Neue oder bessere Kategorisierung vorschlagen',
+ 'GenericAIEngine:autoRecategorizeTicket:success' => 'Kategorisierung und Anfragetyp erfolgreich aktualisiert. Begründung: %1$s',
+ 'GenericAIEngine:autoRecategorizeTicket:failure' => 'Fehler. Die KI hat die ID: %1$s ausgewählt, aber der Servicekatalog enthält sie nicht. Bitte optimieren Sie Ihren Katalog und/oder Ihre Eingabeaufforderung',
+ 'Ticket:ItomigAIAction:AISetTicketType:update' => 'Anfragetyp erfolgreich aktualisiert auf: %1$s. Begründung: %2$s',
+
+
+));

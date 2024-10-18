@@ -33,7 +33,9 @@ class AIService
 	protected static $AIEngineClass = null;
 
 	/**
-	 * @return string|null
+	 * Retrieves and returns the class name of the configured AI engine instance, if any.
+	 *
+	 * @return string|null The class name of the AI engine, or null if no engine is configured.
 	 */
 	public static function GetAIEngineClass()
 	{
@@ -57,7 +59,10 @@ class AIService
 	}
 
 	/**
-	 * @return array
+	 * Retrieves and returns the prompts supported by the AI engine.
+	 * // TODO 
+	 *
+	 * @return array An array of prompts.
 	 */
 	public static function GetPrompts()
 	{
@@ -101,5 +106,14 @@ class AIService
 			return $this->AIEngine->PerformPrompt($prompt, $text, $srcObject);
 		}
 		return '';
+	}
+
+	/**
+	 * Retrieves the AI engine instance.
+	 *
+	 * @return iAIEngineInterface|null The AI engine instance, or null if no engine is configured.
+	 */
+	public function GetAIEngine() {
+		return $this->AIEngine;
 	}
 }
