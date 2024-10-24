@@ -363,7 +363,7 @@ class OpenAIEngine implements iAIEngineInterface
      * This method sends the ticket data to an AI model to analyze and categorize it as either an incident or a service request. If the AI determines neither, it returns "failure".
      *
      * @param Ticket $oTicket The ticket object to be analyzed.
-     * @return string The type of ticket ('incident', 'service_request', or 'failure').
+     * @return string The type of ticket ('incident', 'service_request') or 'failure'
      */
 	protected function determineType($oTicket) {
     	// Initialize AI helper and fetch ticket data
@@ -377,6 +377,25 @@ class OpenAIEngine implements iAIEngineInterface
 		if (($aResult['type']) == 'service_request') return "service_request";
 		return "Failure: ". print_r($aResult, true);
 
+	}
+
+/**
+ * Draft FAQ based on ticket data.
+ *
+ * This method uses OpenAI to generate a draft FAQ based on the provided ticket data.
+ * It initializes an AI helper, fetches the ticket data, and then uses the getCompletions method to retrieve the response from OpenAI.
+ *
+ * @param object $oTicket The ticket object containing the relevant data.
+ */
+	protected function draftFAQ($oTicket) {
+		// Initialize AI helper and fetch ticket data
+		$oHelper = new AIBaseHelper();
+		$aTicket = $oHelper->getTicketData($oTicket);
+		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
+		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['draftFAQ']);
+		$aResult = json_decode ( $jResult , true );
+		//TODO do some meaningful matching; verify result
+		
 	}
 
 
