@@ -79,14 +79,17 @@ class AIBaseHelper
 	 */
 	public function getTicketData($oTicket)
 	{
+		// TODO Ticket must have a public_log, which de facto makes this incompatible with anything but UserRequests
 		$sPublicLog = $oTicket->Get('public_log');
 		$sTitle = $oTicket->Get('title');
+		$sRef = $oTicket->Get('ref');
 		$sDescription = $oTicket->Get('description');
 		$sCaller = $oTicket->Get('caller_id_friendlyname');
 		$sOrg = $oTicket->Get('org_id_friendlyname');
 		$sStatus = $oTicket->Get('status');
 
 		return [
+			'ref' => $sRef,
 			'title' => $sTitle,
 			'description' => $sDescription,
 			'caller' => $sCaller,
@@ -96,5 +99,41 @@ class AIBaseHelper
 		];
 	}
 
+
+	/**
+	 * Retrieve all child Tickets (UserRequests)
+	 * @param $oTicket the parent Ticket object
+	 * @return array with attribute name => value
+	 */
+	public function getChildTickets($oTicket)
+	{
+		\IssueLog::Info("getChildTickets() called", AIBaseHelper::MODULE_CODE);
+		$aChildTicketList = array();
+		$sTicketClass = $oTicket->Get('finalclass');
+		$iTicketID= $oTicket->Get('id');
+		// build query string
+		switch ($sTicketClass){
+			case "UserRequest":
+				$sQuery = "SELECT UserRequest AS t WHERE t.parent_request_id = $iTicketID";
+/*			case "Problem":
+				$sQuery = "SELECT Problem AS t WHERE t.parent_problem_id = $iTicketID";
+			case "Change":
+					$sQuery = "SELECT Change AS t WHERE t.parent_change_id = $iTicketID";
+*/
+			default:
+				$sQuery = "SELECT UserRequest AS t WHERE t.parent_request_id = $iTicketID";
+
+		}
+
+		// retrieve Tickets from DB
+		\IssueLog::Info("getChildTickets() about to retrieve children…", AIBaseHelper::MODULE_CODE);
+		$oResultSet = new \DBObjectSet (\DBObjectSearch::FromOQL($sQuery));
+		if ($oResultSet->Count() > 0 ){
+			while ($oChildTicket = $oResultSet->Fetch()) {
+				array_push($aChildTicketList, $this->getTicketData($oChildTicket));		
+			}
+		}
+		return $aChildTicketList;
+	}
 }
 

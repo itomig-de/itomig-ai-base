@@ -42,36 +42,21 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public static function GetPrompts(): array
 	{
-		return [
+		$aGenericPrompts = GenericAIEngine::GetPrompts();
+		$aAdditionalPrompts = array(
 			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:GetCompletions',
-				'prompt' => 'getCompletions'
+				'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
+				'prompt' => 'rephraseTicket',
 			],
 			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:Translate',
-				'prompt' => 'translate'
-			],
-			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:improveText',
-				'prompt' => 'improveText'
-			],
-			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:summarizeTicket',
-				'prompt' => 'summarizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:recategorizeTicket',
-				'prompt' => 'recategorizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:autoRecategorizeTicket',
-				'prompt' => 'autoRecategorizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:OpenAI:Prompt:determineType',
-				'prompt' => 'determineType'
+				'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeChildren',
+				'prompt' => 'summarizeChildren',
 			]
-		];
+			);
+		array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]);
+
+		// TODO add more prompts once they are implemented :)
+		return $aGenericPrompts;
 	}
 
 
@@ -90,41 +75,20 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 
 
 	/**
-	 * Ask OpenAI a question, retrieve the answer and return it in text form
-	 *
-	 * @param string $sMessage
-	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
-	 * @return string the textual response
+	 * @inheritDoc
 	 * @throws AIResponseException
 	 */
-	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
-		$oResult = $this->sendRequest([
-			'model' => $this->model,
-			'messages' => [
-				[
-					'role' =>  'system',
-					'content' => $sSystemPrompt
-				],
-				[
-					'role' => 'user',
-					'content' => $sMessage
-				]
-			],
-			'stream' => false,
-			'temperature' => 0.4,
-			'num_ctx' => 16384,
-		]);
-		//TODO Check result
-
-		// access key information of response
-		$oResultMessage = $oResult->choices[0]->message;
-
-		// error handling
-		if ($oResultMessage->role != "assistant") {
-			throw new AIResponseException("Invalid AI response");
+	public function PerformPrompt($prompt, $text, $object): string
+	{
+		switch ($prompt)
+		{
+			case 'rephraseTicket':
+				return $this->rephraseTicket($object);
+			case 'summarizeChildren':
+				return $this->summarizeChildren($object);
+			default:
+			    return parent::PerformPrompt($prompt, $text, $object);
 		}
-		// body of response
-		return $oResultMessage->content;
 	}
 
 	/**

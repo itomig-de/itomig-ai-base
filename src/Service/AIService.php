@@ -102,4 +102,13 @@ class AIService
 		}
 		return '';
 	}
+
+	/**
+	 * Retrieves the AI engine instance.
+	 *
+	 * @return iAIEngineInterface|null The AI engine instance, or null if no engine is configured.
+	 */
+	public function GetAIEngine() {
+		return $this->AIEngine;
+	}
 }

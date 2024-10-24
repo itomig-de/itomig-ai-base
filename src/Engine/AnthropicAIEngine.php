@@ -25,7 +25,7 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
-class AnthropicAIEngine implements iAIEngineInterface
+class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
     /**
      * @inheritDoc
@@ -35,26 +35,15 @@ class AnthropicAIEngine implements iAIEngineInterface
         return 'AnthropicAI';
     }
 
-    /**
-     * @inheritDoc
-     */
-    public static function GetPrompts(): array
-    {
-        return [
-            [
-                'label' => 'UI:AIResponse:AnthropicAI:Prompt:GetCompletions',
-                'prompt' => 'getCompletions'
-            ],
-            [
-                'label' => 'UI:AIResponse:AnthropicAI:Prompt:Translate',
-                'prompt' => 'translate'
-            ],
-            [
-                'label' => 'UI:AIResponse:AnthropicAI:Prompt:improveText',
-                'prompt' => 'improveText'
-            ]
-        ];
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public static function GetPrompts(): array
+	{
+		$aGenericPrompts = GenericAIEngine::GetPrompts();
+		// TODO add more prompts once they are implemented :)
+		return $aGenericPrompts;
+	}
 
     /**
      * @inheritDoc
@@ -65,15 +54,7 @@ class AnthropicAIEngine implements iAIEngineInterface
 		$model = $configuration['model'] ?? 'claude-3-sonnet-20240229';
 		$languages = $configuration['translate_languages'] ?? ['German', 'English', 'French'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? ['translate' =>
-			'You are a professional translator. \
-			You translate any given text into the language that is being indicated to you. \
-			If no language is indicated, you translate into German.',
-			'improveText' =>
-				'You are a helpful professional writing assistant. \
-			You improve any given text by making it polite and professional, without changing its meaning nor its original language. ',
-			'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
-		      Your responses are in the same language as the question.'];
+		$aSystemPrompts = $configuration['system_prompts'] ?? [];
 		return new self($url, $apiKey, $model, $languages, $aSystemPrompts );
 	}
 
@@ -102,94 +83,31 @@ class AnthropicAIEngine implements iAIEngineInterface
 	 */
 	protected $aSystemPrompts;
 
-	/**
-	 * @param string $url
-	 * @param string $apiKey
-	 * @param string $model
-	 * @param string[] $languages
-	 * @param array $aSystemPrompts
-	 */
-	public function __construct($url, $apiKey, $model, $languages, $aSystemPrompts = array (
-		'translate' =>
-			'You are a professional translator. \
-			You translate any given text into the language that is being indicated to you. \
-			If no language is indicated, you translate into German.',
-		'improveText' =>
-			'You are a helpful professional writing assistant. \
-			You improve any given text by making it polite and professional, without changing its meaning or its original language. ',
-		'default' => 'You are a helpful assistant. You respond in a polite, professional way and keep your responses concise. \
-		      Your responses are in the same language as the question.'
-	))
-	{
-		$this->url = $url;
-		$this->apiKey = $apiKey;
-		$this->model = $model;
-		$this->languages = $languages;
-		$this->aSystemPrompts = $aSystemPrompts;
-	}
 
-    /**
-     * @inheritDoc
-     * @throws AIResponseException
-     */
-    public function PerformPrompt($prompt, $text, $object): string
-    {
-        switch ($prompt)
-        {
-            case 'translate':
-                return $this->translate($text);
-
-            case 'improveText':
-                return $this->improveText($text);
-
-            default:
-                return $this->getCompletions($text);
-        }
-    }
-
-    /**
-     * Ask Anthropic AI to translate text
-     *
-     * @param string $sMessage
-     * @param string $language
-     * @return string the textual response
-     * @throws AIResponseException
-     */
-    protected function translate($sMessage, $language = "English") {
-        if (!in_array($language, $this->languages)) {
-            throw new AIResponseException("Invalid language \"$language\"");
-        }
-        return $this->getCompletions("Translate the following text into $language. Only translate the text, do not make any comment about the translation, do not add any placeholders: $sMessage");
-    }
-
-    /**
-     * Ask Anthropic AI to improve text
-     *
-     * @param $sMessage
-     * @return string the textual response
-     * @throws AIResponseException
-     */
-    protected function improveText($sMessage) {
-        return $this->getCompletions("Improve the following text, without changing its original language, by making it more polite and correcting grammatical and orthographic errors. Do not provide explanations about the improvements or changes you made: $sMessage");
-    }
 
     /**
      * Ask Anthropic AI a question, retrieve the answer and return it in text form
      *
      * @param $sMessage
+     * @param $sSystemPrompt 
      * @return string the textual response
      * @throws AIResponseException
      */
-    protected function getCompletions($sMessage) {
+    protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
         $oResult = $this->sendRequest([
             'model' => $this->model,
             'messages' => [
+                [
+					'role' =>  'system',
+					'content' => $sSystemPrompt
+				],
                 [
                     'role' => 'user',
                     'content' => $sMessage
                 ]
             ],
-            'max_tokens' => 1000
+            'max_tokens' => 5000,
+            'temperature' => 0.4,
         ]);
 
         if (!isset($oResult->content) || !isset($oResult->content[0]->text)) {

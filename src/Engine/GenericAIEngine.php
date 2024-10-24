@@ -37,41 +37,43 @@ class GenericAIEngine implements iAIEngineInterface
 		return 'GenericAI';
 	}
 
+    protected static $aPrompts = [
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:GetCompletions',
+            'prompt' => 'getCompletions'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:Translate',
+            'prompt' => 'translate'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:improveText',
+            'prompt' => 'improveText'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeTicket',
+            'prompt' => 'summarizeTicket'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket',
+            'prompt' => 'recategorizeTicket'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:autoRecategorizeTicket',
+            'prompt' => 'autoRecategorizeTicket'
+        ],
+        [
+            'label' => 'UI:AIResponse:GenericAI:Prompt:determineType',
+            'prompt' => 'determineType'
+        ]
+    ];
+
 	/**
 	 * @inheritDoc
 	 */
 	public static function GetPrompts(): array
 	{
-		return [
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:GetCompletions',
-				'prompt' => 'getCompletions'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:Translate',
-				'prompt' => 'translate'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:improveText',
-				'prompt' => 'improveText'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeTicket',
-				'prompt' => 'summarizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket',
-				'prompt' => 'recategorizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:autoRecategorizeTicket',
-				'prompt' => 'autoRecategorizeTicket'
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:determineType',
-				'prompt' => 'determineType'
-			]
-		];
+		return  GenericAIEngine::$aPrompts; 
 	}
 
 	/**
@@ -287,6 +289,42 @@ class GenericAIEngine implements iAIEngineInterface
 		return $this->getCompletions($sPrompt, $this->aSystemPrompts['summarizeTicket']);
 	}
 
+    /**
+	 * Ask GenericAI to rephrase a Ticket
+	 *
+	 * @param \DBObject $oTicket
+	 * @return string the textual response
+	 * @throws AIResponseException
+	 * @throws \CoreException
+	 */
+	protected function rephraseTicket($oTicket) {
+		// TODO: Type check
+		$oHelper = new AIBaseHelper();
+		$aTicket = $oHelper->getTicketData($oTicket);
+		$sPrompt .= json_encode ($aTicket);
+		
+		return $this->getCompletions($sPrompt, $this->aSystemPrompts['rephraseTicket']);
+	}
+
+    /**
+	 * Ask GenericAI to summarize Children of Ticket
+	 *
+	 * @param \DBObject $oTicket
+	 * @return string the textual response
+	 * @throws AIResponseException
+	 * @throws \CoreException
+	 */
+	protected function summarizeChildren($oTicket) {
+		// TODO: Type check
+		$oHelper = new AIBaseHelper();
+        $aChildTicketData = $oHelper->getChildTickets($oTicket);
+		$sPrompt .= json_encode ($aChildTicketData);
+		\IssueLog::Info("summarizeChildren(): raw Ticket data = " . $sPrompt, AIBaseHelper::MODULE_CODE);
+		return $this->getCompletions($sPrompt, $this->aSystemPrompts['summarizeChildren']);
+	}
+
+
+
 	/**
 	 * Ask GenericAI to Re-Categorize Ticket
 	 *
@@ -365,7 +403,7 @@ class GenericAIEngine implements iAIEngineInterface
      * @param Ticket $oTicket The ticket object to be analyzed.
      * @return string The type of ticket ('incident', 'service_request') or 'failure'
      */
-	protected function determineType($oTicket) {
+	public function determineType($oTicket) {
     	// Initialize AI helper and fetch ticket data
 		$oHelper = new AIBaseHelper();
 		$aTicket = $oHelper->getTicketData($oTicket);
@@ -373,9 +411,11 @@ class GenericAIEngine implements iAIEngineInterface
 		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['determineType']);
 		$aResult = json_decode ( $jResult , true );
 
-		if (($aResult['type']) == 'incident') return "incident";
-		if (($aResult['type']) == 'service_request') return "service_request";
-		return "Failure: ". print_r($aResult, true);
+        return $aResult;
+
+		if (($aResult['type']) == 'incident') return ["incident", $aResult['rationale']];
+		if (($aResult['type']) == 'service_request') return ["service_request",  $aResult['rationale']];
+		return [ "failure: ", print_r($aResult, true)];
 
 	}
 
