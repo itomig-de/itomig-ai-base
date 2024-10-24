@@ -8,6 +8,8 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => $baseDir . '/src/Engine/AnthropicAIEngine.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Engine\\DeepLAIEngine' => $baseDir . '/src/Engine/DeepLAIEngine.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => $baseDir . '/src/Engine/GenericAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => $baseDir . '/src/Engine/MistralAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\OpenAIEngine' => $baseDir . '/src/Engine/OpenAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\iAIEngineInterface' => $baseDir . '/src/Engine/iAIEngineInterface.php',

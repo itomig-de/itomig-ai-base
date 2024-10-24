@@ -23,6 +23,8 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\DeepLAIEngine' => __DIR__ . '/../..' . '/src/Engine/DeepLAIEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => __DIR__ . '/../..' . '/src/Engine/GenericAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => __DIR__ . '/../..' . '/src/Engine/MistralAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\OpenAIEngine' => __DIR__ . '/../..' . '/src/Engine/OpenAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\iAIEngineInterface' => __DIR__ . '/../..' . '/src/Engine/iAIEngineInterface.php',
