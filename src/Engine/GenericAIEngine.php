@@ -319,7 +319,7 @@ class GenericAIEngine implements iAIEngineInterface
 		$oHelper = new AIBaseHelper();
         $aChildTicketData = $oHelper->getChildTickets($oTicket);
 		$sPrompt .= json_encode ($aChildTicketData);
-		\IssueLog::Info("summarizeChildren(): raw Ticket data = " . $sPrompt, AIBaseHelper::MODULE_CODE);
+		\IssueLog::Debug("summarizeChildren(): raw Ticket data = " . $sPrompt, AIBaseHelper::MODULE_CODE);
 		return $this->getCompletions($sPrompt, $this->aSystemPrompts['summarizeChildren']);
 	}
 
@@ -334,12 +334,16 @@ class GenericAIEngine implements iAIEngineInterface
 	 * @throws \CoreException
 	 */
 	protected function recategorizeTicket($oTicket) {
-		// TODO: Check type
+		$sType = $oTicket->Get('finalclass');
+        if ($sType != "UserRequest") {
+            \IssueLog::Error("autoRecategorizeTicket(): need UserRequest object as input, got ".$sType, AIBaseHelper::MODULE_CODE);
+            return "Failure: Class ".$sType." not supported, need UserRequest.";
+        }
 
 		$oHelper = new AIBaseHelper();
 		$aTicket = $oHelper->getTicketData($oTicket);
 
-		$aSerCat = $oHelper->getServiceCatalogue($oTicket->Get('org_id'), true);
+		$aSerCat = $oHelper->getServiceCatalogue($oTicket->Get('org_id'), null, true);
 		$sPrompt = "\n#########################\n";
 
 		$sPrompt .= json_encode ( $aSerCat );
@@ -347,51 +351,34 @@ class GenericAIEngine implements iAIEngineInterface
 		return $this->getCompletions($sPrompt, $this->aSystemPrompts['recategorizeTicket']);
 	}
 
-		/**
-	 * Ask GenericAI to automatically Re-Categorize Ticket
+    /**
+	 * Ask GenericAI to automatically Re-Categorize Ticket. Returns proposal for new Service, Service Subcategory, Request Type
 	 *
 	 * @param \DBObject $oTicket
-	 * @return string the textual response
+	 * @return array a structured response in array format. 
 	 * @throws AIResponseException
 	 * @throws \CoreException
 	 */
-	protected function autoRecategorizeTicket($oTicket) {
-		// TODO: Check type
+	public function autoRecategorizeTicket($oTicket) {
+		$sType = $oTicket->Get('finalclass');
+        if ($sType != "UserRequest") {
+            \IssueLog::Error("autoRecategorizeTicket(): need UserRequest object as input, got ".$sType, AIBaseHelper::MODULE_CODE);
+            return "Failure: Class ".$sType." not supported, need UserRequest.";
+        }
 
 		$oHelper = new AIBaseHelper();
 		$aTicket = $oHelper->getTicketData($oTicket);
 
-		$aSerCat = $oHelper->getServiceCatalogue($oTicket->Get('org_id'), true);
+		$aSerCat = $oHelper->getServiceCatalogue($oTicket->Get('org_id'), null, true);
 		$sPrompt = "\n#########################\n";
 
 		$sPrompt .= json_encode ( $aSerCat );
 		$sPrompt .= "Ticket:\n" . json_encode ($aTicket);
 		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['autoRecategorizeTicket']);
 		$aResult = json_decode ( $jResult , true );
-		
-		// check if Service Subcategory is technically valid for the Ticket
-		$iSubCatID = $aResult['subcategory']['ID'];
-		foreach ($aSerCat as $aSSC) {
-			if ($aSSC['ID'] == $iSubCatID) {
-				$aResultData = [
-					'service_id' => $aSSC['Service ID'],
-					'servicesubcategory_id' => $iSubCatID,
-					'type' => $aResult['Type'],
-					'rationale' => $aResult['rationale'],
-				];
-				$oTicket->Set('service_id',$aResultData['service_id']);
-				$oTicket->Set('servicesubcategory_id',$aResultData['servicesubcategory_id']);
-				$oTicket->Set('request_type',$aResultData['type']);
-				$oTicket->Set('private_log', "I made AI recategorize this Ticket. Rationale: ".$aResultData['rationale']);
-				$oTicket->DBUpdate();
-				return "Updated the Ticket, with rationale: ".$aSSC['rationale']. "
-				Dump of AI analysis result: ". print_r($aResult, true) . "
-				Dump of AI analysis resultData: ".print_r($aResultData, true);
-			}
-		}
-		// Failure - do nothing with the ticket, return a message.
-		return "Failure. AI chose ID: ".$iSubCatID. "but the Service Catalogue does not contain it. 
-		Please optimize your Catalogue and / or your prompt.";
+
+        return $aResult; 
+
 		
 	}
 
