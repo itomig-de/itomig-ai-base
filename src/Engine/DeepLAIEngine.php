@@ -55,8 +55,8 @@ class DeepLAIEngine implements iAIEngineInterface
     public static function GetEngine($configuration): DeepLAIEngine
     {
         $apiKey = $configuration['api_key'] ?? '';
-        $languages = $configuration['translate_languages'] ?? ['DE', 'EN', 'FR'];
-        return new self($apiKey, $languages);
+        $aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
+        return new self($apiKey, $aLanguages);
     }
 
     /**

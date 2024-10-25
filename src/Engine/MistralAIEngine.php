@@ -53,10 +53,10 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
-		$languages = $configuration['translate_languages'] ?? ['German', 'English', 'French'];
+		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
 		$aSystemPrompts = $configuration['system_prompts'] ?? [];
-		return new self($url, $apiKey, $model, $languages, $aSystemPrompts );
+		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
 	}
 
 	/**

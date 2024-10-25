@@ -52,10 +52,10 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
 		$model = $configuration['model'] ?? 'claude-3-sonnet-20240229';
-		$languages = $configuration['translate_languages'] ?? ['German', 'English', 'French'];
+		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
 		$aSystemPrompts = $configuration['system_prompts'] ?? [];
-		return new self($url, $apiKey, $model, $languages, $aSystemPrompts );
+		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
 	}
 
     /**
