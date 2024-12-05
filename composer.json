@@ -1,6 +1,9 @@
 {
   "config": {
-    "classmap-authoritative": true
+    "classmap-authoritative": true,
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
   },
   "autoload": {
     "psr-4": {
@@ -10,6 +13,8 @@
   "name": "itomig-de/itomig-ai-base",
   "description": "AI Base Extension",
   "require": {
-    "composer-runtime-api": "^2.0"
+    "composer-runtime-api": "^2.0",
+    "theodo-group/llphant": "^0.8.12",
+    "oro/doctrine-extensions": "^2.0"
   }
 }
