@@ -57,7 +57,7 @@ class GenericAIEngine implements iAIEngineInterface
 			'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeTicket',
 			'prompt' => 'summarizeTicket'
 		],
-		[
+/*		[
 			'label' => 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket',
 			'prompt' => 'recategorizeTicket'
 		],
@@ -69,6 +69,7 @@ class GenericAIEngine implements iAIEngineInterface
 			'label' => 'UI:AIResponse:GenericAI:Prompt:determineType',
 			'prompt' => 'determineType'
 		]
+			*/
 	];
 
 	/**
@@ -259,7 +260,7 @@ Please analyze the title and description of the incoming report and return the r
 			case 'summarizeTicket':
 				return $this->summarizeTicket($object);
 
-			case 'recategorizeTicket':
+			/*case 'recategorizeTicket':
 				return $this->recategorizeTicket($object);
 
 			case 'autoRecategorizeTicket':
@@ -267,6 +268,7 @@ Please analyze the title and description of the incoming report and return the r
 
 			case 'determineType' :
 				return $this->determineType($object);
+				*/
 
 			default:
 				return $this->getCompletions($text);
@@ -466,16 +468,6 @@ Please analyze the title and description of the incoming report and return the r
 	 */
 	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-		$config = new OpenAIConfig();
-		$config->apiKey = $this->apiKey;
-		$config->url = $this->url;
-		$chat = new OpenAIChat($config);
-
-		$chat->setSystemMessage ($sSystemPrompt);
-		$response = $chat->generateText($sMessage);
-		return $response;
-
-		//// ------------------
 
 		$oResult = $this->sendRequest([
 			'model' => $this->model,
