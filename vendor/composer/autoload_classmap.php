@@ -1064,6 +1064,7 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\DeepLAIEngine' => $baseDir . '/src/Engine/DeepLAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => $baseDir . '/src/Engine/GenericAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => $baseDir . '/src/Engine/MistralAIEngine.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Engine\\OllamaAIEngine' => $baseDir . '/src/Engine/OllamaAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\OpenAIEngine' => $baseDir . '/src/Engine/OpenAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\iAIEngineInterface' => $baseDir . '/src/Engine/iAIEngineInterface.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => $baseDir . '/src/Exception/AIResponseException.php',

@@ -23,12 +23,12 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
-use LLPhant\OpenAIConfig;
+use LLPhant\OllamaConfig;
+use LLPhant\Chat\OllamaChat;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
-use LLPhant\Chat\OpenAIChat;
 
-class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
+class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
 
 	/**
@@ -36,7 +36,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public static function GetEngineName(): string
 	{
-		return 'OpenAI';
+		return 'OllamaAI';
 	}
 
 	/**
@@ -65,7 +65,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetEngine($configuration): OpenAIEngine
+	public static function GetEngine($configuration): OllamaAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
@@ -104,60 +104,20 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-		$config = new OpenAIConfig();
-		$config->apiKey = $this->apiKey;
+		$config = new OllamaConfig();
+		//$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
-		$chat = new OpenAIChat($config);
+		$config->model = $this->model;
+		$chat = new OllamaChat($config);
 
 		$chat->setSystemMessage ($sSystemPrompt);
 		$response = $chat->generateText($sMessage);
 		\IssueLog::Info(__METHOD__);
 		\IssueLog::Info($response);
-		return $response;
 
 		// TODO error handling in LLPhant - ?
-
-		//// ------------------
-	}
-
-	/**
-	 * send post request via curl to OpenAI
-	 *
-	 * @param array $postData
-	 * @return mixed
-	 * @throws AIResponseException
-	 */
-	protected function sendRequest($postData)
-	{
-		$curl = curl_init();
-
-		curl_setopt_array($curl, array(
-			CURLOPT_URL => $this->url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => 'POST',
-			CURLOPT_POSTFIELDS => json_encode($postData),
-			CURLOPT_HTTPHEADER => array(
-				'Content-Type: application/json',
-				'Accept: application/json',
-				'Authorization: Bearer '.$this->apiKey,
-			),
-		));
-
-		$response = curl_exec($curl);
-		\IssueLog::Info(json_encode($postData));
-		\IssueLog::Info(__METHOD__);
-		\IssueLog::Info($response);
-		$iErr = curl_errno($curl);
-		$sErrMsg = curl_error($curl);
-		if ($iErr !== 0) {
-			throw new AIResponseException("Problem opening URL: $this->url, $sErrMsg");
-		}
-		return json_decode($response,false);
+		// TODO num_ctx parameter...?
+		return $response;
 	}
 
 }

@@ -23,9 +23,11 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
-use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use Dict;
+use LLPhant\OpenAIConfig;
+use LLPhant\Chat\OpenAIChat;
+use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class GenericAIEngine implements iAIEngineInterface
 {
@@ -463,6 +465,18 @@ Please analyze the title and description of the incoming report and return the r
 	 * @throws AIResponseException
 	 */
 	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+
+		$config = new OpenAIConfig();
+		$config->apiKey = $this->apiKey;
+		$config->url = $this->url;
+		$chat = new OpenAIChat($config);
+
+		$chat->setSystemMessage ($sSystemPrompt);
+		$response = $chat->generateText($sMessage);
+		return $response;
+
+		//// ------------------
+
 		$oResult = $this->sendRequest([
 			'model' => $this->model,
 			'messages' => [

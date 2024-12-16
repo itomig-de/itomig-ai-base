@@ -23,6 +23,8 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\OpenAIConfig;
+use LLPhant\Chat\MistralAIChat;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
@@ -102,6 +104,34 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 			default:
 				return $this->getCompletions($text);
 		}
+	}
+
+			/**
+	 * Ask Mistral AI a question, retrieve the answer and return it in text form
+	 *
+	 * @param string $sMessage
+	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @return string the textual response
+	 * @throws AIResponseException
+	 */
+	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+
+		$config = new OpenAIConfig();
+		$config->apiKey = $this->apiKey;
+		$config->url = $this->url;
+		$config->model=$this->model;
+		$chat = new MistralAIChat($config);
+
+		$chat->setSystemMessage ($sSystemPrompt);
+		$response = $chat->generateText($sMessage);
+
+		\IssueLog::Info(__METHOD__);
+		\IssueLog::Info($response);
+
+		// TODO error handling in LLPhant - ?
+		return $response;
+
+		//// ------------------
 	}
 
 

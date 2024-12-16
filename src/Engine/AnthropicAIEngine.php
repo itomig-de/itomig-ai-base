@@ -23,6 +23,8 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\AnthropicConfig;
+use LLPhant\Chat\AnthropicChat;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
@@ -84,38 +86,30 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	protected $aSystemPrompts;
 
 
+	/**
+	 * Ask Anthropic AI a question, retrieve the answer and return it in text form
+	 *
+	 * @param string $sMessage
+	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @return string the textual response
+	 * @throws AIResponseException
+	 */
+	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-    /**
-     * Ask Anthropic AI a question, retrieve the answer and return it in text form
-     *
-     * @param $sMessage
-     * @param $sSystemPrompt 
-     * @return string the textual response
-     * @throws AIResponseException
-     */
-    protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
-        $oResult = $this->sendRequest([
-            'model' => $this->model,
-            'messages' => [
-                [
-					'role' =>  'system',
-					'content' => $sSystemPrompt
-				],
-                [
-                    'role' => 'user',
-                    'content' => $sMessage
-                ]
-            ],
-            'max_tokens' => 5000,
-            'temperature' => 0.4,
-        ]);
+		$config = new AnthropicConfig($this->model, 4096, array() , $this->apiKey);
+		$chat = new AnthropicChat($config);
 
-        if (!isset($oResult->content) || !isset($oResult->content[0]->text)) {
-            throw new AIResponseException("Invalid AI response structure");
-        }
+		$chat->setSystemMessage ($sSystemPrompt);
+		$response = $chat->generateText($sMessage);
 
-        return $oResult->content[0]->text;
-    }
+		\IssueLog::Info(__METHOD__);
+		\IssueLog::Info($response);
+
+		// TODO error handling in LLPhant - ?
+		return $response;
+
+		//// ------------------
+	}
 
     /**
      * send post request via curl to Anthropic
