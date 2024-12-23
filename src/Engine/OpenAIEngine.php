@@ -107,6 +107,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
+		$config->model = $this->model;
 		$chat = new OpenAIChat($config);
 
 		$chat->setSystemMessage ($sSystemPrompt);

@@ -106,7 +106,7 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 		}
 	}
 
-			/**
+	/**
 	 * Ask Mistral AI a question, retrieve the answer and return it in text form
 	 *
 	 * @param string $sMessage
