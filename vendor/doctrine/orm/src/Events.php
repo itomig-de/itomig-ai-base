@@ -103,16 +103,14 @@ final class Events
      * The onFlush event occurs when the EntityManager#flush() operation is invoked,
      * after any changes to managed entities have been determined but before any
      * actual database operations are executed. The event is only raised if there is
-     * actually something to do for the underlying UnitOfWork. If nothing needs to be done,
-     * the onFlush event is not raised.
+     * actually something to do for the underlying UnitOfWork.
      */
     public const onFlush = 'onFlush';
 
     /**
      * The postFlush event occurs when the EntityManager#flush() operation is invoked and
      * after all actual database operations are executed successfully. The event is only raised if there is
-     * actually something to do for the underlying UnitOfWork. If nothing needs to be done,
-     * the postFlush event is not raised. The event won't be raised if an error occurs during the
+     * actually something to do for the underlying UnitOfWork. The event won't be raised if an error occurs during the
      * flush operation.
      */
     public const postFlush = 'postFlush';

@@ -10,7 +10,7 @@ use Doctrine\ORM\Query\AST\PathExpression;
 use Exception;
 use Stringable;
 
-/** @psalm-import-type AssociationMapping from ClassMetadata */
+/** @phpstan-import-type AssociationMapping from ClassMetadata */
 class QueryException extends ORMException
 {
     /**
@@ -144,7 +144,7 @@ class QueryException extends ORMException
 
     /**
      * @param string[] $assoc
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return QueryException
      */
@@ -168,7 +168,7 @@ class QueryException extends ORMException
 
     /**
      * @param string[] $assoc
-     * @psalm-param array<string, string> $assoc
+     * @phpstan-param array<string, string> $assoc
      *
      * @return QueryException
      */
@@ -192,7 +192,7 @@ class QueryException extends ORMException
 
     /**
      * @param string[] $assoc
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return QueryException
      */

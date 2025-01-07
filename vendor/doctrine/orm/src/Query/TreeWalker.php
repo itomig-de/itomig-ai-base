@@ -9,7 +9,7 @@ use Doctrine\ORM\AbstractQuery;
 /**
  * Interface for walkers of DQL ASTs (abstract syntax trees).
  *
- * @psalm-import-type QueryComponent from Parser
+ * @phpstan-import-type QueryComponent from Parser
  */
 interface TreeWalker
 {
@@ -19,7 +19,7 @@ interface TreeWalker
      * @param AbstractQuery $query           The parsed Query.
      * @param ParserResult  $parserResult    The result of the parsing process.
      * @param mixed[]       $queryComponents The query components (symbol table).
-     * @psalm-param array<string, QueryComponent> $queryComponents The query components (symbol table).
+     * @phpstan-param array<string, QueryComponent> $queryComponents The query components (symbol table).
      */
     public function __construct($query, $parserResult, array $queryComponents);
 
@@ -27,7 +27,7 @@ interface TreeWalker
      * Returns internal queryComponents array.
      *
      * @return array<string, array<string, mixed>>
-     * @psalm-return array<string, QueryComponent>
+     * @phpstan-return array<string, QueryComponent>
      */
     public function getQueryComponents();
 
@@ -38,7 +38,7 @@ interface TreeWalker
      *
      * @param string               $dqlAlias       The DQL alias.
      * @param array<string, mixed> $queryComponent
-     * @psalm-param QueryComponent $queryComponent
+     * @phpstan-param QueryComponent $queryComponent
      *
      * @return void
      */

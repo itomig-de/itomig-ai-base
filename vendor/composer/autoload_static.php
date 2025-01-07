@@ -201,7 +201,7 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
         ),
         'Doctrine\\Deprecations\\' => 
         array (
-            0 => __DIR__ . '/..' . '/doctrine/deprecations/lib/Doctrine/Deprecations',
+            0 => __DIR__ . '/..' . '/doctrine/deprecations/src',
         ),
         'Doctrine\\DBAL\\' => 
         array (
@@ -626,8 +626,8 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
         'Doctrine\\DBAL\\Types\\VarDateTimeImmutableType' => __DIR__ . '/..' . '/doctrine/dbal/src/Types/VarDateTimeImmutableType.php',
         'Doctrine\\DBAL\\Types\\VarDateTimeType' => __DIR__ . '/..' . '/doctrine/dbal/src/Types/VarDateTimeType.php',
         'Doctrine\\DBAL\\VersionAwarePlatformDriver' => __DIR__ . '/..' . '/doctrine/dbal/src/VersionAwarePlatformDriver.php',
-        'Doctrine\\Deprecations\\Deprecation' => __DIR__ . '/..' . '/doctrine/deprecations/lib/Doctrine/Deprecations/Deprecation.php',
-        'Doctrine\\Deprecations\\PHPUnit\\VerifyDeprecations' => __DIR__ . '/..' . '/doctrine/deprecations/lib/Doctrine/Deprecations/PHPUnit/VerifyDeprecations.php',
+        'Doctrine\\Deprecations\\Deprecation' => __DIR__ . '/..' . '/doctrine/deprecations/src/Deprecation.php',
+        'Doctrine\\Deprecations\\PHPUnit\\VerifyDeprecations' => __DIR__ . '/..' . '/doctrine/deprecations/src/PHPUnit/VerifyDeprecations.php',
         'Doctrine\\Inflector\\CachedWordInflector' => __DIR__ . '/..' . '/doctrine/inflector/lib/Doctrine/Inflector/CachedWordInflector.php',
         'Doctrine\\Inflector\\GenericLanguageInflectorFactory' => __DIR__ . '/..' . '/doctrine/inflector/lib/Doctrine/Inflector/GenericLanguageInflectorFactory.php',
         'Doctrine\\Inflector\\Inflector' => __DIR__ . '/..' . '/doctrine/inflector/lib/Doctrine/Inflector/Inflector.php',
@@ -1367,6 +1367,8 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
         'LLPhant\\Embeddings\\VectorStores\\OpenSearch\\OpenSearchVectorStore' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/OpenSearch/OpenSearchVectorStore.php',
         'LLPhant\\Embeddings\\VectorStores\\Qdrant\\QdrantVectorStore' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/Qdrant/QdrantVectorStore.php',
         'LLPhant\\Embeddings\\VectorStores\\Redis\\RedisVectorStore' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/Redis/RedisVectorStore.php',
+        'LLPhant\\Embeddings\\VectorStores\\Typesense\\LLPhantTypesenseClient' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/Typesense/LLPhantTypesenseClient.php',
+        'LLPhant\\Embeddings\\VectorStores\\Typesense\\TypesenseVectorStore' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/Typesense/TypesenseVectorStore.php',
         'LLPhant\\Embeddings\\VectorStores\\VectorStoreBase' => __DIR__ . '/..' . '/theodo-group/llphant/src/Embeddings/VectorStores/VectorStoreBase.php',
         'LLPhant\\Exception\\FormatException' => __DIR__ . '/..' . '/theodo-group/llphant/src/Exception/FormatException.php',
         'LLPhant\\Exception\\HttpException' => __DIR__ . '/..' . '/theodo-group/llphant/src/Exception/HttpException.php',

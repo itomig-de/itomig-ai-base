@@ -45,7 +45,7 @@ abstract class Base
 
     /**
      * @param string[]|object[]|string|object $args
-     * @psalm-param list<string|object>|string|object $args
+     * @phpstan-param list<string|object>|string|object $args
      *
      * @return $this
      */
@@ -84,7 +84,7 @@ abstract class Base
 
     /**
      * @return int
-     * @psalm-return 0|positive-int
+     * @phpstan-return 0|positive-int
      */
     public function count()
     {

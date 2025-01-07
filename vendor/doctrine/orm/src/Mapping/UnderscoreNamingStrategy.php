@@ -32,7 +32,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
 
     /**
      * @var string
-     * @psalm-var non-empty-string
+     * @phpstan-var non-empty-string
      */
     private $pattern;
 

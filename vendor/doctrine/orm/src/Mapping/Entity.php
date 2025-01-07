@@ -29,7 +29,7 @@ final class Entity implements MappingAttribute
      */
     public $readOnly = false;
 
-    /** @psalm-param class-string<EntityRepository<T>>|null $repositoryClass */
+    /** @phpstan-param class-string<EntityRepository<T>>|null $repositoryClass */
     public function __construct(?string $repositoryClass = null, bool $readOnly = false)
     {
         $this->repositoryClass = $repositoryClass;

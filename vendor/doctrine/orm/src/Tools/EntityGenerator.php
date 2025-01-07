@@ -190,7 +190,7 @@ class EntityGenerator
     /**
      * Hash-map for handle types.
      *
-     * @psalm-var array<Types::*|'json_array', string>
+     * @phpstan-var array<Types::*|'json_array', string>
      */
     protected $typeAlias = [
         Types::DATETIMETZ_MUTABLE => '\DateTime',
@@ -214,7 +214,7 @@ class EntityGenerator
     /**
      * Hash-map to handle generator types string.
      *
-     * @psalm-var array<ClassMetadataInfo::GENERATOR_TYPE_*, string>
+     * @phpstan-var array<ClassMetadataInfo::GENERATOR_TYPE_*, string>
      */
     protected static $generatorStrategyMap = [
         ClassMetadataInfo::GENERATOR_TYPE_AUTO      => 'AUTO',
@@ -228,7 +228,7 @@ class EntityGenerator
     /**
      * Hash-map to handle the change tracking policy string.
      *
-     * @psalm-var array<ClassMetadataInfo::CHANGETRACKING_*, string>
+     * @phpstan-var array<ClassMetadataInfo::CHANGETRACKING_*, string>
      */
     protected static $changeTrackingPolicyMap = [
         ClassMetadataInfo::CHANGETRACKING_DEFERRED_IMPLICIT  => 'DEFERRED_IMPLICIT',
@@ -239,7 +239,7 @@ class EntityGenerator
     /**
      * Hash-map to handle the inheritance type string.
      *
-     * @psalm-var array<ClassMetadataInfo::INHERITANCE_TYPE_*, string>
+     * @phpstan-var array<ClassMetadataInfo::INHERITANCE_TYPE_*, string>
      */
     protected static $inheritanceTypeMap = [
         ClassMetadataInfo::INHERITANCE_TYPE_NONE            => 'NONE',
@@ -373,7 +373,7 @@ public function __construct(<params>)
      * Generates and writes entity classes for the given array of ClassMetadataInfo instances.
      *
      * @param string $outputDirectory
-     * @psalm-param list<ClassMetadataInfo> $metadatas
+     * @phpstan-param list<ClassMetadataInfo> $metadatas
      *
      * @return void
      */
@@ -532,7 +532,7 @@ public function __construct(<params>)
      *
      * @throws InvalidArgumentException
      *
-     * @psalm-assert self::FIELD_VISIBLE_* $visibility
+     * @phpstan-assert self::FIELD_VISIBLE_* $visibility
      */
     public function setFieldVisibility($visibility)
     {
@@ -819,7 +819,6 @@ public function __construct(<params>)
      * @return void
      *
      * @todo this won't work if there is a namespace in brackets and a class outside of it.
-     * @psalm-suppress UndefinedConstant
      */
     protected function parseTokensInEntityFile($src)
     {
@@ -926,7 +925,7 @@ public function __construct(<params>)
 
     /**
      * @return ReflectionClass[]
-     * @psalm-return array<trait-string, ReflectionClass<object>>
+     * @phpstan-return array<trait-string, ReflectionClass<object>>
      *
      * @throws ReflectionException
      */
@@ -1076,7 +1075,7 @@ public function __construct(<params>)
 
     /**
      * @param string $constraintName
-     * @psalm-param array<string, array<string, mixed>> $constraints
+     * @phpstan-param array<string, array<string, mixed>> $constraints
      *
      * @return string
      */
@@ -1243,7 +1242,7 @@ public function __construct(<params>)
     }
 
     /**
-     * @psalm-param array<string, mixed> $associationMapping
+     * @phpstan-param array<string, mixed> $associationMapping
      *
      * @return bool
      */
@@ -1461,7 +1460,7 @@ public function __construct(<params>)
     }
 
     /**
-     * @psalm-param array<string, mixed> $joinColumn
+     * @phpstan-param array<string, mixed> $joinColumn
      *
      * @return string
      */
@@ -1783,7 +1782,7 @@ public function __construct(<params>)
     }
 
     /**
-     * @psalm-param array<string, mixed> $embeddedClass
+     * @phpstan-param array<string, mixed> $embeddedClass
      *
      * @return string
      */
@@ -1903,7 +1902,7 @@ public function __construct(<params>)
         return static::$generatorStrategyMap[$type];
     }
 
-    /** @psalm-param array<string, mixed> $fieldMapping */
+    /** @phpstan-param array<string, mixed> $fieldMapping */
     private function nullableFieldExpression(array $fieldMapping): ?string
     {
         if (isset($fieldMapping['nullable']) && $fieldMapping['nullable'] === true) {
@@ -1916,7 +1915,7 @@ public function __construct(<params>)
     /**
      * Exports (nested) option elements.
      *
-     * @psalm-param array<string, mixed> $options
+     * @phpstan-param array<string, mixed> $options
      */
     private function exportTableOptions(array $options): string
     {

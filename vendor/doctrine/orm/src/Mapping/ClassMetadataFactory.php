@@ -52,9 +52,9 @@ use function substr;
  * to a relational database.
  *
  * @extends AbstractClassMetadataFactory<ClassMetadata>
- * @psalm-import-type AssociationMapping from ClassMetadata
- * @psalm-import-type EmbeddedClassMapping from ClassMetadata
- * @psalm-import-type FieldMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type EmbeddedClassMapping from ClassMetadata
+ * @phpstan-import-type FieldMapping from ClassMetadata
  */
 class ClassMetadataFactory extends AbstractClassMetadataFactory
 {
@@ -639,7 +639,7 @@ class ClassMetadataFactory extends AbstractClassMetadataFactory
                 $platform     = $this->getTargetPlatform();
 
                 // Platforms that do not have native IDENTITY support need a sequence to emulate this behaviour.
-                /** @psalm-suppress UndefinedClass, InvalidClass */ // @phpstan-ignore method.deprecated
+                // @phpstan-ignore method.deprecated
                 if (! $platform instanceof MySQLPlatform && ! $platform instanceof SqlitePlatform && ! $platform instanceof SQLServerPlatform && $platform->usesSequenceEmulatedIdentityColumns()) {
                     Deprecation::trigger(
                         'doctrine/orm',
@@ -744,7 +744,7 @@ DEPRECATION
         }
     }
 
-    /** @psalm-return ClassMetadata::GENERATOR_TYPE_* */
+    /** @phpstan-return ClassMetadata::GENERATOR_TYPE_* */
     private function determineIdGeneratorStrategy(AbstractPlatform $platform): int
     {
         assert($this->em !== null);
@@ -830,7 +830,6 @@ DEPRECATION
      */
     protected function wakeupReflection(ClassMetadataInterface $class, ReflectionService $reflService)
     {
-        assert($class instanceof ClassMetadata);
         $class->wakeupReflection($reflService);
     }
 
@@ -839,7 +838,6 @@ DEPRECATION
      */
     protected function initializeReflection(ClassMetadataInterface $class, ReflectionService $reflService)
     {
-        assert($class instanceof ClassMetadata);
         $class->initializeReflection($reflService);
     }
 

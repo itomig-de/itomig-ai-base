@@ -60,13 +60,13 @@ class ResultSetMappingBuilder extends ResultSetMapping
      * Default column renaming mode.
      *
      * @var int
-     * @psalm-var self::COLUMN_RENAMING_*
+     * @phpstan-var self::COLUMN_RENAMING_*
      */
     private $defaultRenameMode;
 
     /**
      * @param int $defaultRenameMode
-     * @psalm-param self::COLUMN_RENAMING_* $defaultRenameMode
+     * @phpstan-param self::COLUMN_RENAMING_* $defaultRenameMode
      */
     public function __construct(EntityManagerInterface $em, $defaultRenameMode = self::COLUMN_RENAMING_NONE)
     {
@@ -81,7 +81,7 @@ class ResultSetMappingBuilder extends ResultSetMapping
      * @param string                $alias          The unique alias to use for the root entity.
      * @param array<string, string> $renamedColumns Columns that have been renamed (tableColumnName => queryColumnName).
      * @param int|null              $renameMode     One of the COLUMN_RENAMING_* constants or array for BC reasons (CUSTOM).
-     * @psalm-param self::COLUMN_RENAMING_*|null $renameMode
+     * @phpstan-param self::COLUMN_RENAMING_*|null $renameMode
      *
      * @return void
      */
@@ -104,7 +104,7 @@ class ResultSetMappingBuilder extends ResultSetMapping
      *                                              with the joined entity result.
      * @param array<string, string> $renamedColumns Columns that have been renamed (tableColumnName => queryColumnName).
      * @param int|null              $renameMode     One of the COLUMN_RENAMING_* constants or array for BC reasons (CUSTOM).
-     * @psalm-param self::COLUMN_RENAMING_*|null $renameMode
+     * @phpstan-param self::COLUMN_RENAMING_*|null $renameMode
      *
      * @return void
      */
@@ -123,7 +123,7 @@ class ResultSetMappingBuilder extends ResultSetMapping
      * @param string   $class
      * @param string   $alias
      * @param string[] $columnAliasMap
-     * @psalm-param array<string, string> $columnAliasMap
+     * @phpstan-param array<string, string> $columnAliasMap
      *
      * @return void
      *
@@ -195,9 +195,9 @@ class ResultSetMappingBuilder extends ResultSetMapping
     /**
      * Gets column alias for a given column.
      *
-     * @psalm-param array<string, string>  $customRenameColumns
+     * @phpstan-param array<string, string>  $customRenameColumns
      *
-     * @psalm-assert self::COLUMN_RENAMING_* $mode
+     * @phpstan-assert self::COLUMN_RENAMING_* $mode
      */
     private function getColumnAlias(string $columnName, int $mode, array $customRenameColumns): string
     {
@@ -225,8 +225,8 @@ class ResultSetMappingBuilder extends ResultSetMapping
      * This depends on the renaming mode selected by the user.
      *
      * @param class-string $className
-     * @psalm-param self::COLUMN_RENAMING_* $mode
-     * @psalm-param array<string, string> $customRenameColumns
+     * @phpstan-param self::COLUMN_RENAMING_* $mode
+     * @phpstan-param array<string, string> $customRenameColumns
      *
      * @return string[]
      */
@@ -448,7 +448,7 @@ class ResultSetMappingBuilder extends ResultSetMapping
      * expressions have to be written manually.
      *
      * @param string[] $tableAliases
-     * @psalm-param array<string, string> $tableAliases
+     * @phpstan-param array<string, string> $tableAliases
      *
      * @return string
      */

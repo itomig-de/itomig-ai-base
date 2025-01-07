@@ -34,7 +34,7 @@ use function sprintf;
  * are able to cache subqueries. By keeping the ORDER BY clause intact, the limitSubQuery
  * that will most likely be executed next can be read from the native SQL cache.
  *
- * @psalm-import-type QueryComponent from Parser
+ * @phpstan-import-type QueryComponent from Parser
  */
 class CountOutputWalker extends SqlOutputWalker
 {
@@ -52,7 +52,7 @@ class CountOutputWalker extends SqlOutputWalker
      * @param Query        $query
      * @param ParserResult $parserResult
      * @param mixed[]      $queryComponents
-     * @psalm-param array<string, QueryComponent> $queryComponents
+     * @phpstan-param array<string, QueryComponent> $queryComponents
      */
     public function __construct($query, $parserResult, array $queryComponents)
     {

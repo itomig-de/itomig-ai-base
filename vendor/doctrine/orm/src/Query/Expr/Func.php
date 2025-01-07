@@ -24,7 +24,7 @@ class Func
      *
      * @param string        $name
      * @param mixed[]|mixed $arguments
-     * @psalm-param list<mixed>|mixed $arguments
+     * @phpstan-param list<mixed>|mixed $arguments
      */
     public function __construct($name, $arguments)
     {
@@ -38,7 +38,7 @@ class Func
         return $this->name;
     }
 
-    /** @psalm-return list<mixed> */
+    /** @phpstan-return list<mixed> */
     public function getArguments()
     {
         return $this->arguments;

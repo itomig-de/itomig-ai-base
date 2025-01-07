@@ -14,11 +14,7 @@ use function strtoupper;
 
 trait CriteriaOrderings
 {
-    /**
-     * @return array<string, string>
-     *
-     * @psalm-suppress DeprecatedMethod We need to call the deprecated API if the new one does not exist yet.
-     */
+    /** @return array<string, string> */
     private static function getCriteriaOrderings(Criteria $criteria): array
     {
         if (! method_exists(Criteria::class, 'orderings')) {

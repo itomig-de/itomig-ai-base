@@ -15,7 +15,7 @@ use Doctrine\ORM\Persisters\Entity\EntityPersister;
 /**
  * Contract for building second level cache regions components.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 interface CacheFactory
 {

@@ -25,7 +25,7 @@ use function array_values;
 use function assert;
 use function count;
 
-/** @psalm-import-type AssociationMapping from ClassMetadata */
+/** @phpstan-import-type AssociationMapping from ClassMetadata */
 abstract class AbstractCollectionPersister implements CachedCollectionPersister
 {
     /** @var UnitOfWork */

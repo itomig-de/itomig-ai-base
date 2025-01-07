@@ -20,7 +20,7 @@ use function ltrim;
  * Mechanism to overwrite interfaces or classes specified as association
  * targets.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 class ResolveTargetEntityListener implements EventSubscriber
 {
@@ -43,7 +43,7 @@ class ResolveTargetEntityListener implements EventSubscriber
      *
      * @param string $originalEntity
      * @param string $newEntity
-     * @psalm-param array<string, mixed> $mapping
+     * @phpstan-param array<string, mixed> $mapping
      *
      * @return void
      */

@@ -57,7 +57,7 @@ final class AssociationOverride implements MappingAttribute
      * The fetching strategy to use for the association.
      *
      * @var string|null
-     * @psalm-var 'LAZY'|'EAGER'|'EXTRA_LAZY'|null
+     * @phpstan-var 'LAZY'|'EAGER'|'EXTRA_LAZY'|null
      * @readonly
      * @Enum({"LAZY", "EAGER", "EXTRA_LAZY"})
      */
@@ -66,7 +66,7 @@ final class AssociationOverride implements MappingAttribute
     /**
      * @param JoinColumn|array<JoinColumn> $joinColumns
      * @param JoinColumn|array<JoinColumn> $inverseJoinColumns
-     * @psalm-param 'LAZY'|'EAGER'|'EXTRA_LAZY'|null $fetch
+     * @phpstan-param 'LAZY'|'EAGER'|'EXTRA_LAZY'|null $fetch
      */
     public function __construct(
         string $name,

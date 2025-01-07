@@ -53,7 +53,7 @@ use function substr;
  * Works with composite keys but cannot deal with queries that have multiple
  * root entities (e.g. `SELECT f, b from Foo, Bar`)
  *
- * @psalm-import-type QueryComponent from Parser
+ * @phpstan-import-type QueryComponent from Parser
  */
 class LimitSubqueryOutputWalker extends SqlOutputWalker
 {
@@ -98,7 +98,7 @@ class LimitSubqueryOutputWalker extends SqlOutputWalker
      * @param Query        $query
      * @param ParserResult $parserResult
      * @param mixed[]      $queryComponents
-     * @psalm-param array<string, QueryComponent> $queryComponents
+     * @phpstan-param array<string, QueryComponent> $queryComponents
      */
     public function __construct($query, $parserResult, array $queryComponents)
     {
@@ -437,7 +437,7 @@ class LimitSubqueryOutputWalker extends SqlOutputWalker
 
     /**
      * @return string[][]
-     * @psalm-return array{0: list<non-empty-string>, 1: list<string>}
+     * @phpstan-return array{0: list<non-empty-string>, 1: list<string>}
      */
     private function generateSqlAliasReplacements(): array
     {

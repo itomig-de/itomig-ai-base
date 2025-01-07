@@ -671,7 +671,7 @@ class AnnotationDriver extends CompatibilityAnnotationDriver
      *
      * @param class-string $className
      *
-     * @psalm-return ClassMetadata::FETCH_* The fetch mode as defined in ClassMetadata.
+     * @phpstan-return ClassMetadata::FETCH_* The fetch mode as defined in ClassMetadata.
      *
      * @throws MappingException If the fetch mode is not valid.
      */
@@ -687,7 +687,7 @@ class AnnotationDriver extends CompatibilityAnnotationDriver
     /**
      * Attempts to resolve the generated mode.
      *
-     * @psalm-return ClassMetadata::GENERATED_*
+     * @phpstan-return ClassMetadata::GENERATED_*
      *
      * @throws MappingException If the fetch mode is not valid.
      */
@@ -704,7 +704,7 @@ class AnnotationDriver extends CompatibilityAnnotationDriver
      * Parses the given method.
      *
      * @return list<array{string, string}>
-     * @psalm-return list<array{string, (Events::*)}>
+     * @phpstan-return list<array{string, (Events::*)}>
      */
     private function getMethodCallbacks(ReflectionMethod $method): array
     {
@@ -752,7 +752,7 @@ class AnnotationDriver extends CompatibilityAnnotationDriver
      * Parse the given JoinColumn as array
      *
      * @return mixed[]
-     * @psalm-return array{
+     * @phpstan-return array{
      *                   name: string|null,
      *                   unique: bool,
      *                   nullable: bool,
@@ -784,7 +784,7 @@ class AnnotationDriver extends CompatibilityAnnotationDriver
      * Parse the given Column as array
      *
      * @return mixed[]
-     * @psalm-return array{
+     * @phpstan-return array{
      *                   fieldName: string,
      *                   type: mixed,
      *                   scale: int,

@@ -35,7 +35,7 @@ abstract class SQLFilter
     /**
      * Parameters for the filter.
      *
-     * @psalm-var array<string,array{type: string, value: mixed, is_list: bool}>
+     * @phpstan-var array<string,array{type: string, value: mixed, is_list: bool}>
      */
     private $parameters = [];
 
@@ -190,7 +190,7 @@ abstract class SQLFilter
      * Gets the SQL query part to add to a query.
      *
      * @param string $targetTableAlias
-     * @psalm-param ClassMetadata<object> $targetEntity
+     * @phpstan-param ClassMetadata<object> $targetEntity
      *
      * @return string The constraint SQL if there is available, empty string otherwise.
      */

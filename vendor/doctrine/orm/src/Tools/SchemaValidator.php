@@ -50,7 +50,7 @@ use const PHP_VERSION_ID;
  *
  * @link        www.doctrine-project.com
  *
- * @psalm-import-type FieldMapping from ClassMetadata
+ * @phpstan-import-type FieldMapping from ClassMetadata
  */
 class SchemaValidator
 {
@@ -94,7 +94,7 @@ class SchemaValidator
      * 2. Check if "mappedBy" and "inversedBy" are consistent to each other.
      * 3. Check if "referencedColumnName" attributes are really pointing to primary key columns.
      *
-     * @psalm-return array<string, list<string>>
+     * @phpstan-return array<string, list<string>>
      */
     public function validateMapping()
     {
@@ -116,7 +116,7 @@ class SchemaValidator
      * Validates a single class of the current.
      *
      * @return string[]
-     * @psalm-return list<string>
+     * @phpstan-return list<string>
      */
     public function validateClass(ClassMetadataInfo $class)
     {

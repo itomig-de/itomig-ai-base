@@ -52,7 +52,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
      *
      * @param class-string<T> $className
      *
-     * @psalm-return EntityRepository<T>
+     * @phpstan-return EntityRepository<T>
      *
      * @template T of object
      */

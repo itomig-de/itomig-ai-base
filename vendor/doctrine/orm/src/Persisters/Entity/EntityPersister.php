@@ -15,7 +15,7 @@ use Doctrine\ORM\Query\ResultSetMapping;
  * Entity persister interface
  * Define the behavior that should be implemented by all entity persisters.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 interface EntityPersister
 {
@@ -54,8 +54,8 @@ interface EntityPersister
      * @param int|null         $limit
      * @param int|null         $offset
      * @param mixed[]|null     $orderBy
-     * @psalm-param AssociationMapping|null $assoc
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param AssociationMapping|null $assoc
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return string
      */
@@ -75,14 +75,14 @@ interface EntityPersister
      *
      * @param string[] $criteria
      *
-     * @psalm-return array{list<mixed>, list<int|string|null>}
+     * @phpstan-return array{list<mixed>, list<int|string|null>}
      */
     public function expandParameters($criteria);
 
     /**
      * Expands Criteria Parameters by walking the expressions and grabbing all parameters and types from it.
      *
-     * @psalm-return array{list<mixed>, list<int|string|null>}
+     * @phpstan-return array{list<mixed>, list<int|string|null>}
      */
     public function expandCriteriaParameters(Criteria $criteria);
 
@@ -113,7 +113,7 @@ interface EntityPersister
      *
      * If no inserts are queued, invoking this method is a NOOP.
      *
-     * @psalm-return void|list<array{
+     * @phpstan-return void|list<array{
      *                   generatedId: int,
      *                   entity: object
      *               }> Returning an array of generated post-insert IDs is deprecated, implementations
@@ -181,10 +181,10 @@ interface EntityPersister
      *                                          for loading the entity.
      * @param int|null                $limit    Limit number of results.
      * @param string[]|null           $orderBy  Criteria to order by.
-     * @psalm-param array<string, mixed>       $criteria
-     * @psalm-param array<string, mixed>       $hints
-     * @psalm-param LockMode::*|null           $lockMode
-     * @psalm-param array<string, string>|null $orderBy
+     * @phpstan-param array<string, mixed>       $criteria
+     * @phpstan-param array<string, mixed>       $hints
+     * @phpstan-param LockMode::*|null           $lockMode
+     * @phpstan-param array<string, string>|null $orderBy
      *
      * @return object|null The loaded and managed entity instance or NULL if the entity can not be found.
      *
@@ -204,7 +204,7 @@ interface EntityPersister
      * Loads an entity by identifier.
      *
      * @param object|null $entity The entity to load the data into. If not specified, a new entity is created.
-     * @psalm-param array<string, mixed> $identifier The entity identifier.
+     * @phpstan-param array<string, mixed> $identifier The entity identifier.
      *
      * @return object|null The loaded and managed entity instance or NULL if the entity can not be found.
      *
@@ -217,10 +217,10 @@ interface EntityPersister
      * association from another entity.
      *
      * @param object $sourceEntity The entity that owns the association (not necessarily the "owning side").
-     * @psalm-param array<string, mixed> $identifier The identifier of the entity to load. Must be provided if
+     * @phpstan-param array<string, mixed> $identifier The identifier of the entity to load. Must be provided if
      *                                               the association to load represents the owning side, otherwise
      *                                               the identifier is derived from the $sourceEntity.
-     * @psalm-param AssociationMapping $assoc        The association to load.
+     * @phpstan-param AssociationMapping $assoc        The association to load.
      *
      * @return object The loaded and managed entity instance or NULL if the entity can not be found.
      *
@@ -235,10 +235,10 @@ interface EntityPersister
      * @param int|null $lockMode One of the \Doctrine\DBAL\LockMode::* constants
      *                           or NULL if no specific lock mode should be used
      *                           for refreshing the managed entity.
-     * @psalm-param array<string, mixed> $id The identifier of the entity as an
+     * @phpstan-param array<string, mixed> $id The identifier of the entity as an
      *                                       associative array from column or
      *                                       field names to values.
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return void
      */
@@ -256,8 +256,8 @@ interface EntityPersister
      *
      * @param int|null $limit
      * @param int|null $offset
-     * @psalm-param array<string, string>|null $orderBy
-     * @psalm-param array<string, mixed>       $criteria
+     * @phpstan-param array<string, string>|null $orderBy
+     * @phpstan-param array<string, mixed>       $criteria
      */
     public function loadAll(array $criteria = [], ?array $orderBy = null, $limit = null, $offset = null);
 
@@ -267,7 +267,7 @@ interface EntityPersister
      * @param object   $sourceEntity
      * @param int|null $offset
      * @param int|null $limit
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return mixed[]
      */
@@ -278,7 +278,7 @@ interface EntityPersister
      *
      * @param object               $sourceEntity The entity that owns the collection.
      * @param PersistentCollection $collection   The collection to fill.
-     * @psalm-param AssociationMapping $assoc The association mapping of the association being loaded.
+     * @phpstan-param AssociationMapping $assoc The association mapping of the association being loaded.
      *
      * @return mixed[]
      */
@@ -289,7 +289,7 @@ interface EntityPersister
      *
      * @param object               $sourceEntity
      * @param PersistentCollection $collection   The collection to load/fill.
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return mixed
      */
@@ -299,8 +299,8 @@ interface EntityPersister
      * Locks all rows of this entity matching the given criteria with the specified pessimistic lock mode.
      *
      * @param int $lockMode One of the Doctrine\DBAL\LockMode::* constants.
-     * @psalm-param array<string, mixed> $criteria
-     * @psalm-param LockMode::* $lockMode
+     * @phpstan-param array<string, mixed> $criteria
+     * @phpstan-param LockMode::* $lockMode
      *
      * @return void
      */
@@ -312,7 +312,7 @@ interface EntityPersister
      * @param object   $sourceEntity
      * @param int|null $offset
      * @param int|null $limit
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return mixed[]
      */

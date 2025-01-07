@@ -22,10 +22,10 @@ class Andx extends Composite
         self::class,
     ];
 
-    /** @psalm-var list<string|Comparison|Func|Orx|self> */
+    /** @phpstan-var list<string|Comparison|Func|Orx|self> */
     protected $parts = [];
 
-    /** @psalm-return list<string|Comparison|Func|Orx|self> */
+    /** @phpstan-return list<string|Comparison|Func|Orx|self> */
     public function getParts()
     {
         return $this->parts;

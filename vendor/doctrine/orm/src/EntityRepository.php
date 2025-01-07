@@ -57,14 +57,14 @@ class EntityRepository implements ObjectRepository, Selectable
      * @internal This property will be private in 3.0, call {@see getClassMetadata()} instead.
      *
      * @var ClassMetadata
-     * @psalm-var ClassMetadata<T>
+     * @phpstan-var ClassMetadata<T>
      */
     protected $_class;
 
     /** @var Inflector|null */
     private static $inflector;
 
-    /** @psalm-param ClassMetadata<T> $class */
+    /** @phpstan-param ClassMetadata<T> $class */
     public function __construct(EntityManagerInterface $em, ClassMetadata $class)
     {
         $this->_entityName = $class->name;
@@ -186,10 +186,10 @@ class EntityRepository implements ObjectRepository, Selectable
      *                              or NULL if no specific lock mode should be used
      *                              during the search.
      * @param int|null $lockVersion The lock version.
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return object|null The entity instance or NULL if the entity can not be found.
-     * @psalm-return ?T
+     * @phpstan-return ?T
      */
     public function find($id, $lockMode = null, $lockVersion = null)
     {
@@ -199,7 +199,7 @@ class EntityRepository implements ObjectRepository, Selectable
     /**
      * Finds all entities in the repository.
      *
-     * @psalm-return list<T> The entities.
+     * @phpstan-return list<T> The entities.
      */
     public function findAll()
     {
@@ -211,11 +211,11 @@ class EntityRepository implements ObjectRepository, Selectable
      *
      * @param int|null $limit
      * @param int|null $offset
-     * @psalm-param array<string, mixed> $criteria
-     * @psalm-param array<string, string>|null $orderBy
+     * @phpstan-param array<string, mixed> $criteria
+     * @phpstan-param array<string, string>|null $orderBy
      *
      * @return object[] The objects.
-     * @psalm-return list<T>
+     * @phpstan-return list<T>
      */
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null)
     {
@@ -227,11 +227,11 @@ class EntityRepository implements ObjectRepository, Selectable
     /**
      * Finds a single entity by a set of criteria.
      *
-     * @psalm-param array<string, mixed> $criteria
-     * @psalm-param array<string, string>|null $orderBy
+     * @phpstan-param array<string, mixed> $criteria
+     * @phpstan-param array<string, string>|null $orderBy
      *
      * @return object|null The entity instance or NULL if the entity can not be found.
-     * @psalm-return ?T
+     * @phpstan-return ?T
      */
     public function findOneBy(array $criteria, ?array $orderBy = null)
     {
@@ -243,7 +243,7 @@ class EntityRepository implements ObjectRepository, Selectable
     /**
      * Counts entities by a set of criteria.
      *
-     * @psalm-param array<string, mixed> $criteria
+     * @phpstan-param array<string, mixed> $criteria
      *
      * @return int The cardinality of the objects that match the given criteria.
      *
@@ -259,7 +259,7 @@ class EntityRepository implements ObjectRepository, Selectable
      *
      * @param string  $method
      * @param mixed[] $arguments
-     * @psalm-param list<mixed> $arguments
+     * @phpstan-param list<mixed> $arguments
      *
      * @return mixed The returned value from the resolved method.
      *
@@ -308,7 +308,7 @@ class EntityRepository implements ObjectRepository, Selectable
 
     /**
      * @return ClassMetadata
-     * @psalm-return ClassMetadata<T>
+     * @phpstan-return ClassMetadata<T>
      */
     protected function getClassMetadata()
     {
@@ -320,7 +320,7 @@ class EntityRepository implements ObjectRepository, Selectable
      * return a new collection containing these elements.
      *
      * @return AbstractLazyCollection
-     * @psalm-return AbstractLazyCollection<int, T>&Selectable<int, T>
+     * @phpstan-return AbstractLazyCollection<int, T>&Selectable<int, T>
      */
     public function matching(Criteria $criteria)
     {
@@ -334,7 +334,7 @@ class EntityRepository implements ObjectRepository, Selectable
      *
      * @param string $method The method to call
      * @param string $by     The property name used as condition
-     * @psalm-param list<mixed> $arguments The arguments to pass at method call
+     * @phpstan-param list<mixed> $arguments The arguments to pass at method call
      *
      * @return mixed
      *

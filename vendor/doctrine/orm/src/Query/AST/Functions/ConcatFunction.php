@@ -22,7 +22,7 @@ class ConcatFunction extends FunctionNode
     /** @var Node */
     public $secondStringPrimary;
 
-    /** @psalm-var list<Node> */
+    /** @phpstan-var list<Node> */
     public $concatExpressions = [];
 
     /** @inheritDoc */

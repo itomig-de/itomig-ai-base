@@ -26,7 +26,7 @@ class OrderBy
     /** @var string[] */
     protected $allowedClasses = [];
 
-    /** @psalm-var list<string> */
+    /** @phpstan-var list<string> */
     protected $parts = [];
 
     /**
@@ -54,14 +54,14 @@ class OrderBy
 
     /**
      * @return int
-     * @psalm-return 0|positive-int
+     * @phpstan-return 0|positive-int
      */
     public function count()
     {
         return count($this->parts);
     }
 
-    /** @psalm-return list<string> */
+    /** @phpstan-return list<string> */
     public function getParts()
     {
         return $this->parts;

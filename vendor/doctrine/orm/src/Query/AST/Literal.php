@@ -12,7 +12,7 @@ class Literal extends Node
 
     /**
      * @var int
-     * @psalm-var self::*
+     * @phpstan-var self::*
      */
     public $type;
 
@@ -22,7 +22,7 @@ class Literal extends Node
     /**
      * @param int   $type
      * @param mixed $value
-     * @psalm-param self::* $type
+     * @phpstan-param self::* $type
      */
     public function __construct($type, $value)
     {

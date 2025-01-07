@@ -9,8 +9,8 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 /**
  * A set of rules for determining the column, alias and table quotes.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
- * @psalm-import-type JoinColumnData from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type JoinColumnData from ClassMetadata
  */
 interface QuoteStrategy
 {
@@ -69,7 +69,7 @@ interface QuoteStrategy
     /**
      * Gets the (possibly quoted) identifier column names for safe use in an SQL statement.
      *
-     * @psalm-return list<string>
+     * @phpstan-return list<string>
      */
     public function getIdentifierColumnNames(ClassMetadata $class, AbstractPlatform $platform);
 

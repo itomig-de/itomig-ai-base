@@ -18,7 +18,7 @@ class Join extends Node
 
     /**
      * @var int
-     * @psalm-var self::JOIN_TYPE_*
+     * @phpstan-var self::JOIN_TYPE_*
      */
     public $joinType = self::JOIN_TYPE_INNER;
 
@@ -31,7 +31,7 @@ class Join extends Node
     /**
      * @param int  $joinType
      * @param Node $joinAssociationDeclaration
-     * @psalm-param self::JOIN_TYPE_* $joinType
+     * @phpstan-param self::JOIN_TYPE_* $joinType
      */
     public function __construct($joinType, $joinAssociationDeclaration)
     {

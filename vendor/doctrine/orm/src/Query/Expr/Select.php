@@ -20,10 +20,10 @@ class Select extends Base
     /** @var string[] */
     protected $allowedClasses = [Func::class];
 
-    /** @psalm-var list<string|Func> */
+    /** @phpstan-var list<string|Func> */
     protected $parts = [];
 
-    /** @psalm-return list<string|Func> */
+    /** @phpstan-return list<string|Func> */
     public function getParts()
     {
         return $this->parts;

@@ -24,7 +24,7 @@ class QueryCacheKey extends CacheKey
      *
      * @readonly Public only for performance reasons, it should be considered immutable.
      * @var int
-     * @psalm-var Cache::MODE_*
+     * @phpstan-var Cache::MODE_*
      */
     public $cacheMode;
 
@@ -34,7 +34,7 @@ class QueryCacheKey extends CacheKey
      */
     public $timestampKey;
 
-    /** @psalm-param Cache::MODE_* $cacheMode */
+    /** @phpstan-param Cache::MODE_* $cacheMode */
     public function __construct(
         string $cacheId,
         int $lifetime = 0,

@@ -21,7 +21,7 @@ class Join
 
     /**
      * @var string
-     * @psalm-var self::INNER_JOIN|self::LEFT_JOIN
+     * @phpstan-var self::INNER_JOIN|self::LEFT_JOIN
      */
     protected $joinType;
 
@@ -33,7 +33,7 @@ class Join
 
     /**
      * @var string|null
-     * @psalm-var self::ON|self::WITH|null
+     * @phpstan-var self::ON|self::WITH|null
      */
     protected $conditionType;
 
@@ -50,8 +50,8 @@ class Join
      * @param string|null                           $conditionType The condition type constant. Either ON or WITH.
      * @param string|Comparison|Composite|Func|null $condition     The condition for the join.
      * @param string|null                           $indexBy       The index for the join.
-     * @psalm-param self::INNER_JOIN|self::LEFT_JOIN $joinType
-     * @psalm-param self::ON|self::WITH|null $conditionType
+     * @phpstan-param self::INNER_JOIN|self::LEFT_JOIN $joinType
+     * @phpstan-param self::ON|self::WITH|null $conditionType
      */
     public function __construct($joinType, $join, $alias = null, $conditionType = null, $condition = null, $indexBy = null)
     {
@@ -65,7 +65,7 @@ class Join
 
     /**
      * @return string
-     * @psalm-return self::INNER_JOIN|self::LEFT_JOIN
+     * @phpstan-return self::INNER_JOIN|self::LEFT_JOIN
      */
     public function getJoinType()
     {
@@ -86,7 +86,7 @@ class Join
 
     /**
      * @return string|null
-     * @psalm-return self::ON|self::WITH|null
+     * @phpstan-return self::ON|self::WITH|null
      */
     public function getConditionType()
     {

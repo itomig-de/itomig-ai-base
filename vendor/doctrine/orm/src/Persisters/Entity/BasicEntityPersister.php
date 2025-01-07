@@ -90,7 +90,7 @@ use function trim;
  * Subclasses can be created to provide custom persisting and querying strategies,
  * i.e. spanning multiple tables.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 class BasicEntityPersister implements EntityPersister
 {
@@ -143,7 +143,7 @@ class BasicEntityPersister implements EntityPersister
     /**
      * Queued inserts.
      *
-     * @psalm-var array<int, object>
+     * @phpstan-var array<int, object>
      */
     protected $queuedInserts = [];
 
@@ -198,6 +198,9 @@ class BasicEntityPersister implements EntityPersister
 
     /** @var CachedPersisterContext */
     private $noLimitsContext;
+
+    /** @var ?string */
+    private $filterHash = null;
 
     /**
      * Initializes a new <tt>BasicEntityPersister</tt> that uses the given EntityManager
@@ -382,7 +385,7 @@ class BasicEntityPersister implements EntityPersister
      * @param mixed[] $id
      *
      * @return int[]|null[]|string[]
-     * @psalm-return list<int|string|null>
+     * @phpstan-return list<int|string|null>
      */
     final protected function extractIdentifierTypes(array $id, ClassMetadata $versionedClass): array
     {
@@ -630,7 +633,7 @@ class BasicEntityPersister implements EntityPersister
      * @param bool   $isInsert Whether the data to be prepared refers to an insert statement.
      *
      * @return mixed[][] The prepared data.
-     * @psalm-return array<string, array<array-key, mixed|null>>
+     * @phpstan-return array<string, array<array-key, mixed|null>>
      */
     protected function prepareUpdateData($entity, bool $isInsert = false)
     {
@@ -749,7 +752,7 @@ class BasicEntityPersister implements EntityPersister
      * @param object $entity The entity for which to prepare the data.
      *
      * @return mixed[][] The prepared data for the tables to update.
-     * @psalm-return array<string, mixed[]>
+     * @phpstan-return array<string, mixed[]>
      */
     protected function prepareInsertData($entity)
     {
@@ -1043,7 +1046,7 @@ class BasicEntityPersister implements EntityPersister
 
     /**
      * @param object $sourceEntity
-     * @psalm-param array<string, mixed> $assoc
+     * @phpstan-param array<string, mixed> $assoc
      *
      * @return Result
      *
@@ -1207,7 +1210,7 @@ class BasicEntityPersister implements EntityPersister
     /**
      * Gets the ORDER BY SQL snippet for ordered collections.
      *
-     * @psalm-param array<string, string> $orderBy
+     * @phpstan-param array<string, string> $orderBy
      *
      * @throws InvalidOrientation
      * @throws InvalidFindByCall
@@ -1271,7 +1274,7 @@ class BasicEntityPersister implements EntityPersister
      */
     protected function getSelectColumnsSQL()
     {
-        if ($this->currentPersisterContext->selectColumnListSql !== null) {
+        if ($this->currentPersisterContext->selectColumnListSql !== null && $this->filterHash === $this->em->getFilters()->getHash()) {
             return $this->currentPersisterContext->selectColumnListSql;
         }
 
@@ -1378,6 +1381,7 @@ class BasicEntityPersister implements EntityPersister
         }
 
         $this->currentPersisterContext->selectColumnListSql = implode(', ', $columnList);
+        $this->filterHash                                   = $this->em->getFilters()->getHash();
 
         return $this->currentPersisterContext->selectColumnListSql;
     }
@@ -1419,7 +1423,7 @@ class BasicEntityPersister implements EntityPersister
      * Gets the SQL join fragment used when selecting entities from a
      * many-to-many association.
      *
-     * @psalm-param AssociationMapping $manyToMany
+     * @phpstan-param AssociationMapping $manyToMany
      *
      * @return string
      */
@@ -1500,7 +1504,7 @@ class BasicEntityPersister implements EntityPersister
      * columns placed in the INSERT statements used by the persister.
      *
      * @return string[] The list of columns.
-     * @psalm-return list<string>
+     * @phpstan-return list<string>
      */
     protected function getInsertColumnList()
     {
@@ -1632,7 +1636,7 @@ class BasicEntityPersister implements EntityPersister
      * Gets the FROM and optionally JOIN conditions to lock the entity managed by this persister.
      *
      * @param int|null $lockMode One of the Doctrine\DBAL\LockMode::* constants.
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return string
      */
@@ -1747,10 +1751,10 @@ class BasicEntityPersister implements EntityPersister
     /**
      * Builds the left-hand-side of a where condition statement.
      *
-     * @psalm-param AssociationMapping|null $assoc
+     * @phpstan-param AssociationMapping|null $assoc
      *
      * @return string[]
-     * @psalm-return list<string>
+     * @phpstan-return list<string>
      *
      * @throws InvalidFindByCall
      * @throws UnrecognizedField
@@ -1821,8 +1825,8 @@ class BasicEntityPersister implements EntityPersister
      * or alter the criteria by which entities are selected.
      *
      * @param AssociationMapping|null $assoc
-     * @psalm-param array<string, mixed> $criteria
-     * @psalm-param array<string, mixed>|null $assoc
+     * @phpstan-param array<string, mixed> $criteria
+     * @phpstan-param array<string, mixed>|null $assoc
      *
      * @return string
      */
@@ -1863,7 +1867,7 @@ class BasicEntityPersister implements EntityPersister
      * Builds criteria and execute SQL statement to fetch the one to many entities from.
      *
      * @param object $sourceEntity
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      */
     private function getOneToManyStatement(
         array $assoc,
@@ -1946,7 +1950,7 @@ class BasicEntityPersister implements EntityPersister
      *                             - class to which the field belongs to
      *
      * @return mixed[][]
-     * @psalm-return array{0: array, 1: list<int|string|null>}
+     * @phpstan-return array{0: array, 1: list<int|string|null>}
      */
     private function expandToManyParameters(array $criteria): array
     {
@@ -1971,7 +1975,7 @@ class BasicEntityPersister implements EntityPersister
      * @param mixed $value
      *
      * @return int[]|null[]|string[]
-     * @psalm-return list<int|string|null>
+     * @phpstan-return list<int|string|null>
      *
      * @throws QueryException
      */
@@ -2046,7 +2050,7 @@ class BasicEntityPersister implements EntityPersister
      *
      * @param mixed $value
      *
-     * @psalm-return list<mixed>
+     * @phpstan-return list<mixed>
      */
     private function getIndividualValue($value): array
     {
@@ -2118,7 +2122,7 @@ class BasicEntityPersister implements EntityPersister
      * Generates the appropriate join SQL for the given join column.
      *
      * @param array[] $joinColumns The join columns definition of an association.
-     * @psalm-param array<array<string, mixed>> $joinColumns
+     * @phpstan-param array<array<string, mixed>> $joinColumns
      *
      * @return string LEFT JOIN if one of the columns is nullable, INNER JOIN otherwise.
      */
@@ -2191,7 +2195,7 @@ class BasicEntityPersister implements EntityPersister
 
     /**
      * @return string[]
-     * @psalm-return list<string>
+     * @phpstan-return list<string>
      */
     protected function getClassIdentifiersTypes(ClassMetadata $class): array
     {

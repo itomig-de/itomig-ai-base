@@ -98,7 +98,7 @@ class Paginator implements Countable, IteratorAggregate
      * @param bool|null $useOutputWalkers
      *
      * @return $this
-     * @psalm-return static<T>
+     * @phpstan-return static<T>
      */
     public function setUseOutputWalkers($useOutputWalkers)
     {
@@ -130,7 +130,7 @@ class Paginator implements Countable, IteratorAggregate
      * {@inheritDoc}
      *
      * @return Traversable
-     * @psalm-return Traversable<array-key, T>
+     * @phpstan-return Traversable<array-key, T>
      */
     #[ReturnTypeWillChange]
     public function getIterator()

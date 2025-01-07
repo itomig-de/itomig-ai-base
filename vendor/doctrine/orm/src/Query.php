@@ -125,7 +125,7 @@ class Query extends AbstractQuery
      * The current state of this query.
      *
      * @var int
-     * @psalm-var self::STATE_*
+     * @phpstan-var self::STATE_*
      */
     private $state = self::STATE_DIRTY;
 
@@ -387,7 +387,7 @@ class Query extends AbstractQuery
      * @param array<list<int>> $paramMappings
      *
      * @return mixed[][]
-     * @psalm-return array{0: list<mixed>, 1: array}
+     * @phpstan-return array{0: list<mixed>, 1: array}
      *
      * @throws Query\QueryException
      */
@@ -438,7 +438,7 @@ class Query extends AbstractQuery
 
     /**
      * @return mixed[] tuple of (value, type)
-     * @psalm-return array{0: mixed, 1: mixed}
+     * @phpstan-return array{0: mixed, 1: mixed}
      */
     private function resolveParameterValue(Parameter $parameter): array
     {
@@ -637,7 +637,7 @@ class Query extends AbstractQuery
      * @see AbstractQuery::STATE_DIRTY
      *
      * @return int The query state.
-     * @psalm-return self::STATE_* The query state.
+     * @phpstan-return self::STATE_* The query state.
      */
     public function getState(): int
     {
@@ -730,8 +730,8 @@ class Query extends AbstractQuery
      *
      * @param ArrayCollection|mixed[]|null $parameters    The query parameters.
      * @param string|int                   $hydrationMode The hydration mode to use.
-     * @psalm-param ArrayCollection<int, Parameter>|array<string, mixed>|null $parameters
-     * @psalm-param string|AbstractQuery::HYDRATE_*|null                      $hydrationMode
+     * @phpstan-param ArrayCollection<int, Parameter>|array<string, mixed>|null $parameters
+     * @phpstan-param string|AbstractQuery::HYDRATE_*|null                      $hydrationMode
      */
     public function iterate($parameters = null, $hydrationMode = self::HYDRATE_OBJECT): IterableResult
     {
@@ -774,7 +774,7 @@ class Query extends AbstractQuery
      * @see \Doctrine\DBAL\LockMode
      *
      * @param int $lockMode
-     * @psalm-param LockMode::* $lockMode
+     * @phpstan-param LockMode::* $lockMode
      *
      * @return $this
      *

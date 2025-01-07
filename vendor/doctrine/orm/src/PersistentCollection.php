@@ -34,11 +34,11 @@ use function spl_object_id;
  * Similarly, if you remove entities from a collection that is part of a one-many
  * mapping this will only result in the nulling out of the foreign keys on flush.
  *
- * @psalm-template TKey of array-key
- * @psalm-template T
+ * @phpstan-template TKey of array-key
+ * @phpstan-template T
  * @template-extends AbstractLazyCollection<TKey,T>
  * @template-implements Selectable<TKey,T>
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 final class PersistentCollection extends AbstractLazyCollection implements Selectable
 {
@@ -48,7 +48,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * A snapshot of the collection at the moment it was fetched from the database.
      * This is used to create a diff of the collection at commit time.
      *
-     * @psalm-var array<string|int, mixed>
+     * @phpstan-var array<string|int, mixed>
      */
     private $snapshot = [];
 
@@ -63,7 +63,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * The association mapping the collection belongs to.
      * This is currently either a OneToManyMapping or a ManyToManyMapping.
      *
-     * @psalm-var AssociationMapping|null
+     * @phpstan-var AssociationMapping|null
      */
     private $association;
 
@@ -102,7 +102,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      *
      * @param EntityManagerInterface $em    The EntityManager the collection will be associated with.
      * @param ClassMetadata          $class The class descriptor of the entity type of this collection.
-     * @psalm-param Collection<TKey, T>&Selectable<TKey, T> $collection The collection elements.
+     * @phpstan-param Collection<TKey, T>&Selectable<TKey, T> $collection The collection elements.
      */
     public function __construct(EntityManagerInterface $em, $class, Collection $collection)
     {
@@ -118,7 +118,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * describes the association between the owner and the elements of the collection.
      *
      * @param object $entity
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      */
     public function setOwner($entity, array $assoc): void
     {
@@ -234,7 +234,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * INTERNAL:
      * Returns the last snapshot of the elements in the collection.
      *
-     * @psalm-return array<string|int, mixed> The last snapshot of the elements.
+     * @phpstan-return array<string|int, mixed> The last snapshot of the elements.
      */
     public function getSnapshot(): array
     {
@@ -276,7 +276,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
     /**
      * INTERNAL: Gets the association mapping of the collection.
      *
-     * @psalm-return AssociationMapping
+     * @phpstan-return AssociationMapping
      */
     public function getMapping(): array
     {
@@ -581,7 +581,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      *                with circular references. This solution seems simpler and works well.
      *
      * @return string[]
-     * @psalm-return array{0: string, 1: string}
+     * @phpstan-return array{0: string, 1: string}
      */
     public function __sleep(): array
     {
@@ -599,7 +599,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * @param int|null $length
      *
      * @return mixed[]
-     * @psalm-return array<TKey,T>
+     * @phpstan-return array<TKey,T>
      */
     public function slice($offset, $length = null): array
     {
@@ -641,7 +641,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      * Selects all elements from a selectable that match the expression and
      * return a new collection containing these elements.
      *
-     * @psalm-return Collection<TKey, T>
+     * @phpstan-return Collection<TKey, T>
      *
      * @throws RuntimeException
      */

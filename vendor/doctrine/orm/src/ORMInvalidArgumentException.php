@@ -24,7 +24,7 @@ use function sprintf;
 /**
  * Contains exception messages for all invalid lifecycle state exceptions inside UnitOfWork
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
+ * @phpstan-import-type AssociationMapping from ClassMetadata
  */
 class ORMInvalidArgumentException extends InvalidArgumentException
 {
@@ -83,7 +83,7 @@ class ORMInvalidArgumentException extends InvalidArgumentException
     }
 
     /**
-     * @psalm-param non-empty-list<array{AssociationMapping, object}> $newEntitiesWithAssociations non-empty an array
+     * @phpstan-param non-empty-list<array{AssociationMapping, object}> $newEntitiesWithAssociations non-empty an array
      *                                                                of [array $associationMapping, object $entity] pairs
      *
      * @return ORMInvalidArgumentException
@@ -112,7 +112,7 @@ class ORMInvalidArgumentException extends InvalidArgumentException
 
     /**
      * @param object $entry
-     * @psalm-param AssociationMapping $associationMapping
+     * @phpstan-param AssociationMapping $associationMapping
      *
      * @return ORMInvalidArgumentException
      */
@@ -123,7 +123,7 @@ class ORMInvalidArgumentException extends InvalidArgumentException
 
     /**
      * @param object $entry
-     * @psalm-param AssociationMapping $assoc
+     * @phpstan-param AssociationMapping $assoc
      *
      * @return ORMInvalidArgumentException
      */
@@ -300,7 +300,7 @@ EXCEPTION
 
     /**
      * @param object $entity
-     * @psalm-param AssociationMapping $associationMapping
+     * @phpstan-param AssociationMapping $associationMapping
      */
     private static function newEntityFoundThroughRelationshipMessage(array $associationMapping, $entity): string
     {

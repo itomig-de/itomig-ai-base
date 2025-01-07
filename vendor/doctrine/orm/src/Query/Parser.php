@@ -36,9 +36,9 @@ use function substr;
  * An LL(*) recursive-descent parser for the context-free grammar of the Doctrine Query Language.
  * Parses a DQL query, reports any errors in it, and generates an AST.
  *
- * @psalm-import-type AssociationMapping from ClassMetadata
- * @psalm-type DqlToken = Token<TokenType::T_*, string>
- * @psalm-type QueryComponent = array{
+ * @phpstan-import-type AssociationMapping from ClassMetadata
+ * @phpstan-type DqlToken = Token<TokenType::T_*, string>
+ * @phpstan-type QueryComponent = array{
  *                 metadata?: ClassMetadata<object>,
  *                 parent?: string|null,
  *                 relation?: AssociationMapping|null,
@@ -103,19 +103,19 @@ class Parser
      * and still need to be validated.
      */
 
-    /** @psalm-var list<array{token: DqlToken|null, expression: mixed, nestingLevel: int}> */
+    /** @phpstan-var list<array{token: DqlToken|null, expression: mixed, nestingLevel: int}> */
     private $deferredIdentificationVariables = [];
 
-    /** @psalm-var list<array{token: DqlToken|null, expression: AST\PartialObjectExpression, nestingLevel: int}> */
+    /** @phpstan-var list<array{token: DqlToken|null, expression: AST\PartialObjectExpression, nestingLevel: int}> */
     private $deferredPartialObjectExpressions = [];
 
-    /** @psalm-var list<array{token: DqlToken|null, expression: AST\PathExpression, nestingLevel: int}> */
+    /** @phpstan-var list<array{token: DqlToken|null, expression: AST\PathExpression, nestingLevel: int}> */
     private $deferredPathExpressions = [];
 
-    /** @psalm-var list<array{token: DqlToken|null, expression: mixed, nestingLevel: int}> */
+    /** @phpstan-var list<array{token: DqlToken|null, expression: mixed, nestingLevel: int}> */
     private $deferredResultVariables = [];
 
-    /** @psalm-var list<array{token: DqlToken|null, expression: AST\NewObjectExpression, nestingLevel: int}> */
+    /** @phpstan-var list<array{token: DqlToken|null, expression: AST\NewObjectExpression, nestingLevel: int}> */
     private $deferredNewObjectExpressions = [];
 
     /**
@@ -149,7 +149,7 @@ class Parser
     /**
      * Map of declared query components in the parsed query.
      *
-     * @psalm-var array<string, QueryComponent>
+     * @phpstan-var array<string, QueryComponent>
      */
     private $queryComponents = [];
 
@@ -174,7 +174,7 @@ class Parser
      */
     private $customOutputWalker;
 
-    /** @psalm-var array<string, AST\SelectExpression> */
+    /** @phpstan-var array<string, AST\SelectExpression> */
     private $identVariableExpressions = [];
 
     /**
@@ -457,10 +457,10 @@ class Parser
      *
      * @param string       $expected Expected string.
      * @param mixed[]|null $token    Got token.
-     * @psalm-param DqlToken|null $token
+     * @phpstan-param DqlToken|null $token
      *
      * @return void
-     * @psalm-return no-return
+     * @phpstan-return no-return
      *
      * @throws QueryException
      */
@@ -484,10 +484,10 @@ class Parser
      *
      * @param string       $message Optional message.
      * @param mixed[]|null $token   Optional token.
-     * @psalm-param DqlToken|null $token
+     * @phpstan-param DqlToken|null $token
      *
      * @return void
-     * @psalm-return no-return
+     * @phpstan-return no-return
      *
      * @throws QueryException
      */
@@ -522,7 +522,7 @@ class Parser
      * @param bool $resetPeek Reset peek after finding the closing parenthesis.
      *
      * @return mixed[]
-     * @psalm-return DqlToken|null
+     * @phpstan-return DqlToken|null
      */
     private function peekBeyondClosingParenthesis(bool $resetPeek = true)
     {
@@ -556,7 +556,7 @@ class Parser
     /**
      * Checks if the given token indicates a mathematical operator.
      *
-     * @psalm-param DqlToken|null $token
+     * @phpstan-param DqlToken|null $token
      */
     private function isMathOperator($token): bool
     {
@@ -582,7 +582,7 @@ class Parser
     /**
      * Checks whether the given token type indicates an aggregate function.
      *
-     * @psalm-param TokenType::T_* $tokenType
+     * @phpstan-param TokenType::T_* $tokenType
      *
      * @return bool TRUE if the token type is an aggregate function, FALSE otherwise.
      */
@@ -1120,7 +1120,7 @@ class Parser
      * PathExpression ::= IdentificationVariable {"." identifier}*
      *
      * @param int $expectedTypes
-     * @psalm-param int-mask-of<AST\PathExpression::TYPE_*> $expectedTypes
+     * @phpstan-param int-mask-of<AST\PathExpression::TYPE_*> $expectedTypes
      *
      * @return AST\PathExpression
      */

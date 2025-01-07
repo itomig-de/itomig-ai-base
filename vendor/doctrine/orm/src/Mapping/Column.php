@@ -95,7 +95,7 @@ final class Column implements MappingAttribute
     /**
      * @var string|null
      * @readonly
-     * @psalm-var 'NEVER'|'INSERT'|'ALWAYS'|null
+     * @phpstan-var 'NEVER'|'INSERT'|'ALWAYS'|null
      * @Enum({"NEVER", "INSERT", "ALWAYS"})
      */
     public $generated;
@@ -103,7 +103,7 @@ final class Column implements MappingAttribute
     /**
      * @param class-string<BackedEnum>|null $enumType
      * @param array<string,mixed>           $options
-     * @psalm-param 'NEVER'|'INSERT'|'ALWAYS'|null $generated
+     * @phpstan-param 'NEVER'|'INSERT'|'ALWAYS'|null $generated
      */
     public function __construct(
         ?string $name = null,

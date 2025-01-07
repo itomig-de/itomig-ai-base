@@ -135,7 +135,7 @@ class ClassMetadataBuilder
      * Adds Index.
      *
      * @param string $name
-     * @psalm-param list<string> $columns
+     * @phpstan-param list<string> $columns
      *
      * @return $this
      */
@@ -154,7 +154,7 @@ class ClassMetadataBuilder
      * Adds Unique Constraint.
      *
      * @param string $name
-     * @psalm-param list<string> $columns
+     * @phpstan-param list<string> $columns
      *
      * @return $this
      */
@@ -301,7 +301,7 @@ class ClassMetadataBuilder
      *
      * @param string $name
      * @param string $type
-     * @psalm-param array<string, mixed> $mapping
+     * @phpstan-param array<string, mixed> $mapping
      *
      * @return $this
      */

@@ -21,7 +21,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
  * An adapter implementation of the TreeWalker interface. The methods in this class
  * are empty. This class exists as convenience for creating tree walkers.
  *
- * @psalm-import-type QueryComponent from Parser
+ * @phpstan-import-type QueryComponent from Parser
  */
 abstract class TreeWalkerAdapter implements TreeWalker
 {
@@ -42,7 +42,7 @@ abstract class TreeWalkerAdapter implements TreeWalker
     /**
      * The query components of the original query (the "symbol table") that was produced by the Parser.
      *
-     * @psalm-var array<string, QueryComponent>
+     * @phpstan-var array<string, QueryComponent>
      */
     private $queryComponents;
 
@@ -71,7 +71,7 @@ abstract class TreeWalkerAdapter implements TreeWalker
      *
      * @param string               $dqlAlias       The DQL alias.
      * @param array<string, mixed> $queryComponent
-     * @psalm-param QueryComponent $queryComponent
+     * @phpstan-param QueryComponent $queryComponent
      *
      * @return void
      */
@@ -102,7 +102,7 @@ abstract class TreeWalkerAdapter implements TreeWalker
      * @deprecated Call {@see getQueryComponents()} instead.
      *
      * @return array<string, array<string, mixed>>
-     * @psalm-return array<string, QueryComponent>
+     * @phpstan-return array<string, QueryComponent>
      */
     protected function _getQueryComponents()
     {

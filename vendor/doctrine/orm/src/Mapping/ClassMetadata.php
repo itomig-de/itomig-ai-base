@@ -12,7 +12,7 @@ use BackedEnum;
  * @todo remove or rename ClassMetadataInfo to ClassMetadata
  * @template-covariant T of object
  * @template-extends ClassMetadataInfo<T>
- * @psalm-type FieldMapping = array{
+ * @phpstan-type FieldMapping = array{
  *      type: string,
  *      fieldName: string,
  *      columnName: string,
@@ -38,7 +38,7 @@ use BackedEnum;
  *      version?: string,
  *      default?: string|int,
  * }
- * @psalm-type JoinColumnData = array{
+ * @phpstan-type JoinColumnData = array{
  *     name: string,
  *     referencedColumnName: string,
  *     unique?: bool,
@@ -48,7 +48,7 @@ use BackedEnum;
  *     columnDefinition?: string,
  *     nullable?: bool,
  * }
- * @psalm-type AssociationMapping = array{
+ * @phpstan-type AssociationMapping = array{
  *     cache?: array,
  *     cascade: array<string>,
  *     declared?: class-string,
@@ -83,7 +83,7 @@ use BackedEnum;
  *     type: int,
  *     unique?: bool,
  * }
- * @psalm-type DiscriminatorColumnMapping = array{
+ * @phpstan-type DiscriminatorColumnMapping = array{
  *     name: string,
  *     fieldName: string,
  *     type: string,
@@ -92,7 +92,7 @@ use BackedEnum;
  *     enumType?: class-string<BackedEnum>|null,
  *     options?: array<string, mixed>,
  * }
- * @psalm-type EmbeddedClassMapping = array{
+ * @phpstan-type EmbeddedClassMapping = array{
  *    class: class-string,
  *    columnPrefix: string|null,
  *    declaredField: string|null,
@@ -109,7 +109,7 @@ class ClassMetadata extends ClassMetadataInfo
      * @see https://github.com/doctrine/orm/issues/8709
      *
      * @param string $entityName The name of the entity class the new instance is used for.
-     * @psalm-param class-string<T> $entityName
+     * @phpstan-param class-string<T> $entityName
      */
     public function __construct($entityName, ?NamingStrategy $namingStrategy = null, ?TypedFieldMapper $typedFieldMapper = null)
     {

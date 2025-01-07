@@ -37,7 +37,7 @@ final class OneToMany implements MappingAttribute
      * The fetching strategy to use for the association.
      *
      * @var string
-     * @psalm-var 'LAZY'|'EAGER'|'EXTRA_LAZY'
+     * @phpstan-var 'LAZY'|'EAGER'|'EXTRA_LAZY'
      * @readonly
      * @Enum({"LAZY", "EAGER", "EXTRA_LAZY"})
      */
@@ -58,7 +58,7 @@ final class OneToMany implements MappingAttribute
     /**
      * @param class-string|null $targetEntity
      * @param string[]|null     $cascade
-     * @psalm-param 'LAZY'|'EAGER'|'EXTRA_LAZY' $fetch
+     * @phpstan-param 'LAZY'|'EAGER'|'EXTRA_LAZY' $fetch
      */
     public function __construct(
         ?string $mappedBy = null,

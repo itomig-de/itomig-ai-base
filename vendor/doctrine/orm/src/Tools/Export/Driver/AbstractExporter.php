@@ -73,7 +73,7 @@ abstract class AbstractExporter
     /**
      * Sets the array of ClassMetadata instances to export.
      *
-     * @psalm-param list<ClassMetadata> $metadata
+     * @phpstan-param list<ClassMetadata> $metadata
      *
      * @return void
      */
@@ -172,7 +172,7 @@ abstract class AbstractExporter
 
     /**
      * @param int $type
-     * @psalm-param ClassMetadataInfo::INHERITANCE_TYPE_* $type
+     * @phpstan-param ClassMetadataInfo::INHERITANCE_TYPE_* $type
      *
      * @return string
      */
@@ -195,7 +195,7 @@ abstract class AbstractExporter
 
     /**
      * @param int $mode
-     * @psalm-param ClassMetadataInfo::FETCH_* $mode
+     * @phpstan-param ClassMetadataInfo::FETCH_* $mode
      *
      * @return string
      */
@@ -215,7 +215,7 @@ abstract class AbstractExporter
 
     /**
      * @param int $policy
-     * @psalm-param ClassMetadataInfo::CHANGETRACKING_* $policy
+     * @phpstan-param ClassMetadataInfo::CHANGETRACKING_* $policy
      *
      * @return string
      */
@@ -235,7 +235,7 @@ abstract class AbstractExporter
 
     /**
      * @param int $type
-     * @psalm-param ClassMetadataInfo::GENERATOR_TYPE_* $type
+     * @phpstan-param ClassMetadataInfo::GENERATOR_TYPE_* $type
      *
      * @return string
      */

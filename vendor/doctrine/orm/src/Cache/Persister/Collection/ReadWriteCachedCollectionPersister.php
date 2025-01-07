@@ -13,7 +13,7 @@ use Doctrine\ORM\Persisters\Collection\CollectionPersister;
 
 use function spl_object_id;
 
-/** @psalm-import-type AssociationMapping from ClassMetadata */
+/** @phpstan-import-type AssociationMapping from ClassMetadata */
 class ReadWriteCachedCollectionPersister extends AbstractCollectionPersister
 {
     /** @param AssociationMapping $association The association mapping. */

@@ -424,7 +424,7 @@ class EntityManager implements EntityManagerInterface
      *                                     during the search.
      * @param int|null        $lockVersion The version of the entity to find when using
      *                                     optimistic locking.
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return T|null The entity instance or NULL if the entity can not be found.
      *
@@ -710,7 +710,7 @@ class EntityManager implements EntityManagerInterface
      * overriding any local changes that have not yet been persisted.
      *
      * @param object $entity The entity to refresh
-     * @psalm-param LockMode::*|null $lockMode
+     * @phpstan-param LockMode::*|null $lockMode
      *
      * @return void
      *
@@ -786,7 +786,7 @@ class EntityManager implements EntityManagerInterface
     /**
      * {@inheritDoc}
      *
-     * @psalm-return never
+     * @phpstan-return never
      */
     public function copy($entity, $deep = false)
     {
@@ -983,7 +983,7 @@ class EntityManager implements EntityManagerInterface
      * @param mixed[]|Connection $connection   An array with the connection parameters or an existing Connection instance.
      * @param Configuration      $config       The Configuration instance to use.
      * @param EventManager|null  $eventManager The EventManager instance to use.
-     * @psalm-param array<string, mixed>|Connection $connection
+     * @phpstan-param array<string, mixed>|Connection $connection
      *
      * @return EntityManager The created EntityManager.
      *
@@ -1014,7 +1014,7 @@ class EntityManager implements EntityManagerInterface
      * @param mixed[]|Connection $connection   An array with the connection parameters or an existing Connection instance.
      * @param Configuration      $config       The Configuration instance to use.
      * @param EventManager|null  $eventManager The EventManager instance to use.
-     * @psalm-param array<string, mixed>|Connection $connection
+     * @phpstan-param array<string, mixed>|Connection $connection
      *
      * @return Connection
      *
@@ -1081,7 +1081,7 @@ class EntityManager implements EntityManagerInterface
     }
 
     /**
-     * @psalm-param LockMode::* $lockMode
+     * @phpstan-param LockMode::* $lockMode
      *
      * @throws OptimisticLockException
      * @throws TransactionRequiredException

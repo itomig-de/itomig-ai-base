@@ -17,10 +17,10 @@ class Literal extends Base
     /** @var string */
     protected $postSeparator = '';
 
-    /** @psalm-var list<string> */
+    /** @phpstan-var list<string> */
     protected $parts = [];
 
-    /** @psalm-return list<string> */
+    /** @phpstan-return list<string> */
     public function getParts()
     {
         return $this->parts;

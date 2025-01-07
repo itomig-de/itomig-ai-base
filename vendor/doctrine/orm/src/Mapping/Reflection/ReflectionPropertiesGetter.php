@@ -59,7 +59,7 @@ final class ReflectionPropertiesGetter
      * @param class-string $className
      *
      * @return ReflectionClass[]
-     * @psalm-return list<ReflectionClass<object>>
+     * @phpstan-return list<ReflectionClass<object>>
      */
     private function getHierarchyClasses(string $className): array
     {
@@ -83,7 +83,7 @@ final class ReflectionPropertiesGetter
 
     /**
      * @return ReflectionProperty[]
-     * @psalm-return array<string, ReflectionProperty>
+     * @phpstan-return array<string, ReflectionProperty>
      */
     private function getClassProperties(ReflectionClass $reflectionClass): array
     {

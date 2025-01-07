@@ -238,7 +238,7 @@ interface EntityManagerInterface extends ObjectManager
      * @param object                     $entity
      * @param int                        $lockMode
      * @param int|DateTimeInterface|null $lockVersion
-     * @psalm-param LockMode::* $lockMode
+     * @phpstan-param LockMode::* $lockMode
      *
      * @return void
      *
@@ -284,7 +284,7 @@ interface EntityManagerInterface extends ObjectManager
      * @deprecated
      *
      * @param string|int $hydrationMode
-     * @psalm-param string|AbstractQuery::HYDRATE_* $hydrationMode
+     * @phpstan-param string|AbstractQuery::HYDRATE_* $hydrationMode
      *
      * @return AbstractHydrator
      */
@@ -294,7 +294,7 @@ interface EntityManagerInterface extends ObjectManager
      * Create a new instance for the given hydration mode.
      *
      * @param string|int $hydrationMode
-     * @psalm-param string|AbstractQuery::HYDRATE_* $hydrationMode
+     * @phpstan-param string|AbstractQuery::HYDRATE_* $hydrationMode
      *
      * @return AbstractHydrator
      *
@@ -336,9 +336,9 @@ interface EntityManagerInterface extends ObjectManager
      * @param string|class-string<T> $className
      *
      * @return Mapping\ClassMetadata
-     * @psalm-return ($className is class-string<T> ? Mapping\ClassMetadata<T> : Mapping\ClassMetadata<object>)
+     * @phpstan-return ($className is class-string<T> ? Mapping\ClassMetadata<T> : Mapping\ClassMetadata<object>)
      *
-     * @psalm-template T of object
+     * @phpstan-template T of object
      */
     public function getClassMetadata($className);
 }

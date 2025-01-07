@@ -47,7 +47,7 @@ class ConvertDoctrine1Schema
      * to convert the Doctrine 1 schema files from.
      *
      * @param string[]|string $from
-     * @psalm-param list<string>|string $from
+     * @phpstan-param list<string>|string $from
      */
     public function __construct($from)
     {
@@ -66,7 +66,7 @@ class ConvertDoctrine1Schema
      * Doctrine 1 schema.
      *
      * @return ClassMetadataInfo[] An array of ClassMetadataInfo instances
-     * @psalm-return list<ClassMetadataInfo>
+     * @phpstan-return list<ClassMetadataInfo>
      */
     public function getMetadata()
     {

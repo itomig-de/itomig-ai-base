@@ -43,7 +43,7 @@ class ListenersInvoker
      * @param string        $eventName The entity lifecycle event.
      *
      * @return int Bitmask of subscribed event systems.
-     * @psalm-return int-mask-of<self::INVOKE_*>
+     * @phpstan-return int-mask-of<self::INVOKE_*>
      */
     public function getSubscribedSystems(ClassMetadata $metadata, $eventName)
     {
@@ -72,7 +72,7 @@ class ListenersInvoker
      * @param object        $entity    The Entity on which the event occurred.
      * @param EventArgs     $event     The Event args.
      * @param int           $invoke    Bitmask to invoke listeners.
-     * @psalm-param int-mask-of<self::INVOKE_*> $invoke
+     * @phpstan-param int-mask-of<self::INVOKE_*> $invoke
      *
      * @return void
      */

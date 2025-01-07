@@ -294,7 +294,7 @@ EOPHP;
      *
      * @deprecated ProxyFactory::createInitializer() is deprecated and will be removed in version 3.0 of doctrine/orm.
      *
-     * @psalm-return Closure(CommonProxy):void
+     * @phpstan-return Closure(CommonProxy):void
      *
      * @throws EntityNotFoundException
      */
@@ -392,7 +392,7 @@ EOPHP;
      *
      * @deprecated ProxyFactory::createCloner() is deprecated and will be removed in version 3.0 of doctrine/orm.
      *
-     * @psalm-return Closure(CommonProxy):void
+     * @phpstan-return Closure(CommonProxy):void
      *
      * @throws EntityNotFoundException
      */

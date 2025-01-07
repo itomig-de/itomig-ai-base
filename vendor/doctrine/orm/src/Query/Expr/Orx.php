@@ -22,10 +22,10 @@ class Orx extends Composite
         self::class,
     ];
 
-    /** @psalm-var list<string|Comparison|Func|Andx|self> */
+    /** @phpstan-var list<string|Comparison|Func|Andx|self> */
     protected $parts = [];
 
-    /** @psalm-return list<string|Comparison|Func|Andx|self> */
+    /** @phpstan-return list<string|Comparison|Func|Andx|self> */
     public function getParts()
     {
         return $this->parts;
