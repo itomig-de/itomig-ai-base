@@ -94,7 +94,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	}
 
 
-		/**
+	/**
 	 * Ask OpenAI a question, retrieve the answer and return it in text form
 	 *
 	 * @param string $sMessage
@@ -104,13 +104,15 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
+		\IssueLog::Info("OpenAIEngine: getCompletions() called");
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
 		$config->model = $this->model;
 		$chat = new OpenAIChat($config);
-
+        \IssueLog::Info("OpenAIEngine: new OpenAIChat(config) instantiated, about to setSystemMessage()..");
 		$chat->setSystemMessage ($sSystemPrompt);
+		\IssueLog::Info("OpenAIEngine: system Message set, next step: generateText()..");
 		$response = $chat->generateText($sMessage);
 		\IssueLog::Info(__METHOD__);
 		\IssueLog::Info($response);

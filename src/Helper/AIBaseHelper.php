@@ -96,12 +96,32 @@ class AIBaseHelper
 	}
 
 	/**
+	 * Cleans an AI-generated JSON string by removing the surrounding "```json\n" and "\n```" markers (if they are there).
+	 *
+	 * @param string $sRawString The raw string containing the JSON data with surrounding markers.
+	 * @return string The cleaned JSON string without the surrounding markers.
+	 */
+	public function cleanJSON(string $sRawString) 
+	{
+		$pattern = '/^```json\n(.*?)\n```$/s';
+	
+		$cleanedString = preg_replace($pattern, '$1', $sRawString);
+	
+		if ($cleanedString === null || $cleanedString === $sRawString) {
+			return $sRawString;
+		}
+	
+		return $cleanedString;
+	}
+
+	/**
 	 * Retrieve detailed information about a ticket.
 	 * @param $oTicket the Ticket object
 	 * @return array with attribute name => value
 	 */
 	public function getTicketData($oTicket)
 	{
+		\IssueLog::Info("getTicketData() called");
 		// TODO Ticket must have a public_log, which de facto makes this incompatible with anything but UserRequests
 		$sPublicLog = $oTicket->Get('public_log');
 		$sTitle = $oTicket->Get('title');
@@ -110,6 +130,7 @@ class AIBaseHelper
 		$sCaller = $oTicket->Get('caller_id_friendlyname');
 		$sOrg = $oTicket->Get('org_id_friendlyname');
 		$sStatus = $oTicket->Get('status');
+		\IssueLog::Info("getTicketData() has collected all attributes");
 
 		return [
 			'ref' => $sRef,
@@ -181,14 +202,16 @@ class AIBaseHelper
      * @return bool Returns true if the type was successfully set, false otherwise.
      */
     public function setType($oTicket) {
-      
+        \IssueLog::Info("setType() about to guess if Incident or Service Request", AIBaseHelper::MODULE_CODE);
 		$aType = $this->oAIEngine->determineType($oTicket);
 		if (($aType['type'] == "incident") || ($aType['type'] == "service_request")) {
 		  $oTicket->Set("request_type", $aType['type']);
+		  \IssueLog::Info("setType() thinks it's a...". $aType['type'], AIBaseHelper::MODULE_CODE);
 		  $sLabel = Dict::S('Ticket:ItomigAIAction:AISetTicketType:update');
 		  $sResult = sprintf($sLabel, $aType['type'], $aType['rationale']);
 		  return $sResult;
 		}
+		\IssueLog::Info("setType() failing", AIBaseHelper::MODULE_CODE);
 		return false;
 	  }
   

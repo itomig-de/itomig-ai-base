@@ -416,12 +416,15 @@ Please analyze the title and description of the incoming report and return the r
 	 * @return string The type of ticket ('incident', 'service_request') or 'failure'
 	 */
 	public function determineType($oTicket) {
+		\IssueLog::Info("determineType() called");
 		// Initialize AI helper and fetch ticket data
 		$oHelper = new AIBaseHelper();
 		$aTicket = $oHelper->getTicketData($oTicket);
 		$sPrompt = "Ticket:\n" . json_encode ($aTicket);
 		$jResult = $this->getCompletions($sPrompt, $this->aSystemPrompts['determineType']);
-		$aResult = json_decode ( $jResult , true );
+		\IssueLog::Info("determineType() raw result:" . $jResult);
+
+		$aResult = json_decode ( $oHelper->cleanJSON( $jResult ) , true );
 
 		return $aResult;
 
