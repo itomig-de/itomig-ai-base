@@ -46,7 +46,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$aGenericPrompts = GenericAIEngine::GetPrompts();
 		$aAdditionalPrompts = array(
-			[
+/*			[
 				'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
 				'prompt' => 'rephraseTicket',
 			],
@@ -54,6 +54,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 				'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeChildren',
 				'prompt' => 'summarizeChildren',
 			]
+*/
 			);
 		array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]);
 
@@ -70,7 +71,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
+		$aSystemPrompts = $configuration['system_prompts'] ?? null;
 		$apiKey = $configuration['api_key'] ?? [];
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}

@@ -57,6 +57,13 @@ class GenericAIEngine implements iAIEngineInterface
 			'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeTicket',
 			'prompt' => 'summarizeTicket'
 		],
+		[
+			'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
+			'prompt' => 'rephraseTicket'
+		],
+
+
+
 /*		[
 			'label' => 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket',
 			'prompt' => 'recategorizeTicket'
@@ -263,6 +270,9 @@ Please analyze the title and description of the incoming report and return the r
 
 			case 'summarizeTicket':
 				return $this->summarizeTicket($object);
+
+			case 'rephraseTicket':
+				return $this->rephraseTicket($object);
 
 			/*case 'recategorizeTicket':
 				return $this->recategorizeTicket($object);

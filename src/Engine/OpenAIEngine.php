@@ -70,7 +70,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
+	    $aSystemPrompts = $configuration['system_prompts'] ?? null;
 		$apiKey = $configuration['api_key'] ?? [];
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}

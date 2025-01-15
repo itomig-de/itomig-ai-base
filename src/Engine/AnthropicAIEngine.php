@@ -56,7 +56,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$model = $configuration['model'] ?? 'claude-3-sonnet-20240229';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
+		$aSystemPrompts = $configuration['system_prompts'] ?? null;
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
 	}
 
