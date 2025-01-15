@@ -27,6 +27,7 @@ Dict::Add('EN US', 'English', 'English', array(
 	'UI:AIResponse:GenericAI:Prompt:Translate' => 'Translate',
 	'UI:AIResponse:GenericAI:Prompt:improveText' => 'Improve text',
 	'UI:AIResponse:GenericAI:Prompt:summarizeTicket' => 'Summarize ticket',
+	'UI:AIResponse:GenericAI:Prompt:rephraseTicket' => 'Rephrase the ticket in other words for better understanding',
 	'UI:AIResponse:GenericAI:Prompt:recategorizeTicket' => 'Propose new or better categorization',
 
 	'GenericAIEngine:autoRecategorizeTicket:success' => 'Successfully updated categorization and request type. Rationale: %1$s',
