@@ -88,7 +88,7 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @var array $aSystemPrompts
 	 */
-	protected $aSystemPrompts;
+	public $aSystemPrompts;
 
 
 	/**

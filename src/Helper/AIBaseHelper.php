@@ -24,7 +24,6 @@
 
 namespace Itomig\iTop\Extension\AIBase\Helper;
 
-use Itomig\iTop\Extension\AIBase\Service;
 use Dict;
 
 class AIBaseHelper
@@ -53,9 +52,10 @@ class AIBaseHelper
 		$cleanedString = preg_replace($pattern, '$1', $sRawString);
 	
 		if ($cleanedString === null || $cleanedString === $sRawString) {
+			\IssueLog::Info("cleanJSON(): no modification necessary to string, returning: ".$sRawString, self::MODULE_CODE);
 			return $sRawString;
 		}
-	
+	    \IssueLog::Info("cleanJSON(): cleaned a string, result is: ".$cleanedString, self::MODULE_CODE);
 		return $cleanedString;
 	}
 
@@ -73,55 +73,6 @@ class AIBaseHelper
 	}
 
 
-	  /**
-	   * Autorecategorizes a ticket based on AI analysis.
-	   *
-	   * This method uses the AI engine to analyze a given ticket and attempts to reassign it to a more appropriate service subcategory.
-	   * If the new subcategory is technically valid, the ticket's related attributes are updated accordingly, including service ID,
-	   * service subcategory ID, request type, and private log. A success or failure message is set based on the analysis result,
-	   * and an optional session message can be displayed if requested.
-	   *
-	   * @param $oTicket The ticket to be reclassified.
-	   * @param bool $bDisplayMessage Whether to display a success message. Default is false.
-	   * @return string A success or failure message indicating the outcome of the recategorization attempt.
-	   */
-	  public function autoRecategorizeTicket($oTicket, $bDisplayMessage = false) {
-
-		  $aResult = $this->oAIEngine->autoRecategorizeTicket($oTicket);
-
-		  // get Service Catalogue for the Ticket Org and only items matching the AI-guessed Request Type
-		  $aSerCat = $this->getServiceCatalogue($oTicket->Get('org_id'), $aResult['type'], true );
-
-
-		  // check if Service Subcategory is technically valid for the Ticket
-		  // TODO maybe replace by generic AIHelper function
-		  $iSubCatID = $aResult['subcategory']['ID'];
-		  foreach ($aSerCat as $aSSC) {
-			  if ($aSSC['ID'] == $iSubCatID) {
-				  $aResultData = [
-					  'service_id' => $aSSC['Service ID'],
-					  'servicesubcategory_id' => $iSubCatID,
-					  'type' => $aResult['Type'],
-					  'rationale' => $aResult['rationale'],
-				  ];
-				  $oTicket->Set('service_id',$aResultData['service_id']);
-				  $oTicket->Set('servicesubcategory_id',$aResultData['servicesubcategory_id']);
-				  $oTicket->Set('request_type',$aResultData['type']);
-				  $oTicket->Set('private_log', "I made AI recategorize this Ticket. Rationale: ".$aResultData['rationale']);
-
-				  $sLabel = Dict::S('GenericAIEngine:autoRecategorizeTicket:success');
-				  $sResult = sprintf($sLabel, $aResultData['rationale']);
-				  return $sResult;
-
-			  }
-		  }
-		  // Failure - do nothing with the ticket, return a message.
-		  $sLabel = Dict::S('GenericAIEngine:autoRecategorizeTicket:failure');
-		  $sResult = sprintf($sLabel, $iSubCatID);
-		  return $sResult;
-
-
-	  }
 
 
 }

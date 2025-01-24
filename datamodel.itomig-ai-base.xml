@@ -3,54 +3,6 @@
   <constants>
   </constants>
   <classes>
-    <class id="Ticket" _delta="merge">
-      <methods>
-        <method id="AISetTicketType" _delta="define">
-          <comment>/**
-            *
-            * 
-            */
-          </comment>
-          <static>false</static>
-          <access>public</access>
-          <code><![CDATA[	public function AISetTicketType()
-    {
-      CMDBObject::SetTrackOrigin(\Combodo\iTop\Core\CMDBChange\CMDBChangeOrigin::CUSTOM_EXTENSION);
-      $oAITicketHelper = new \Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper();
-      $sResult = $oAITicketHelper->setType($this);
-
-      $this->SetSessionMessageFromInstance("update",$sResult, "info", 0);
-      $this->DBUpdate();
-
-      
-	  }]]></code>
-          <arguments/>
-        </method>
-
-        <method id="AIAutoRecategorizeTicket" _delta="define">
-          <comment>/**
-            *
-            * 
-            */
-          </comment>
-          <static>false</static>
-          <access>public</access>
-          <code><![CDATA[	public function AIAutoRecategorizeTicket()
-    {
-      CMDBObject::SetTrackOrigin(\Combodo\iTop\Core\CMDBChange\CMDBChangeOrigin::CUSTOM_EXTENSION);
-      $oAITicketHelper = new \Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper();
-      $sResult = $oAITicketHelper->autoRecategorizeTicket($this, true);
-      $this->SetSessionMessageFromInstance("update",$sResult, "info", 0);
-			$this->DBUpdate();
-
-	  }]]></code>
-          <arguments/>
-        </method>       
-
-      </methods>
-    </class>
-
-
   </classes>
   <menus>
   </menus>
