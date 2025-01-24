@@ -73,6 +73,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$aSystemPrompts = $configuration['system_prompts'] ?? null;
 		$apiKey = $configuration['api_key'] ?? [];
+		if (empty($aSystemPrompts)) {
+            return new self($url, $apiKey, $model, $aLanguages);
+        }
+        
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}
 
@@ -103,7 +107,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
 		$config = new OllamaConfig();
 		//$config->apiKey = $this->apiKey;

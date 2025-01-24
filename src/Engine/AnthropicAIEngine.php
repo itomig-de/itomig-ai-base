@@ -57,7 +57,12 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
 		$aSystemPrompts = $configuration['system_prompts'] ?? null;
-		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
+        
+        if (empty($aSystemPrompts)) {
+            return new self($url, $apiKey, $model, $aLanguages);
+        }
+        
+        return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}
 
     /**
@@ -94,7 +99,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	protected function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
 		$config = new AnthropicConfig($this->model, 4096, array() , $this->apiKey);
 		$chat = new AnthropicChat($config);
