@@ -1300,7 +1300,6 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\iAIEngineInterface' => __DIR__ . '/../..' . '/src/Engine/iAIEngineInterface.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => __DIR__ . '/../..' . '/src/Exception/AIResponseException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => __DIR__ . '/../..' . '/src/Helper/AIBaseHelper.php',
-        'Itomig\\iTop\\Extension\\AIBase\\Helper\\AITicketHelper' => __DIR__ . '/../..' . '/src/Helper/AITicketHelper.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
         'LLPhant\\Audio\\OpenAIAudio' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',
