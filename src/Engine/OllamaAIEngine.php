@@ -31,6 +31,7 @@ use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
 
+
 	/**
 	 * @inheritDoc
 	 */
@@ -99,8 +100,8 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	}
 
 
-		/**
-	 * Ask OpenAI a question, retrieve the answer and return it in text form
+	/**
+	 * Ask Ollama a question, retrieve the answer and return it in text form
 	 *
 	 * @param string $sMessage
 	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
@@ -113,6 +114,13 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		//$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
 		$config->model = $this->model;
+
+		/* 
+		set temperature to 0.4 (conservative answers) and the context window to 16384 tokens.
+		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and 
+		limited VRAM (e.g. 12 GB) 
+		TODO make these configurable in a future version (?) 
+		*/ 
 		$config->modelOptions = array (
 			'num_ctx' => '16384',
 			'temperature' => '0.4',
@@ -121,11 +129,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 
 		$chat->setSystemMessage ($sSystemPrompt);
 		$response = $chat->generateText($sMessage);
-		\IssueLog::Info(__METHOD__);
-		\IssueLog::Info($response);
+		\IssueLog::Debug(__METHOD__);
+		\IssueLog::Debug($response);
 
-		// TODO error handling in LLPhant - ?
-		// TODO num_ctx parameter...?
+		// TODO error handling in LLPhant: Catch LLPhant\Exception ?
 		return $response;
 	}
 
