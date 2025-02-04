@@ -113,6 +113,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		//$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
 		$config->model = $this->model;
+		$config->modelOptions = array (
+			'num_ctx' => '16384',
+			'temperature' => '0.4',
+		);
 		$chat = new OllamaChat($config);
 
 		$chat->setSystemMessage ($sSystemPrompt);
