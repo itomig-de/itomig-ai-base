@@ -110,63 +110,23 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-		\IssueLog::Info("OpenAIEngine: getCompletions() called");
+		\IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
 		$config->model = $this->model;
 		$chat = new OpenAIChat($config);
-        \IssueLog::Info("OpenAIEngine: new OpenAIChat(config) instantiated, about to setSystemMessage()..");
-		$chat->setSystemMessage ($sSystemPrompt);
-		\IssueLog::Info("OpenAIEngine: system Message set, next step: generateText()..");
+        $chat->setSystemMessage ($sSystemPrompt);
+		
+		\IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
 		$response = $chat->generateText($sMessage);
-		\IssueLog::Info(__METHOD__);
-		\IssueLog::Info($response);
+		\IssueLog::Debug(__METHOD__);
+		\IssueLog::Debug($response);
 		return $response;
 
-		// TODO error handling in LLPhant - ?
-
-		//// ------------------
+		// TODO error handling in LLPhant: Catch LLPhant\Exception ?
 	}
 
-	/**
-	 * send post request via curl to OpenAI
-	 *
-	 * @param array $postData
-	 * @return mixed
-	 * @throws AIResponseException
-	 */
-	protected function sendRequest($postData)
-	{
-		$curl = curl_init();
 
-		curl_setopt_array($curl, array(
-			CURLOPT_URL => $this->url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => 'POST',
-			CURLOPT_POSTFIELDS => json_encode($postData),
-			CURLOPT_HTTPHEADER => array(
-				'Content-Type: application/json',
-				'Accept: application/json',
-				'Authorization: Bearer '.$this->apiKey,
-			),
-		));
-
-		$response = curl_exec($curl);
-		\IssueLog::Info(json_encode($postData));
-		\IssueLog::Info(__METHOD__);
-		\IssueLog::Info($response);
-		$iErr = curl_errno($curl);
-		$sErrMsg = curl_error($curl);
-		if ($iErr !== 0) {
-			throw new AIResponseException("Problem opening URL: $this->url, $sErrMsg");
-		}
-		return json_decode($response,false);
-	}
 
 }
