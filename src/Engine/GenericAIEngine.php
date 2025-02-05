@@ -189,7 +189,16 @@ Here is the list of child tickets in JSON format, which you should now analyze a
 
 		// if only _some_ system prompts are configured, use defaults for the others. 
 		$this->aSystemPrompts = array_merge(self::$aDefaultSystemPrompts, $aSystemPrompts);
-		//\IssueLog::Debug("this->aSystemPrompts[summarizeTicket] =". $this->aSystemPrompts['summarizeTicket'], AIBaseHelper::MODULE_CODE);
+	}
+
+	/**
+	 * Add a custom system prompt to the existing set of prompts.
+	 *
+	 * @param string $sPromptName The name of the new system prompt.
+	 * @param string $sPrompt The content of the new system prompt.
+	 */
+	public function addSystemPrompt($sPromptName, $sPrompt) {
+		$this->aSystemPrompts = array_merge($this->aSystemPrompts, array ($sPromptName => $sPrompt));
 	}
 
 	/**
