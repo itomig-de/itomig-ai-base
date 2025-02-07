@@ -52,10 +52,10 @@ class AIBaseHelper
 		$cleanedString = preg_replace($pattern, '$1', $sRawString);
 	
 		if ($cleanedString === null || $cleanedString === $sRawString) {
-			\IssueLog::Info("cleanJSON(): no modification necessary to string, returning: ".$sRawString, self::MODULE_CODE);
+			\IssueLog::Debug("cleanJSON(): no modification necessary to string, returning: ".$sRawString, self::MODULE_CODE);
 			return $sRawString;
 		}
-	    \IssueLog::Info("cleanJSON(): cleaned a string, result is: ".$cleanedString, self::MODULE_CODE);
+	    \IssueLog::Debug("cleanJSON(): cleaned a string, result is: ".$cleanedString, self::MODULE_CODE);
 		return $cleanedString;
 	}
 
@@ -67,6 +67,7 @@ class AIBaseHelper
 	 * @param $sValue the value that AI provided, to be determined if valid or not
 	 */
 	public function isValidResult($aValidResults,$sKey,$sValue) {
+		\IssueLog::Debug("isValidResult(): checking if ".$sKey." => ".$sValue." are in valid results range..", self::MODULE_CODE);
 		if ($aValidResults[$sKey] == $sValue) return true;
 		return false;
 
