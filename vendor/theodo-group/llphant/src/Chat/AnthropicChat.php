@@ -14,12 +14,16 @@ use LLPhant\Exception\HttpException;
 use LLPhant\Utility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class AnthropicChat implements ChatInterface
 {
     private const DEFAULT_URL = 'https://api.anthropic.com';
 
     private const CURRENT_VERSION = '2023-06-01';
+
+    private readonly LoggerInterface $logger;
 
     private ?Message $systemMessage = null;
 
@@ -41,11 +45,12 @@ class AnthropicChat implements ChatInterface
 
     use AnthropicTotalTokensTrait;
 
-    public function __construct(AnthropicConfig $config = new AnthropicConfig())
+    public function __construct(AnthropicConfig $config = new AnthropicConfig(), ?LoggerInterface $logger = null)
     {
         $this->modelOptions = $config->modelOptions;
         $this->model = $config->model;
         $this->maxTokens = $config->maxTokens;
+        $this->logger = $logger ?: new NullLogger();
 
         if ($config->client instanceof Client) {
             $this->client = $config->client;
@@ -109,12 +114,15 @@ class AnthropicChat implements ChatInterface
         return $this->generateChatStream([Message::user($prompt)]);
     }
 
-    public function generateChatOrReturnFunctionCalled(array $messages): string|FunctionInfo
+    /**
+     * @return string|FunctionInfo[]
+     */
+    public function generateChatOrReturnFunctionCalled(array $messages): string|array
     {
         $answer = $this->generateChat($messages);
 
         if ($this->lastFunctionCalled instanceof FunctionInfo) {
-            return $this->lastFunctionCalled;
+            return [$this->lastFunctionCalled];
         }
 
         return $answer;
@@ -129,7 +137,10 @@ class AnthropicChat implements ChatInterface
         return $this->decodeStreamOfChat($response);
     }
 
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|FunctionInfo
+    /**
+     * @return string|FunctionInfo[]
+     */
+    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
     {
         return $this->generateChatOrReturnFunctionCalled([Message::user($prompt)]);
     }
@@ -192,6 +203,11 @@ class AnthropicChat implements ChatInterface
      */
     protected function sendRequest(array $json, bool $stream): ResponseInterface
     {
+        $this->logger->debug('Calling POST v1/messages', [
+            'chat' => self::class,
+            'params' => $json,
+        ]);
+
         $response = $this->client->request('POST', 'v1/messages', ['stream' => $stream, 'json' => $json]);
         $status = $response->getStatusCode();
         if ($status < 200 || $status >= 300) {

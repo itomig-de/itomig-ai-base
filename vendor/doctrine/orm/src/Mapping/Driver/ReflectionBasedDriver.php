@@ -32,7 +32,12 @@ trait ReflectionBasedDriver
                 || $metadata->isInheritedEmbeddedClass($property->name);
         }
 
+        /** @var class-string $declaringClass */
         $declaringClass = $property->class;
+
+        if ($this->isTransient($declaringClass)) {
+            return isset($metadata->fieldMappings[$property->name]);
+        }
 
         if (
             isset($metadata->fieldMappings[$property->name]['declared'])

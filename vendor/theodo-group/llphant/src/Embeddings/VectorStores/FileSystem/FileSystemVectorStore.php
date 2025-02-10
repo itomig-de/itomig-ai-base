@@ -7,6 +7,7 @@ use LLPhant\Embeddings\Distances\Distance;
 use LLPhant\Embeddings\Distances\EuclideanDistanceL2;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentStore\DocumentStore;
+use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;
 
 class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
@@ -25,16 +26,27 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
 
     public function addDocument(Document $document): void
     {
-        $documentsPool = $this->readDocumentsFromFile();
-        $documentsPool[] = $document;
-        $this->saveDocumentsToFile($documentsPool);
+        $jsonString = \json_encode($this->documentToArray($document), JSON_THROW_ON_ERROR);
+        $line = \base64_encode($jsonString);
+
+        // Open file in append mode
+        $file = \fopen($this->filePath, 'a');
+
+        if (! $file) {
+            throw new Exception('Unable to open file for writing.');
+        }
+
+        // Write JSON string to the end of the file
+        \fwrite($file, $line."\n");
+
+        fclose($file);
     }
 
     public function addDocuments(array $documents): void
     {
-        $documentsPool = $this->readDocumentsFromFile();
-        $documentsPool = array_merge($documentsPool, $documents);
-        $this->saveDocumentsToFile($documentsPool);
+        foreach ($documents as $document) {
+            $this->addDocument($document);
+        }
     }
 
     /**
@@ -44,43 +56,123 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        $distances = [];
-        $documentsPool = $this->readDocumentsFromFile();
+        $file = fopen($this->filePath, 'r');
+        if (! $file) {
+            throw new Exception('Unable to open file for reading.');
+        }
 
-        foreach ($documentsPool as $index => $document) {
+        $distanceList = new DistanceList($k);
+
+        foreach ($this->yieldJsonObjectsFromFile($file) as $document) {
             if ($document->embedding === null) {
                 throw new Exception("Document with the following content has no embedding: {$document->content}");
             }
             $dist = $this->distance->measure($embedding, $document->embedding);
-            $distances[$index] = $dist;
+            $distanceList->addDistance($dist, $document);
         }
 
-        asort($distances); // Sort by distance (ascending).
+        \fclose($file);
 
-        $topKIndices = array_slice(array_keys($distances), 0, $k, true);
+        return $distanceList->getDocuments();
+    }
 
-        $results = [];
-        foreach ($topKIndices as $index) {
-            $results[] = $documentsPool[$index];
+    /**
+     * @param  resource  $file
+     * @return \Generator<Document>
+     */
+    private function yieldJsonObjectsFromFile(mixed $file): \Generator
+    {
+        while (($line = fgets($file)) !== false) {
+            $trimmedLine = trim($line);
+            if (! empty($trimmedLine)) {
+                $decodedObject = DocumentUtils::createDocumentFromArray(\json_decode(\base64_decode($trimmedLine), true));
+                if (\json_last_error() === JSON_ERROR_NONE) {
+                    yield $decodedObject;
+                } else {
+                    throw new \RuntimeException("Warning: Invalid JSON on line: $trimmedLine");
+                }
+            }
+        }
+    }
+
+    public function isEmpty(): bool
+    {
+        $file = fopen($this->filePath, 'r');
+        if (! $file) {
+            throw new Exception('Unable to open file for reading.');
         }
 
-        return $results;
+        $result = ! $this->yieldJsonObjectsFromFile($file)->current() instanceof \LLPhant\Embeddings\Document;
+
+        \fclose($file);
+
+        return $result;
     }
 
     public function getNumberOfDocuments(): int
     {
-        $documentsPool = $this->readDocumentsFromFile();
+        $file = fopen($this->filePath, 'r');
+        if (! $file) {
+            throw new Exception('Unable to open file for reading.');
+        }
 
-        return count($documentsPool);
+        $result = count(iterator_to_array($this->yieldJsonObjectsFromFile($file), false));
+
+        \fclose($file);
+
+        return $result;
     }
 
     /**
-     * @param  Document[]  $documents
+     * @return Document[]
      */
-    private function saveDocumentsToFile(array $documents): bool
+    private function readDocumentsFromFile(): array
     {
-        // Convert each document object to an associative array
-        $data = array_map(fn (Document $document): array => [
+        $file = fopen($this->filePath, 'r');
+        if (! $file) {
+            throw new Exception('Unable to open file for reading.');
+        }
+
+        $result = \iterator_to_array($this->yieldJsonObjectsFromFile($file), false);
+
+        \fclose($file);
+
+        return $result;
+    }
+
+    public function fetchDocumentsByChunkRange(string $sourceType, string $sourceName, int $leftIndex, int $rightIndex): iterable
+    {
+        // This is a naive implementation, just to create an example of a DocumentStore
+        $result = [];
+
+        $documentsPool = $this->readDocumentsFromFile();
+
+        foreach ($documentsPool as $document) {
+            if ($document->sourceType === $sourceType && $document->sourceName === $sourceName && $document->chunkNumber >= $leftIndex && $document->chunkNumber <= $rightIndex) {
+                $result[$document->chunkNumber] = $document;
+            }
+        }
+
+        \ksort($result);
+
+        return $result;
+    }
+
+    public function deleteStore(): bool
+    {
+        if (! is_readable($this->filePath)) {
+            return false;
+        }
+
+        return \unlink($this->filePath);
+    }
+
+    /**
+     * @return array{content: string, formattedContent: string|null, embedding: float[]|null, sourceType: string, sourceName: string, chunkNumber: int, hash: string}
+     */
+    private function documentToArray(Document $document): array
+    {
+        return [
             'content' => $document->content,
             'formattedContent' => $document->formattedContent,
             'embedding' => $document->embedding,
@@ -88,19 +180,20 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
             'sourceName' => $document->sourceName,
             'chunkNumber' => $document->chunkNumber,
             'hash' => $document->hash,
-        ], $documents);
+        ];
+    }
 
-        // Encode the array of associative arrays as JSON
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
-
-        // Write JSON data to the specified file
-        return file_put_contents($this->filePath, $jsonData) !== false;
+    public function convertFromOldFileFormat(string $pathOfOldStore): void
+    {
+        $oldStore = new FileSystemVectorStore($pathOfOldStore);
+        $documents = $oldStore->readDocumentsFromOldFileFormat();
+        $this->addDocuments($documents);
     }
 
     /**
      * @return Document[]
      */
-    private function readDocumentsFromFile(): array
+    private function readDocumentsFromOldFileFormat(): array
     {
         // Check if file exists and we can open it
         if (! is_readable($this->filePath)) {
@@ -132,32 +225,5 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
 
             return $document;
         }, $data);
-    }
-
-    public function fetchDocumentsByChunkRange(string $sourceType, string $sourceName, int $leftIndex, int $rightIndex): iterable
-    {
-        // This is a naive implementation, just to create an example of a DocumentStore
-        $result = [];
-
-        $documentsPool = $this->readDocumentsFromFile();
-
-        foreach ($documentsPool as $document) {
-            if ($document->sourceType === $sourceType && $document->sourceName === $sourceName && $document->chunkNumber >= $leftIndex && $document->chunkNumber <= $rightIndex) {
-                $result[$document->chunkNumber] = $document;
-            }
-        }
-
-        \ksort($result);
-
-        return $result;
-    }
-
-    public function deleteStore(): bool
-    {
-        if (! is_readable($this->filePath)) {
-            return false;
-        }
-
-        return \unlink($this->filePath);
     }
 }

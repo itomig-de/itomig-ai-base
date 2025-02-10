@@ -18,12 +18,16 @@ use OpenAI\Responses\Chat\CreateResponseToolCall;
 use OpenAI\Responses\Chat\CreateStreamedResponseToolCall;
 use OpenAI\Responses\StreamResponse;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 use function getenv;
 
 class OpenAIChat implements ChatInterface
 {
     private readonly ClientContract $client;
+
+    private readonly LoggerInterface $logger;
 
     public string $model;
 
@@ -46,7 +50,7 @@ class OpenAIChat implements ChatInterface
 
     public ?FunctionInfo $requiredFunction = null;
 
-    public function __construct(?OpenAIConfig $config = null)
+    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
     {
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
@@ -64,6 +68,7 @@ class OpenAIChat implements ChatInterface
         }
         $this->model = $config->model ?? OpenAIChatModel::Gpt4Turbo->value;
         $this->modelOptions = $config->modelOptions ?? [];
+        $this->logger = $logger ?: new NullLogger();
     }
 
     public function generateText(string $prompt): string
@@ -85,18 +90,19 @@ class OpenAIChat implements ChatInterface
         return $this->totalTokens;
     }
 
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|FunctionInfo
+    /**
+     * @return string|FunctionInfo[]
+     */
+    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
     {
         $this->functionsCalled = [];
         $this->lastFunctionCalled = null;
 
         $answer = $this->generate($prompt);
-        $this->handleTools($answer);
+        $tools = $this->getToolsToCall($answer);
 
-        if ($this->functionsCalled) {
-            $lastKey = array_key_last($this->functionsCalled);
-
-            return $this->functionsCalled[$lastKey]->definition;
+        if ($tools !== []) {
+            return $tools;
         }
 
         return $this->responseToString($answer);
@@ -135,15 +141,21 @@ class OpenAIChat implements ChatInterface
         return $this->responseToString($answer);
     }
 
-    public function generateChatOrReturnFunctionCalled(array $messages): string|FunctionInfo
+    /**
+     * This function exists to let the developer handle the tools calls on their own.
+     * It should not call the tools automatically.
+     *
+     * @return string|FunctionInfo[]
+     *
+     * @throws \JsonException
+     */
+    public function generateChatOrReturnFunctionCalled(array $messages): string|array
     {
         $answer = $this->generateResponseFromMessages($messages);
-        $this->handleTools($answer);
+        $tools = $this->getToolsToCall($answer);
 
-        if ($this->functionsCalled) {
-            $lastKey = array_key_last($this->functionsCalled);
-
-            return $this->functionsCalled[$lastKey]->definition;
+        if ($tools !== []) {
+            return $tools;
         }
 
         return $this->responseToString($answer);
@@ -229,6 +241,12 @@ class OpenAIChat implements ChatInterface
     private function createStreamedResponse(array $messages): StreamInterface
     {
         $openAiArgs = $this->getOpenAiArgs($messages);
+
+        $this->logger->debug('Calling Chat::createStreamed', [
+            'chat' => self::class,
+            'args' => $openAiArgs,
+        ]);
+
         $stream = $this->client->chat()->createStreamed($openAiArgs);
         $generator = function (StreamResponse $stream) {
             foreach ($stream as $partialResponse) {
@@ -343,7 +361,20 @@ class OpenAIChat implements ChatInterface
     private function generateResponseFromMessages(array $messages): CreateResponse
     {
         $openAiArgs = $this->getOpenAiArgs($messages);
+
+        $this->logger->debug('Calling Chat::create', [
+            'chat' => self::class,
+            'args' => $openAiArgs,
+        ]);
+
         $answer = $this->client->chat()->create($openAiArgs);
+
+        $this->logger->debug('Received Chat::create answer', [
+            'chat' => self::class,
+            'args' => $openAiArgs,
+            'answer' => $answer,
+        ]);
+
         $this->lastResponse = $answer;
         $this->totalTokens += $answer->usage->totalTokens ?? 0;
 
@@ -353,5 +384,26 @@ class OpenAIChat implements ChatInterface
     private function responseToString(CreateResponse $answer): string
     {
         return $answer->choices[0]->message->content ?? '';
+    }
+
+    /**
+     * @return array<FunctionInfo>
+     *
+     * @throws Exception
+     */
+    private function getToolsToCall(CreateResponse $answer): array
+    {
+        $functionInfos = [];
+        /** @var CreateResponseToolCall $toolCall */
+        foreach ($answer->choices[0]->message->toolCalls as $toolCall) {
+            $functionName = $toolCall->function->name;
+            $arguments = $toolCall->function->arguments;
+            $functionInfo = $this->getFunctionInfoFromName($functionName, $toolCall->id);
+            $functionInfo->jsonArgs = $arguments;
+
+            $functionInfos[] = $functionInfo;
+        }
+
+        return $functionInfos;
     }
 }
