@@ -69,15 +69,15 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public static function GetEngine($configuration): OpenAIEngine
 	{
-		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
-		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
+		$url = $configuration['url'] ?? '';
+		$model = $configuration['model'] ?? '';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 	    $aSystemPrompts = $configuration['system_prompts'] ?? null;
 		$apiKey = $configuration['api_key'] ?? [];
 		if (empty($aSystemPrompts)) {
             return new self($url, $apiKey, $model, $aLanguages);
         }
-        
+
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}
 
@@ -113,11 +113,15 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		\IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
-		$config->url = $this->url;
-		$config->model = $this->model;
+		if(!empty($this->url)) {
+			$config->url = $this->url;
+		}
+		if(!empty($this->model)) {
+			$config->model = $this->model;
+		}
 		$chat = new OpenAIChat($config);
         $chat->setSystemMessage ($sSystemPrompt);
-		
+
 		\IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
 		$response = $chat->generateText($sMessage);
 		\IssueLog::Debug(__METHOD__);
