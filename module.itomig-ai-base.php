@@ -25,6 +25,8 @@ SetupWebPage::AddModule(
 		//
 		'datamodel' => array(
 			'vendor/autoload.php',
+			'src/Model/AsyncAITask.php',
+			'src/Model/TriggerOnAIResponse.php',
 			'model.itomig-ai-base.php'
 		),
 		'webservice' => array(
