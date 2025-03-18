@@ -99,14 +99,14 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		switch ($prompt)
 		{
-			case 'translate':
+			/* case 'translate':
 				return $this->translate($text);
 
 			case 'improveText':
-				return $this->improveText($text);
+				return $this->improveText($text); */
 
 			default:
-				return $this->getCompletions($text);
+			return parent::PerformPrompt($prompt, $text, $object);
 		}
 	}
 

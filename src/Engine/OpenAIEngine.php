@@ -57,7 +57,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 				'prompt' => 'summarizeChildren',
 			]
 			);
-		array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]);
+		 // array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]); // TODO 
 
 		// TODO add more prompts once they are implemented :)
 		return $aGenericPrompts;
@@ -90,10 +90,11 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		switch ($prompt)
 		{
-			case 'rephraseTicket':
+		/* case 'rephraseTicket':
 				return $this->rephraseTicket($object);
 			case 'summarizeChildren':
 				return $this->summarizeChildren($object);
+		*/
 			default:
 			    return parent::PerformPrompt($prompt, $text, $object);
 		}
