@@ -1,6 +1,6 @@
 <?php
 /*
- * @copyright Copyright (C) 2024 ITOMIG GmbH
+ * @copyright Copyright (C) 2024,2025 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
  * @author David Gümbel <david.guembel@itomig.de>
@@ -53,7 +53,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	public static function GetEngine($configuration): AnthropicAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
-		$model = $configuration['model'] ?? 'claude-3-sonnet-20240229';
+		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
 		$aSystemPrompts = $configuration['system_prompts'] ?? null;
@@ -110,7 +110,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
 
-		// TODO error handling in LLPhant: Catch LLPhant\Exception ?
+		// TODO error handling in LLPhant: Catch LLPhantException ( #2) ?
 		return $response;
 	}
 }

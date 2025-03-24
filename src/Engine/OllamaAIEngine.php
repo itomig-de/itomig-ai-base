@@ -1,6 +1,6 @@
 <?php
 /*
- * @copyright Copyright (C) 2024 ITOMIG GmbH
+ * @copyright Copyright (C) 2024,2025 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
  * @author David Gümbel <david.guembel@itomig.de>
@@ -132,7 +132,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
 
-		// TODO error handling in LLPhant: Catch LLPhant\Exception ?
+		// TODO error handling in LLPhant ( #2) ?
 		return $response;
 	}
 

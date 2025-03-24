@@ -1,6 +1,6 @@
 <?php
 /*
- * @copyright Copyright (C) 2024 ITOMIG GmbH
+ * @copyright Copyright (C) 2024, 2025 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
  * @author David Gümbel <david.guembel@itomig.de>
@@ -53,28 +53,6 @@ class GenericAIEngine implements iAIEngineInterface
 			'label' => 'UI:AIResponse:GenericAI:Prompt:improveText',
 			'prompt' => 'improveText'
 		],
-		/*
-		[
-			'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeTicket',
-			'prompt' => 'summarizeTicket'
-		],
-		[
-			'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
-			'prompt' => 'rephraseTicket'
-		],
-		[
-			'label' => 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket',
-			'prompt' => 'recategorizeTicket'
-		],
-		[
-			'label' => 'UI:AIResponse:GenericAI:Prompt:autoRecategorizeTicket',
-			'prompt' => 'autoRecategorizeTicket'
-		],
-		[
-			'label' => 'UI:AIResponse:GenericAI:Prompt:determineType',
-			'prompt' => 'determineType'
-		]
-			*/
 	];
 
 	/**
@@ -91,7 +69,7 @@ class GenericAIEngine implements iAIEngineInterface
 	public static function GetEngine($configuration): GenericAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
-		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
+		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$aSystemPrompts = $configuration['system_prompts'] ?? [];
 		$apiKey = $configuration['api_key'] ?? [];
@@ -292,7 +270,7 @@ Here is the list of child tickets in JSON format, which you should now analyze a
 			],
 			'stream' => false,
 			'temperature' => 0.4,
-			//'num_ctx' => 16384,
+		
 		]);
 		//TODO Check result
 
