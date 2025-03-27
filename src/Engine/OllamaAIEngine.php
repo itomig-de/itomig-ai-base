@@ -30,8 +30,6 @@ use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
-
-
 	/**
 	 * @inheritDoc
 	 */
@@ -43,62 +41,16 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetPrompts(): array
-	{
-		$aGenericPrompts = GenericAIEngine::GetPrompts();
-		$aAdditionalPrompts = array(
-/*			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
-				'prompt' => 'rephraseTicket',
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeChildren',
-				'prompt' => 'summarizeChildren',
-			]
-*/
-			);
-		array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]);
-
-		// TODO add more prompts once they are implemented :)
-		return $aGenericPrompts;
-	}
-
-
-	/**
-	 * @inheritDoc
-	 */
 	public static function GetEngine($configuration): OllamaAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
-		$aSystemPrompts = $configuration['system_prompts'] ?? null;
-		$apiKey = $configuration['api_key'] ?? [];
-		if (empty($aSystemPrompts)) {
-            return new self($url, $apiKey, $model, $aLanguages);
-        }
-        
+		$apiKey = $configuration['api_key'] ?? '';
+		$aSystemPrompts = $configuration['system_prompts'] ?? [];
+
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}
-
-
-	/**
-	 * @inheritDoc
-	 * @throws AIResponseException
-	 */
-	public function PerformPrompt($prompt, $text, $object): string
-	{
-		switch ($prompt)
-		{
-			case 'rephraseTicket':
-				return $this->rephraseTicket($object);
-			case 'summarizeChildren':
-				return $this->summarizeChildren($object);
-			default:
-			    return parent::PerformPrompt($prompt, $text, $object);
-		}
-	}
-
 
 	/**
 	 * Ask Ollama a question, retrieve the answer and return it in text form
@@ -115,12 +67,12 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$config->url = $this->url;
 		$config->model = $this->model;
 
-		/* 
+		/*
 		set temperature to 0.4 (conservative answers) and the context window to 16384 tokens.
-		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and 
-		limited VRAM (e.g. 12 GB) 
-		TODO make these configurable in a future version (?) 
-		*/ 
+		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and
+		limited VRAM (e.g. 12 GB)
+		TODO make these configurable in a future version (?)
+		*/
 		$config->modelOptions = array (
 			'num_ctx' => '16384',
 			'temperature' => '0.4',

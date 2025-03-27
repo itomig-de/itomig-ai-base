@@ -23,12 +23,10 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use IssueLog;
 use LLPhant\OpenAIConfig;
-use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use LLPhant\Chat\OpenAIChat;
-
-use Combodo\iTop\IssueLog;
 
 class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
@@ -44,60 +42,14 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetPrompts(): array
-	{
-		$aGenericPrompts = GenericAIEngine::GetPrompts();
-		$aAdditionalPrompts = array(
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:rephraseTicket',
-				'prompt' => 'rephraseTicket',
-			],
-			[
-				'label' => 'UI:AIResponse:GenericAI:Prompt:summarizeChildren',
-				'prompt' => 'summarizeChildren',
-			]
-			);
-		 // array_push($aGenericPrompts,$aAdditionalPrompts[0],$aAdditionalPrompts[1]); // TODO 
-
-		// TODO add more prompts once they are implemented :)
-		return $aGenericPrompts;
-	}
-
-
-	/**
-	 * @inheritDoc
-	 */
 	public static function GetEngine($configuration): OpenAIEngine
 	{
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
-	    $aSystemPrompts = $configuration['system_prompts'] ?? null;
-		$apiKey = $configuration['api_key'] ?? [];
-		if (empty($aSystemPrompts)) {
-            return new self($url, $apiKey, $model, $aLanguages);
-        }
-
+		$apiKey = $configuration['api_key'] ?? '';
+		$aSystemPrompts = $configuration['system_prompts'] ?? [];
 		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
-	}
-
-
-	/**
-	 * @inheritDoc
-	 * @throws AIResponseException
-	 */
-	public function PerformPrompt($prompt, $text, $object): string
-	{
-		switch ($prompt)
-		{
-		/* case 'rephraseTicket':
-				return $this->rephraseTicket($object);
-			case 'summarizeChildren':
-				return $this->summarizeChildren($object);
-		*/
-			default:
-			    return parent::PerformPrompt($prompt, $text, $object);
-		}
 	}
 
 
@@ -111,7 +63,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
 
-		\IssueLog::Debug("OpenAIEngine: getCompletions() called");
+		IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
 		if(!empty($this->url)) {
@@ -123,10 +75,10 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$chat = new OpenAIChat($config);
         $chat->setSystemMessage ($sSystemPrompt);
 
-		\IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
+		IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
 		$response = $chat->generateText($sMessage);
-		\IssueLog::Debug(__METHOD__);
-		\IssueLog::Debug($response);
+		IssueLog::Debug(__METHOD__);
+		IssueLog::Debug($response);
 		return $response;
 
 		// TODO error handling in LLPhant ( #2) ?

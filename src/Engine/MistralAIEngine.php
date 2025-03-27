@@ -41,73 +41,15 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetPrompts(): array
-	{
-		$aGenericPrompts = GenericAIEngine::GetPrompts();
-		// TODO add more prompts once they are implemented :)
-		return $aGenericPrompts;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
 	public static function GetEngine($configuration): MistralAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? null;
-		if (empty($aSystemPrompts)) {
-            return new self($url, $apiKey, $model, $aLanguages);
-        }
-        
+		$aSystemPrompts = $configuration['system_prompts'] ?? [];
+
         return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
-	}
-
-	/**
-	 * @var string $url
-	 */
-	protected $url;
-
-	/**
-	 * @var string $apiKey
-	 */
-	protected $apiKey;
-
-	/**
-	 * @var string $model
-	 */
-	protected $model;
-
-	/**
-	 * @var string[] $languages
-	 */
-	protected $languages;
-
-	/**
-	 * @var array $aSystemPrompts
-	 */
-	public $aSystemPrompts;
-
-
-	/**
-	 * @inheritDoc
-	 * @throws AIResponseException
-	 */
-	public function PerformPrompt($prompt, $text, $object): string
-	{
-		switch ($prompt)
-		{
-			case 'translate':
-				return $this->translate($text);
-
-			case 'improveText':
-				return $this->improveText($text); 
-
-			default:
-			return parent::PerformPrompt($prompt, $text, $object);
-		}
 	}
 
 	/**

@@ -37,16 +37,6 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
         return 'AnthropicAI';
     }
 
-	/**
-	 * @inheritDoc
-	 */
-	public static function GetPrompts(): array
-	{
-		$aGenericPrompts = GenericAIEngine::GetPrompts();
-		// TODO add more prompts once they are implemented :)
-		return $aGenericPrompts;
-	}
-
     /**
      * @inheritDoc
      */
@@ -56,40 +46,9 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? null;
-        
-        if (empty($aSystemPrompts)) {
-            return new self($url, $apiKey, $model, $aLanguages);
-        }
-        
+		$aSystemPrompts = $configuration['system_prompts'] ?? [];
         return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
 	}
-
-    /**
-     * @var string $url
-     */
-    protected $url;
-
-    /**
-     * @var string $apiKey
-     */
-    protected $apiKey;
-
-    /**
-     * @var string $model
-     */
-    protected $model;
-
-    /**
-     * @var string[] $languages
-     */
-    protected $languages;
-
-	/**
-	 * @var array $aSystemPrompts
-	 */
-	public $aSystemPrompts;
-
 
 	/**
 	 * Ask Anthropic AI a question, retrieve the answer and return it in text form
@@ -99,7 +58,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+	public function getCompletions($sMessage, $sSystemPrompt = '') {
 
 		$config = new AnthropicConfig($this->model, 4096, array() , $this->apiKey);
 		$chat = new AnthropicChat($config);
