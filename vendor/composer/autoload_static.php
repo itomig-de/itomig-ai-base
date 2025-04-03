@@ -1293,6 +1293,7 @@ class ComposerStaticInit460984975fe0331dac01a1fd34ee58bf
         'Http\\Message\\MultipartStream\\MimetypeHelper' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MimetypeHelper.php',
         'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\DeepLAIEngine' => __DIR__ . '/../..' . '/src/Engine/DeepLAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => __DIR__ . '/../..' . '/src/Engine/GenericAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => __DIR__ . '/../..' . '/src/Engine/MistralAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\OllamaAIEngine' => __DIR__ . '/../..' . '/src/Engine/OllamaAIEngine.php',
