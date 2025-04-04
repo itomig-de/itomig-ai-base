@@ -2,13 +2,13 @@ name: Extension packaging
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 jobs:
   release:
     name: Prepare release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current collector
+      - name: Checkout current repository
         uses: actions/checkout@v4
         with:
           path: ${{ github.repository }}
