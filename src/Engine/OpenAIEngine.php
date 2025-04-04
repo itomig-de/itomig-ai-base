@@ -46,22 +46,21 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
-		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
-		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
+		return new self($url, $apiKey, $model);
 	}
 
 
 	/**
 	 * Ask OpenAI a question, retrieve the answer and return it in text form
 	 *
-	 * @param string $sMessage
-	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @param string $message
+	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+	public function GetCompletion($message, $systemInstruction = '') : string
+	{
 
 		IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$config = new OpenAIConfig();
@@ -73,10 +72,10 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 			$config->model = $this->model;
 		}
 		$chat = new OpenAIChat($config);
-        $chat->setSystemMessage ($sSystemPrompt);
+        $chat->setSystemMessage ($systemInstruction);
 
 		IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
-		$response = $chat->generateText($sMessage);
+		$response = $chat->generateText($message);
 		IssueLog::Debug(__METHOD__);
 		IssueLog::Debug($response);
 		return $response;
