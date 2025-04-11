@@ -48,22 +48,6 @@ class AIBaseHelper
 	}
 
 
-	/**
-	 * Check if an AI result is within valid parameters (guardrail against (some) hallucinations)
-	 * @param array $aValidResults array of valid results (e.g. ServiceSubcategories).
-	 * @param string $sKey $aValidResults[$sKkey] will be checked against $sValue
-	 * @param string $sValue the value that AI provided, to be determined if valid or not
-	 */
-	public function isValidResult($aValidResults,$sKey,$sValue) {
-		\IssueLog::Debug("isValidResult(): checking if ".$sKey." => ".$sValue." are in valid results range..", self::MODULE_CODE);
-		if ($aValidResults[$sKey] == $sValue) return true;
-		return false;
-
-	}
-
-
-
-
 }
 
 

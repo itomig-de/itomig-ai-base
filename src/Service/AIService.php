@@ -105,39 +105,22 @@ class AIService
 
 	/**
 	 * @param $message
-	 * @param $systemInstruction
+	 * @param $sInstructionName
 	 * @return string
 	 * @throws AIResponseException
 	 */
-	public function PerformSystemInstruction($message, $systemInstruction): string
+	public function PerformSystemInstruction($message, $sInstructionName): string
 	{
-		switch ($systemInstruction)
+		$systemInstruction = $this->aSystemInstructions[$sInstructionName] ?? $this->aSystemInstructions['default'];
+		if($sInstructionName === 'translate')
 		{
-			case 'translate':
-				return $this->translate($message, Dict::GetUserLanguage());
-
-			case 'improveText':
-				return $this->GetCompletion($message, $this->aSystemInstructions['improveText']);
-
-			default:
-				return $this->GetCompletion($message, $this->aSystemInstructions['default']);
+			$sLanguage = Dict::GetUserLanguage();
+			if (!in_array($sLanguage, $this->aLanguages)) {
+				throw new AIResponseException("Invalid locale identifer \"$sLanguage\", valid locales :" .print_r($this->aLanguages, true));
+			}
+			$systemInstruction = sprintf($systemInstruction, $sLanguage);
 		}
-	}
-
-	/**
-	 * Ask GenericAI to translate text
-	 *
-	 * @param string $sMessage
-	 * @param string $sLanguage
-	 * @return string the textual response
-	 * @throws AIResponseException
-	 */
-	protected function translate($sMessage, $sLanguage = "EN US") {
-		if (!in_array($sLanguage, $this->aLanguages)) {
-			throw new AIResponseException("Invalid locale identifer \"$sLanguage\", valid locales :" .print_r($this->aLanguages, true));
-		}
-		$sSystemPrompt = sprintf($this->aSystemInstructions['translate'], $sLanguage);
-		return $this->GetCompletion($sMessage , $sSystemPrompt);
+		return $this->GetCompletion($message, $systemInstruction);
 	}
 
 	/**
