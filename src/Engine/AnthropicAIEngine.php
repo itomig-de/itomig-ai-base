@@ -44,27 +44,26 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
-		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
-        return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
+        return new self($url, $apiKey, $model);
 	}
 
 	/**
 	 * Ask Anthropic AI a question, retrieve the answer and return it in text form
 	 *
-	 * @param string $sMessage
-	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @param string $message
+	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	public function getCompletions($sMessage, $sSystemPrompt = '') {
+	public function GetCompletion($message, $systemInstruction = '') : string
+	{
 
 		$config = new AnthropicConfig($this->model, 4096, array() , $this->apiKey);
 		$chat = new AnthropicChat($config);
 
-		$chat->setSystemMessage ($sSystemPrompt);
-		$response = $chat->generateText($sMessage);
+		$chat->setSystemMessage ($systemInstruction);
+		$response = $chat->generateText($message);
 
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);

@@ -45,31 +45,29 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
-		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
 
-        return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts );
+        return new self($url, $apiKey, $model);
 	}
 
 	/**
 	 * Ask Mistral AI a question, retrieve the answer and return it in text form
 	 *
-	 * @param string $sMessage
-	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @param string $message
+	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
-
+	public function GetCompletion($message, $systemInstruction = '') : string
+	{
 		$config = new OpenAIConfig();
 		$config->apiKey = $this->apiKey;
 		$config->url = $this->url;
 		$config->model=$this->model;
 		$chat = new MistralAIChat($config);
 
-		$chat->setSystemMessage ($sSystemPrompt);
-		$response = $chat->generateText($sMessage);
+		$chat->setSystemMessage ($systemInstruction);
+		$response = $chat->generateText($message);
 
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);

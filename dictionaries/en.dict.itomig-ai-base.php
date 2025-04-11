@@ -22,19 +22,4 @@
  */
 
 Dict::Add('EN US', 'English', 'English', array(
-
-	'UI:AIResponse:GenericAI:Prompt:GetCompletions' => 'Response (default)',
-	'UI:AIResponse:GenericAI:Prompt:Translate' => 'Translate',
-	'UI:AIResponse:GenericAI:Prompt:improveText' => 'Improve text',
-	'UI:AIResponse:GenericAI:Prompt:summarizeTicket' => 'Summarize ticket',
-	'UI:AIResponse:GenericAI:Prompt:rephraseTicket' => 'Rephrase the ticket in other words for better understanding',
-	'UI:AIResponse:GenericAI:Prompt:recategorizeTicket' => 'Propose new or better categorization',
-
-	'GenericAIEngine:autoRecategorizeTicket:success' => 'Successfully updated categorization and request type. Rationale: %1$s',
-	'GenericAIEngine:autoRecategorizeTicket:failure' => 'Failure. AI chose ID: %1$s, but the Service Catalogue does not contain it. Please optimize your Catalogue and / or your prompt',
-
-	'Ticket:ItomigAIAction:AISetTicketType:update' => 'Successfully updated request type to: %1$s. Rationale: %2$s',
-
-
-
 ));

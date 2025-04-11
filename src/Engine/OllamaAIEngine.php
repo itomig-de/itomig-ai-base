@@ -45,22 +45,21 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
-		$aLanguages = $configuration['translate_languages'] ?? ['DE DE', 'EN US', 'FR FR'];
 		$apiKey = $configuration['api_key'] ?? '';
-		$aSystemPrompts = $configuration['system_prompts'] ?? [];
 
-		return new self($url, $apiKey, $model, $aLanguages, $aSystemPrompts);
+		return new self($url, $apiKey, $model);
 	}
 
 	/**
 	 * Ask Ollama a question, retrieve the answer and return it in text form
 	 *
-	 * @param string $sMessage
-	 * @param string $sSystemPrompt optional - the System prompt (if a specific one is required)
+	 * @param string $message
+	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 * @throws AIResponseException
 	 */
-	public function getCompletions($sMessage, $sSystemPrompt = "You are a helpful assistant. You answer inquiries politely, precisely, and briefly. ") {
+	public function GetCompletion($message, $systemInstruction = '') : string
+	{
 
 		$config = new OllamaConfig();
 		//$config->apiKey = $this->apiKey;
@@ -79,8 +78,8 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		);
 		$chat = new OllamaChat($config);
 
-		$chat->setSystemMessage ($sSystemPrompt);
-		$response = $chat->generateText($sMessage);
+		$chat->setSystemMessage($systemInstruction);
+		$response = $chat->generateText($message);
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
 
