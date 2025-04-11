@@ -22,15 +22,4 @@
  */
 
 Dict::Add('DE DE', 'Deutsch', 'Deutsch', array(
- 'UI:AIResponse:GenericAI:Prompt:GetCompletions' => 'Antwort (Standard)',
- 'UI:AIResponse:GenericAI:Prompt:Translate' => 'Übersetzen',
- 'UI:AIResponse:GenericAI:Prompt:improveText' => 'Text verbessern',
- 'UI:AIResponse:GenericAI:Prompt:summarizeTicket' => 'Ticket zusammenfassen',
- 'UI:AIResponse:GenericAI:Prompt:rephraseTicket' => 'Ticket in anderen Worten formulieren',
- 'UI:AIResponse:GenericAI:Prompt:recategorizeTicket' => 'Neue oder bessere Kategorisierung vorschlagen',
- 'GenericAIEngine:autoRecategorizeTicket:success' => 'Kategorisierung und Anfragetyp erfolgreich aktualisiert. Begründung: %1$s',
- 'GenericAIEngine:autoRecategorizeTicket:failure' => 'Fehler. Die KI hat die ID: %1$s ausgewählt, aber der Servicekatalog enthält sie nicht. Bitte optimieren Sie Ihren Katalog und/oder Ihre Eingabeaufforderung',
- 'Ticket:ItomigAIAction:AISetTicketType:update' => 'Anfragetyp erfolgreich aktualisiert auf: %1$s. Begründung: %2$s',
-
-
 ));

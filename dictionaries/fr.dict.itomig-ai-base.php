@@ -22,15 +22,4 @@
  */
 
 Dict::Add('FR FR', 'French', 'Français', array(
-    'UI:AIResponse:GenericAI:Prompt:GetCompletions' => 'Response (default)',
-    'UI:AIResponse:GenericAI:Prompt:Translate' => 'Traduire',
-    'UI:AIResponse:GenericAI:Prompt:improveText' => 'Améliorer le texte',
-    'UI:AIResponse:GenericAI:Prompt:summarizeTicket' => 'Résumer le ticket',
-    'UI:AIResponse:GenericAI:Prompt:recategorizeTicket' => 'Proposer une nouvelle ou meilleure catégorisation',
-    'UI:AIResponse:GenericAI:Prompt:rephraseTicket' => 'Reformuler le ticket',
-    'GenericAIEngine:autoRecategorizeTicket:success' => 'Mise à jour réussie de la catégorisation et du type de demande. Rationale : %1$s',
-    'GenericAIEngine:autoRecategorizeTicket:failure' => 'Échec. AI a choisi l\'ID : %1$s, mais le catalogue de services ne le contient pas. Veuillez optimiser votre catalogue et / ou votre invite',
-    'Ticket:ItomigAIAction:AISetTicketType:update' => 'Successfully updated request type to : %1$s. Rationale : %2$s',
-
-
 )) ;
