@@ -72,7 +72,7 @@ class AIService
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
 	 */
-	public function __construct($aSystemInstructions, $aLanguages = null)
+	public function __construct($aSystemInstructions = [], $aLanguages = null)
 	{
 		/** @var class-string<iAIEngineInterface> $AIEngineClass */
 		$AIEngineClass = self::GetAIEngineClass();
