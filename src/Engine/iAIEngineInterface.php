@@ -23,6 +23,8 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
+
 interface iAIEngineInterface
 {
 	/**
@@ -30,15 +32,6 @@ interface iAIEngineInterface
 	 * @return string
 	 */
 	public static function GetEngineName() : string;
-
-	/**
-	 * Get available prompts
-	 * @return array{
-	 *     label: string,
-	 *     prompt: string
-	 * }[]
-	 */
-	public static function GetPrompts() : array;
 
 	/**
 	 * Create an instance of the current engine
@@ -49,10 +42,10 @@ interface iAIEngineInterface
 
 	/**
 	 * Perform prompt and return result
-	 * @param string $prompt
-	 * @param string $text
-	 * @param \DBObject|null $object
+	 * @param string $message
+	 * @param string $systemInstruction
 	 * @return string
+	 * @throws AIResponseException
 	 */
-	public function PerformPrompt($prompt, $text, $object) : string;
+	public function GetCompletion($message, $systemInstruction = '') : string;
 }
