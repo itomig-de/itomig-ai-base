@@ -77,7 +77,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 			'temperature' => '0.4',
 		);
 		$chat = new OllamaChat($config);
-
+		\IssueLog::Debug("OllamaAIEngine: about to set system instruction: ".$systemInstruction);
 		$chat->setSystemMessage($systemInstruction);
 		$response = $chat->generateText($message);
 		\IssueLog::Debug(__METHOD__);
