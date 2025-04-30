@@ -69,6 +69,11 @@ class AIService
 	public $aLanguages;
 
 	/**
+	 * @var AIBaseHelper
+	 */
+	protected $oAIBaseHelper;
+
+	/**
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
 	 */
@@ -91,6 +96,8 @@ class AIService
 
 		// if only _some_ system prompts are configured, use defaults for the others.
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
+
+		$this->oAIBaseHelper = new AIBaseHelper();
 	}
 
 	/**
@@ -133,7 +140,7 @@ class AIService
 	{
 		if($this->AIEngine instanceof iAIEngineInterface)
 		{
-			return $this->AIEngine->GetCompletion($sMessage, $sSystemInstruction);
+			return  $this->oAIBaseHelper->removeThinkTag($this->AIEngine->GetCompletion($sMessage, $sSystemInstruction));
 		}
 		return '';
 	}
