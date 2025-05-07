@@ -25,7 +25,6 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
 use LLPhant\OpenAIConfig;
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use LLPhant\Chat\OpenAIChat;
 
 class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
@@ -57,7 +56,6 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
-	 * @throws AIResponseException
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
