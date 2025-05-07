@@ -23,8 +23,6 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
-
 interface iAIEngineInterface
 {
 	/**
@@ -45,7 +43,6 @@ interface iAIEngineInterface
 	 * @param string $message
 	 * @param string $systemInstruction
 	 * @return string
-	 * @throws AIResponseException
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string;
 }
