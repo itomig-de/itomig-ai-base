@@ -22,8 +22,7 @@ SetupWebPage::AddModule(
 		// Components
 		//
 		'datamodel' => array(
-			'vendor/autoload.php',
-			'model.itomig-ai-base.php'
+			'vendor/autoload.php'
 		),
 		'webservice' => array(
 
