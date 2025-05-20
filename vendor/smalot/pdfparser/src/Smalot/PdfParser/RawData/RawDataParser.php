@@ -43,6 +43,8 @@
 namespace Smalot\PdfParser\RawData;
 
 use Smalot\PdfParser\Config;
+use Smalot\PdfParser\Exception\EmptyPdfException;
+use Smalot\PdfParser\Exception\MissingPdfHeaderException;
 
 class RawDataParser
 {
@@ -267,7 +269,8 @@ class RawDataParser
             if (
                 ('/' == $v[0])
                 && ('Type' == $v[1])
-                && (isset($sarr[$k + 1])
+                && (
+                    isset($sarr[$k + 1])
                     && '/' == $sarr[$k + 1][0]
                     && 'XRef' == $sarr[$k + 1][1]
                 )
@@ -293,7 +296,8 @@ class RawDataParser
                     if (
                         '/' == $vdc[0]
                         && 'Columns' == $vdc[1]
-                        && (isset($decpar[$kdc + 1])
+                        && (
+                            isset($decpar[$kdc + 1])
                             && 'numeric' == $decpar[$kdc + 1][0]
                         )
                     ) {
@@ -301,7 +305,8 @@ class RawDataParser
                     } elseif (
                         '/' == $vdc[0]
                         && 'Predictor' == $vdc[1]
-                        && (isset($decpar[$kdc + 1])
+                        && (
+                            isset($decpar[$kdc + 1])
                             && 'numeric' == $decpar[$kdc + 1][0]
                         )
                     ) {
@@ -407,7 +412,7 @@ class RawDataParser
                     }
                     $prev_row = $ddata[$k];
                 } // end for each row
-            // complete decoding
+                // complete decoding
             } else {
                 // number of bytes in a row
                 $rowlen = array_sum($wb);
@@ -935,17 +940,17 @@ class RawDataParser
      *
      * @return array array of parsed PDF document objects
      *
-     * @throws \Exception if empty PDF data given
-     * @throws \Exception if PDF data missing %PDF header
+     * @throws EmptyPdfException if empty PDF data given
+     * @throws MissingPdfHeaderException if PDF data missing `%PDF-` header
      */
     public function parseData(string $data): array
     {
         if (empty($data)) {
-            throw new \Exception('Empty PDF data given.');
+            throw new EmptyPdfException('Empty PDF data given.');
         }
         // find the pdf header starting position
         if (false === ($trimpos = strpos($data, '%PDF-'))) {
-            throw new \Exception('Invalid PDF data: missing %PDF header.');
+            throw new MissingPdfHeaderException('Invalid PDF data: Missing `%PDF-` header.');
         }
 
         // get PDF content string

@@ -14,7 +14,6 @@
   "description": "AI Base Extension",
   "require": {
     "composer-runtime-api": "^2.0",
-    "theodo-group/llphant": "^0.9.4",
-    "oro/doctrine-extensions": "^2.0"
+    "theodo-group/llphant": "^0.9.4"
   }
 }
