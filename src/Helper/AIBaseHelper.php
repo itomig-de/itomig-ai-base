@@ -33,7 +33,7 @@ class AIBaseHelper
 	 * @param string $sRawString The raw string containing the JSON data with surrounding markers.
 	 * @return string The cleaned JSON string without the surrounding markers.
 	 */
-	public function cleanJSON(string $sRawString)
+	public static function cleanJSON(string $sRawString)
 	{
 		$pattern = '/^```json\n(.*?)\n```$/s';
 
@@ -56,7 +56,7 @@ class AIBaseHelper
 	 * @param string $sRawString The input string that might start with a <think> tag
 	 * @return string The string with the initial <think> tag and its contents removed, or unchanged if no initial tag
 	 */
-	public function removeThinkTag(string $sRawString)
+	public static function removeThinkTag(string $sRawString)
 	{
 		$pattern = '/^\s*<think\b[^>]*>.*?<\/think>/is';
 		
