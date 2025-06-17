@@ -33,6 +33,7 @@
 namespace Smalot\PdfParser;
 
 use Smalot\PdfParser\Encoding\PDFDocEncoding;
+use Smalot\PdfParser\Exception\MissingCatalogException;
 
 /**
  * Technical references :
@@ -255,7 +256,7 @@ class Document
                             if ('rdf:li' == $val['tag']) {
                                 $metadata[] = $val['value'];
 
-                            // Else assign a value to this property
+                                // Else assign a value to this property
                             } else {
                                 $metadata[$val['tag']] = $val['value'];
                             }
@@ -379,7 +380,7 @@ class Document
     /**
      * @return Page[]
      *
-     * @throws \Exception
+     * @throws MissingCatalogException
      */
     public function getPages()
     {
@@ -415,7 +416,7 @@ class Document
             return array_values($pages);
         }
 
-        throw new \Exception('Missing catalog.');
+        throw new MissingCatalogException('Missing catalog.');
     }
 
     public function getText(?int $pageLimit = null): string

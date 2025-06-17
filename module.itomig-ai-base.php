@@ -15,6 +15,8 @@ SetupWebPage::AddModule(
 		// Setup
 		//
 		'dependencies' => array(
+			'itop-structure/3.2.1',
+
 		),
 		'mandatory' => false,
 		'visible' => true,
@@ -22,7 +24,11 @@ SetupWebPage::AddModule(
 		// Components
 		//
 		'datamodel' => array(
+<<<<<<< main
 			'vendor/autoload.php',
+=======
+			'vendor/autoload.php'
+>>>>>>> main
 		),
 		'webservice' => array(
 
