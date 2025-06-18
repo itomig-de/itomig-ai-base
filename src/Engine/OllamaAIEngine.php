@@ -25,8 +25,6 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use LLPhant\OllamaConfig;
 use LLPhant\Chat\OllamaChat;
-use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
@@ -56,7 +54,6 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
-	 * @throws AIResponseException
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{

@@ -25,7 +25,6 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
@@ -54,7 +53,6 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
-	 * @throws AIResponseException
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{

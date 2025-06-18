@@ -22,9 +22,11 @@
 
 namespace Itomig\iTop\Extension\AIBase\Service;
 
+use Combodo\iTop\Service\InterfaceDiscovery\InterfaceDiscovery;
 use Dict;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
+use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use MetaModel;
 use utils;
@@ -55,8 +57,7 @@ class AIService
 		'default' => 'You are a helpful assistant. You answer inquiries politely, precisely, and briefly.'
 	];
 
-	/** @var iAIEngineInterface|null $AIEngine */
-	protected $AIEngine;
+	protected ?iAIEngineInterface $oAIEngine;
 
 	/**
 	 * @var string[] $aSystemInstructions
@@ -69,26 +70,26 @@ class AIService
 	public $aLanguages;
 
 	/**
-	 * @var AIBaseHelper
-	 */
-	protected $oAIBaseHelper;
-
-	/**
+	 * 
+	 * @param iAIEngineInterface $engine The engine to use, pass null to get one from the default configuration
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
+	 * @throws AIConfigurationException
 	 */
-	public function __construct($aSystemInstructions = [], $aLanguages = null)
+	public function __construct(?iAIEngineInterface $engine = null , $aSystemInstructions = [], $aLanguages = [])
 	{
-		/** @var class-string<iAIEngineInterface> $AIEngineClass */
-		$AIEngineClass = self::GetAIEngineClass();
-		if(!empty($AIEngineClass))
+		if(is_null($engine))
 		{
-			$this->AIEngine = $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
+			$sAIEngineName = MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.name', '');
+			$AIEngineClass = self::GetAIEngineClass($sAIEngineName);
+			if(empty($AIEngineClass))
+			{
+				throw new AIConfigurationException('Unable to find AIEngineClass with name ="'.$sAIEngineName.'"');
+			}
+			$engine= $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
 		}
-		else
-		{
-			$this->AIEngine = null;
-		}
+		$this->oAIEngine = $engine;
+		
 		if(is_null($aLanguages)){
 			$aLanguages = ['DE DE', 'EN US', 'FR FR'];
 		}
@@ -96,8 +97,6 @@ class AIService
 
 		// if only _some_ system prompts are configured, use defaults for the others.
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
-
-		$this->oAIBaseHelper = new AIBaseHelper();
 	}
 
 	/**
@@ -111,8 +110,10 @@ class AIService
 	}
 
 	/**
-	 * @param $message
-	 * @param $sInstructionName
+	 * Perform a completion based on one of the configured system prompts
+	 * 
+	 * @param $message The prompt
+	 * @param $sInstructionName The code (index) of the configured system prompt
 	 * @return string
 	 * @throws AIResponseException
 	 */
@@ -131,46 +132,36 @@ class AIService
 	}
 
 	/**
-	 * @param $sMessage
-	 * @param string $sSystemInstruction
+	 * @param $sMessage The prompt
+	 * @param string $sSystemInstruction The system prompt
 	 * @return string
 	 * @throws AIResponseException
 	 */
 	public function GetCompletion($sMessage, $sSystemInstruction = '') : string
 	{
-		if($this->AIEngine instanceof iAIEngineInterface)
-		{
-			return  $this->oAIBaseHelper->removeThinkTag($this->AIEngine->GetCompletion($sMessage, $sSystemInstruction));
-		}
-		return '';
+		return AIBaseHelper::removeThinkTag($this->oAIEngine->GetCompletion($sMessage, $sSystemInstruction));
 	}
-
-	/** @var null|string $AIEngineClass */
-	protected static $AIEngineClass = null;
 
 	/**
 	 * Retrieves and returns the class name of the configured AI engine instance, if any.
 	 *
 	 * @return string|null The class name of the AI engine, or null if no engine is configured.
 	 */
-	public static function GetAIEngineClass()
+	protected static function GetAIEngineClass(string $sAIEngineName)
 	{
-		if(is_null(self::$AIEngineClass))
+		$sDesiredAIEngineClass = '';
+		/** @var $aAIEngines */
+		$oInterfaceDiscovery = InterfaceDiscovery::GetInstance();
+		$aAIEngineClasses = $oInterfaceDiscovery->FindItopClasses(iAIEngineInterface::class);
+		/** @var class-string<iAIEngineInterface> $AIEngineClass */
+		foreach ($aAIEngineClasses as $sAIEngineClass)
 		{
-			self::$AIEngineClass = '';
-			/** @var $aAIEngines */
-			$AIEngineClasses = utils::GetClassesForInterface(iAIEngineInterface::class, '', array('[\\\\/]lib[\\\\/]', '[\\\\/]node_modules[\\\\/]', '[\\\\/]test[\\\\/]', '[\\\\/]tests[\\\\/]'));
-			/** @var class-string<iAIEngineInterface> $AIEngineClass */
-			foreach ($AIEngineClasses as $AIEngineClass)
+			if ($sAIEngineName === $sAIEngineClass::GetEngineName())
 			{
-				$AIEngineName = $AIEngineClass::GetEngineName();
-				if ($AIEngineName === MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.name', ''))
-				{
-					self::$AIEngineClass = $AIEngineClass;
-					break;
-				}
+				$sDesiredAIEngineClass = $sAIEngineClass;
+				break;
 			}
 		}
-		return self::$AIEngineClass;
+		return $sDesiredAIEngineClass;
 	}
 }

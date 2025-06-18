@@ -25,7 +25,6 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\MistralAIChat;
-use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 
 class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
@@ -56,7 +55,6 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
-	 * @throws AIResponseException
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
