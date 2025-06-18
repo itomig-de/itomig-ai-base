@@ -24,11 +24,7 @@ SetupWebPage::AddModule(
 		// Components
 		//
 		'datamodel' => array(
-<<<<<<< main
 			'vendor/autoload.php',
-=======
-			'vendor/autoload.php'
->>>>>>> main
 		),
 		'webservice' => array(
 
