@@ -132,7 +132,7 @@ class AIService
 	}
 
 	/**
-	 * @param $sMessage The prompt
+	 * @param string $sMessage The prompt
 	 * @param string $sSystemInstruction The system prompt
 	 * @return string
 	 * @throws AIResponseException
