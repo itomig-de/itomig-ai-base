@@ -100,7 +100,9 @@ class AIService
 			2. configured in the config file over
 			3. defaults from the code (see above)
 		*/
-		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', '')['system_prompts'], $aSystemInstructions);
+		$aConfiguredSystemPrompts = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
+		$aConfiguredSystemPrompts = is_array($aConfiguredSystemPrompts) && isset($aConfiguredSystemPrompts['system_prompts']) ? $aConfiguredSystemPrompts['system_prompts'] : [];
+		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aConfiguredSystemPrompts, $aSystemInstructions);
 
 		$this->oAIBaseHelper = new AIBaseHelper();
 	}
@@ -171,3 +173,5 @@ class AIService
 		return $sDesiredAIEngineClass;
 	}
 }
+
+
