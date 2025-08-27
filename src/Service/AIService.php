@@ -71,7 +71,7 @@ class AIService
 
 	/**
 	 *
-	 * @param iAIEngineInterface $engine The engine to use, pass null to get one from the default configuration
+	 * @param iAIEngineInterface|null $engine The engine to use, pass null to get one from the default configuration
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
 	 * @throws AIConfigurationException
@@ -81,12 +81,25 @@ class AIService
 		if(is_null($engine))
 		{
 			$sAIEngineName = MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.name', '');
-			$AIEngineClass = self::GetAIEngineClass($sAIEngineName);
+			try {
+				$AIEngineClass = self::GetAIEngineClass($sAIEngineName);
+			}
+			catch (\ReflectionException $e)
+			{
+				throw new AIConfigurationException('Unable to find AIEngineClass with name ="'.$sAIEngineName.'"', null, '', $e);
+			}
 			if(empty($AIEngineClass))
 			{
 				throw new AIConfigurationException('Unable to find AIEngineClass with name ="'.$sAIEngineName.'"');
 			}
 			$engine= $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
+
+			/* if only _some_ system prompts are configured, use defaults for the others, in this order:
+				1. explicitly given in the constructor take precedence over
+				2. configured in the config file over
+			*/
+			$aSystemInstructionsByConfig = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', [])['system_prompts'] ?? [];
+			$aSystemInstructions = array_merge($aSystemInstructionsByConfig, $aSystemInstructions);
 		}
 		$this->oAIEngine = $engine;
 
@@ -95,12 +108,8 @@ class AIService
 		}
 		$this->aLanguages = $aLanguages;
 
-		/* if only _some_ system prompts are configured, use defaults for the others, in this order:
-			1. explicitly given in the constructor take precedence over
-			2. configured in the config file over
-			3. defaults from the code (see above)
-		*/
-		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', '')['system_prompts'], $aSystemInstructions);
+		// if only _some_ system prompts are configured, use defaults for the others.
+		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
 	}
 
 	/**
@@ -116,8 +125,8 @@ class AIService
 	/**
 	 * Perform a completion based on one of the configured system prompts
 	 *
-	 * @param $message The prompt
-	 * @param $sInstructionName The code (index) of the configured system prompt
+	 * @param string $message The prompt
+	 * @param string $sInstructionName The code (index) of the configured system prompt
 	 * @return string
 	 * @throws AIResponseException
 	 */
@@ -149,7 +158,8 @@ class AIService
 	/**
 	 * Retrieves and returns the class name of the configured AI engine instance, if any.
 	 *
-	 * @return string|null The class name of the AI engine, or null if no engine is configured.
+	 * @return class-string<iAIEngineInterface>|'' The class name of the AI engine, or null if no engine is configured.
+	 * @throws \ReflectionException
 	 */
 	protected static function GetAIEngineClass(string $sAIEngineName)
 	{
