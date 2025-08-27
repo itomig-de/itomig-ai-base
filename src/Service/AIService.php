@@ -70,7 +70,7 @@ class AIService
 	public $aLanguages;
 
 	/**
-	 * 
+	 *
 	 * @param iAIEngineInterface $engine The engine to use, pass null to get one from the default configuration
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
@@ -89,7 +89,7 @@ class AIService
 			$engine= $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
 		}
 		$this->oAIEngine = $engine;
-		
+
 		if(is_null($aLanguages)){
 			$aLanguages = ['DE DE', 'EN US', 'FR FR'];
 		}
@@ -101,8 +101,6 @@ class AIService
 			3. defaults from the code (see above)
 		*/
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', '')['system_prompts'], $aSystemInstructions);
-
-		$this->oAIBaseHelper = new AIBaseHelper();
 	}
 
 	/**
@@ -117,7 +115,7 @@ class AIService
 
 	/**
 	 * Perform a completion based on one of the configured system prompts
-	 * 
+	 *
 	 * @param $message The prompt
 	 * @param $sInstructionName The code (index) of the configured system prompt
 	 * @return string
