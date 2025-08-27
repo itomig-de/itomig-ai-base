@@ -5,7 +5,7 @@
 
 SetupWebPage::AddModule(
 	__FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-	'itomig-ai-base/25.3.0',
+	'itomig-ai-base/25.3.1',
 	array(
 		// Identification
 		//
