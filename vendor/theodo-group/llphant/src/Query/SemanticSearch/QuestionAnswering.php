@@ -20,8 +20,9 @@ class QuestionAnswering
         public readonly EmbeddingGeneratorInterface $embeddingGenerator,
         public readonly ChatInterface $chat,
         private readonly QueryTransformer $queryTransformer = new IdentityTransformer(),
-        private readonly RetrievedDocumentsTransformer $retrievedDocumentsTransformer = new IdentityDocumentsTransformer())
-    {
+        private readonly RetrievedDocumentsTransformer $retrievedDocumentsTransformer = new IdentityDocumentsTransformer(),
+        private readonly ChatSessionInterface $session = new NullChatSession()
+    ) {
     }
 
     /**
@@ -30,9 +31,17 @@ class QuestionAnswering
     public function answerQuestion(string $question, int $k = 4, array $additionalArguments = []): string
     {
         $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
+        $history = $this->session->getHistoryAsString();
+        if ($history !== '' && $history !== '0') {
+            $systemMessage .= "\nUse also the conversation history to answer the question:\n".$history;
+        }
         $this->chat->setSystemMessage($systemMessage);
+        $this->session->addMessage(Message::user($question));
 
-        return $this->chat->generateText($question);
+        $answer = $this->chat->generateText($question);
+        $this->session->addMessage(Message::assistant($answer));
+
+        return $answer;
     }
 
     /**
@@ -41,9 +50,16 @@ class QuestionAnswering
     public function answerQuestionStream(string $question, int $k = 4, array $additionalArguments = []): StreamInterface
     {
         $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
+        $history = $this->session->getHistoryAsString();
+        if ($history !== '' && $history !== '0') {
+            $systemMessage .= "\nUse also the conversation history to answer the question:\n".$history;
+        }
         $this->chat->setSystemMessage($systemMessage);
+        $this->session->addMessage(Message::user($question));
 
-        return $this->chat->generateStreamOfText($question);
+        $stream = $this->chat->generateStreamOfText($question);
+
+        return $this->session->wrapAnswerStream($stream);
     }
 
     /**
