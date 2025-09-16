@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\MistralAIConfig;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\MistralAIChat;
 
@@ -58,11 +59,9 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
-		$config = new OpenAIConfig();
-		$config->apiKey = $this->apiKey;
-		$config->url = $this->url;
-		$config->model=$this->model;
-		$chat = new MistralAIChat($config);
+		$chat = new MistralAIChat(
+			new MistralAIConfig($this->apiKey, $this->url, $this->model)
+		);
 
 		$chat->setSystemMessage ($systemInstruction);
 		$response = $chat->generateText($message);
