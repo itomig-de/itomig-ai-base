@@ -185,8 +185,14 @@ class AIService
 			if (isset($aEntry['role'], $aEntry['content'])) {
 				// Ensure the role is a valid ChatRole enum value
 				try {
-					$oRole = ChatRole::from($aEntry['role']);
-					$aLlphantHistory[] = new Message($oRole, $aEntry['content']);
+					if ($aEntry['role'] === 'user') {
+						$aLlphantHistory[] = Message::user($aEntry['content']);
+					} elseif ($aEntry['role'] === 'assistant') {
+						$aLlphantHistory[] = Message::assistant($aEntry['content']);
+					} elseif ($aEntry['role'] === 'system') {
+						// System messages are handled separately above, but we can handle them here for completeness
+						$aLlphantHistory[] = Message::system($aEntry['content']);
+					}
 				} catch (\ValueError $e) {
 					IssueLog::Warning("Invalid role '{$aEntry['role']}' in conversation history, skipping entry.", AIBaseHelper::MODULE_CODE, ['exception' => $e]);
 				}

@@ -29,6 +29,14 @@ use LLPhant\Chat\OllamaChat;
 
 class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
+	protected string $url;
+
+	public function __construct($url, $sAPIKey, $sModel)
+	{
+		parent::__construct($sAPIKey, $sModel);
+		$this->url = $url;
+	}
+
 	/**
 	 * @inheritDoc
 	 */

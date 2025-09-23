@@ -21,7 +21,7 @@
  * along with iTop. If not, see <http://www.gnu.org/licenses/>
  */
 
-namespace Itomig\iTop\Extension\AIEngine\GenericAIEngine;
+namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use IssueLog;
@@ -59,13 +59,14 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	{
 		$oChat = $this->createChatInstance();
 		$sSystemMessage = '';
+		$aMessageHistory = [];
 
 		// Separate the system message from the rest of the history for llphant
 		foreach ($aHistory as $oMessage) {
 			if ($oMessage->role === \LLPhant\Chat\Enums\ChatRole::System) {
 				$sSystemMessage = $oMessage->content;
 			} else {
-				$oChat->addMessage($oMessage);
+				$aMessageHistory[] = $oMessage;
 			}
 		}
 
@@ -73,7 +74,8 @@ abstract class GenericAIEngine implements iAIEngineInterface
 			$oChat->setSystemMessage($sSystemMessage);
 		}
 
-		$sResponse = $oChat->generateText();
+		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
+		$sResponse = $oChat->generateChat($aMessageHistory);
 		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
 		return $sResponse;
 	}
