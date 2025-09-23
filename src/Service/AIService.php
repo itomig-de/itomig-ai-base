@@ -23,11 +23,15 @@
 namespace Itomig\iTop\Extension\AIBase\Service;
 
 use Combodo\iTop\Service\InterfaceDiscovery\InterfaceDiscovery;
+use DBObject;
 use Dict;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use IssueLog;
+use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\Message;
 use MetaModel;
 use utils;
 
@@ -71,14 +75,14 @@ class AIService
 
 	/**
 	 *
-	 * @param iAIEngineInterface|null $engine The engine to use, pass null to get one from the default configuration
+	 * @param iAIEngineInterface|null $oEngine The engine to use, pass null to get one from the default configuration
 	 * @param string[] $aSystemInstructions
 	 * @param string[] $aLanguages
 	 * @throws AIConfigurationException
 	 */
-	public function __construct(?iAIEngineInterface $engine = null , $aSystemInstructions = [], $aLanguages = [])
+	public function __construct(?iAIEngineInterface $oEngine = null , $aSystemInstructions = [], $aLanguages = [])
 	{
-		if(is_null($engine))
+		if(is_null($oEngine))
 		{
 			$sAIEngineName = MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.name', '');
 			try {
@@ -92,7 +96,7 @@ class AIService
 			{
 				throw new AIConfigurationException('Unable to find AIEngineClass with name ="'.$sAIEngineName.'"');
 			}
-			$engine= $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
+			$oEngine= $AIEngineClass::GetEngine(MetaModel::GetModuleSetting(AIBaseHelper::MODULE_CODE, 'ai_engine.configuration', ''));
 
 			/* if only _some_ system prompts are configured, use defaults for the others, in this order:
 				1. explicitly given in the constructor take precedence over
@@ -101,7 +105,7 @@ class AIService
 			$aSystemInstructionsByConfig = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', [])['system_prompts'] ?? [];
 			$aSystemInstructions = array_merge($aSystemInstructionsByConfig, $aSystemInstructions);
 		}
-		$this->oAIEngine = $engine;
+		$this->oAIEngine = $oEngine;
 
 		if(is_null($aLanguages)){
 			$aLanguages = ['DE DE', 'EN US', 'FR FR'];
@@ -125,23 +129,23 @@ class AIService
 	/**
 	 * Perform a completion based on one of the configured system prompts
 	 *
-	 * @param string $message The prompt
+	 * @param string $sMessage The prompt
 	 * @param string $sInstructionName The code (index) of the configured system prompt
 	 * @return string
 	 * @throws AIResponseException
 	 */
-	public function PerformSystemInstruction($message, $sInstructionName): string
+	public function PerformSystemInstruction($sMessage, $sInstructionName): string
 	{
-		$systemInstruction = $this->aSystemInstructions[$sInstructionName] ?? $this->aSystemInstructions['default'];
+		$sSystemInstruction = $this->aSystemInstructions[$sInstructionName] ?? $this->aSystemInstructions['default'];
 		if($sInstructionName === 'translate')
 		{
 			$sLanguage = Dict::GetUserLanguage();
 			if (!in_array($sLanguage, $this->aLanguages)) {
 				throw new AIResponseException("Invalid locale identifer \"$sLanguage\", valid locales :" .print_r($this->aLanguages, true));
 			}
-			$systemInstruction = sprintf($systemInstruction, $sLanguage);
+			$sSystemInstruction = sprintf($sSystemInstruction, $sLanguage);
 		}
-		return $this->GetCompletion($message, $systemInstruction);
+		return $this->GetCompletion($sMessage, $sSystemInstruction);
 	}
 
 	/**
@@ -153,6 +157,55 @@ class AIService
 	public function GetCompletion($sMessage, $sSystemInstruction = '') : string
 	{
 		return AIBaseHelper::removeThinkTag($this->oAIEngine->GetCompletion($sMessage, $sSystemInstruction));
+	}
+
+	/**
+	 * Processes the next turn in a conversation. The caller is responsible for managing the history.
+	 *
+	 * @param array $aHistory An array of associative arrays, each with 'role' and 'content' keys.
+	 * @param DBObject|null $oObject An optional iTop object to add as context for this turn.
+	 * @param string|null $sCustomSystemMessage An optional system message. If not provided, the default is used.
+	 * @return array{response: string, history: array} The AI's response and the updated history array.
+	 */
+	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null): array
+	{
+		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE);
+
+		// 1. Prepare the system message
+		$sSystemMessage = $sCustomSystemMessage ?? $this->aSystemInstructions['default'];
+		if ($oObject !== null) {
+			$sContext = "Context: iTop object '{$oObject->GetName()}' (Class: " . get_class($oObject) . ", ID: {$oObject->GetKey()}).";
+			$sSystemMessage .= "\n\n" . $sContext;
+		}
+
+		// 2. Convert the simple history array to llphant Message objects
+		$aLlphantHistory = [];
+		$aLlphantHistory[] = Message::system($sSystemMessage); // Always start with the system message for the engine
+		foreach ($aHistory as $aEntry) {
+			if (isset($aEntry['role'], $aEntry['content'])) {
+				// Ensure the role is a valid ChatRole enum value
+				try {
+					$oRole = ChatRole::from($aEntry['role']);
+					$aLlphantHistory[] = new Message($oRole, $aEntry['content']);
+				} catch (\ValueError $e) {
+					IssueLog::Warning("Invalid role '{$aEntry['role']}' in conversation history, skipping entry.", AIBaseHelper::MODULE_CODE, ['exception' => $e]);
+				}
+			}
+		}
+
+		// 3. Call the engine
+		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory);
+
+		// 4. Append the AI's response to the original simple history
+		$aHistory[] = ['role' => 'assistant', 'content' => $sResponseString];
+
+		IssueLog::Debug("Conversation turn completed.", AIBaseHelper::MODULE_CODE);
+
+		// 5. Return the response and the new history for the caller to store
+		return [
+			'response' => AIBaseHelper::removeThinkTag($sResponseString),
+			'history'  => $aHistory,
+		];
 	}
 
 	/**

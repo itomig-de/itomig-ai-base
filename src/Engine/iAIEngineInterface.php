@@ -23,26 +23,33 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
+use LLPhant\Chat\Message;
+
 interface iAIEngineInterface
 {
 	/**
-	 * Get name of the engine
-	 * @return string
+	 * @param array $aConfiguration
+	 * @return mixed
 	 */
-	public static function GetEngineName() : string;
+	public static function GetEngine($aConfiguration);
 
 	/**
-	 * Create an instance of the current engine
-	 * @param array $configuration
-	 * @return iAIEngineInterface
-	 */
-	public static function GetEngine($configuration) : iAIEngineInterface;
-
-	/**
-	 * Perform prompt and return result
-	 * @param string $message
-	 * @param string $systemInstruction
 	 * @return string
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string;
+	public static function GetEngineName(): string;
+
+	/**
+	 * @param string $sMessage
+	 * @param string $sSystemInstruction
+	 * @return string
+	 */
+	public function GetCompletion($sMessage, $sSystemInstruction = ''): string;
+
+	/**
+	 * Generates the next response in a conversation given the full message history.
+	 * @param Message[] $aHistory The entire conversation history as llphant Message objects.
+	 * @return string The AI's response message.
+	 */
+	public function GetNextTurn(array $aHistory): string;
 }

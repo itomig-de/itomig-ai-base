@@ -1,6 +1,6 @@
 <?php
 /*
- * @copyright Copyright (C) 2024, 2025 ITOMIG GmbH
+ * @copyright Copyright (C) 2024 ITOMIG GmbH
  * @license http://opensource.org/licenses/AGPL-3.0
  * @author Lars Kaltefleiter <lars.kaltefleiter@itomig.de>
  * @author David Gümbel <david.guembel@itomig.de>
@@ -21,35 +21,61 @@
  * along with iTop. If not, see <http://www.gnu.org/licenses/>
  */
 
-namespace Itomig\iTop\Extension\AIBase\Engine;
+namespace Itomig\iTop\Extension\AIEngine\GenericAIEngine;
 
-use Dict;
-use LLPhant\OpenAIConfig;
+use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use IssueLog;
+use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 
 abstract class GenericAIEngine implements iAIEngineInterface
 {
-	/**
-	 * @var string $url
-	 */
-	protected $url;
+	protected string $sAPIKey;
+	protected string $sModel;
 
-	/**
-	 * @var string $apiKey
-	 */
-	protected $apiKey;
-
-	/**
-	 * @var string $model
-	 */
-	protected $model;
-
-	public function __construct($url, $apiKey, $model)
+	public function __construct($sAPIKey, $sModel)
 	{
-		$this->url = $url;
-		$this->apiKey = $apiKey;
-		$this->model = $model;
+		$this->sAPIKey = $sAPIKey;
+		$this->sModel = $sModel;
 	}
 
+	/**
+	 * Abstract method that concrete engine classes must implement to provide
+	 * their specific llphant chat instance.
+	 *
+	 * @return ChatInterface
+	 */
+	abstract protected function createChatInstance(): ChatInterface;
+
+	/**
+	 * Generic implementation for handling a conversational turn.
+	 * This method uses the Template Method Pattern, relying on createChatInstance from subclasses.
+	 *
+	 * @param Message[] $aHistory
+	 * @return string
+	 */
+	public function GetNextTurn(array $aHistory): string
+	{
+		$oChat = $this->createChatInstance();
+		$sSystemMessage = '';
+
+		// Separate the system message from the rest of the history for llphant
+		foreach ($aHistory as $oMessage) {
+			if ($oMessage->role === \LLPhant\Chat\Enums\ChatRole::System) {
+				$sSystemMessage = $oMessage->content;
+			} else {
+				$oChat->addMessage($oMessage);
+			}
+		}
+
+		if (!empty($sSystemMessage)) {
+			$oChat->setSystemMessage($sSystemMessage);
+		}
+
+		$sResponse = $oChat->generateText();
+		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
+		return $sResponse;
+	}
 }
 

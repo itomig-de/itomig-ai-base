@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\Chat\ChatInterface;
 use LLPhant\OllamaConfig;
 use LLPhant\Chat\OllamaChat;
 
@@ -57,26 +58,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
-
-		$config = new OllamaConfig();
-		//$config->apiKey = $this->apiKey;
-		$config->url = $this->url;
-		$config->model = $this->model;
-
-		/*
-		set temperature to 0.4 (conservative answers) and the context window to 16384 tokens.
-		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and
-		limited VRAM (e.g. 12 GB)
-		TODO make these configurable in a future version (?)
-		*/
-		$config->modelOptions = array (
-			'num_ctx' => '16384',
-			'temperature' => '0.4',
-		);
-		$chat = new OllamaChat($config);
+		$oChat = $this->createChatInstance();
 		\IssueLog::Debug("OllamaAIEngine: about to set system instruction: ".$systemInstruction);
-		$chat->setSystemMessage($systemInstruction);
-		$response = $chat->generateText($message);
+		$oChat->setSystemMessage($systemInstruction);
+		$response = $oChat->generateText($message);
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
 
@@ -84,4 +69,27 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		return $response;
 	}
 
+	/**
+	 * Creates and returns an instance of OllamaChat.
+	 *
+	 * @return ChatInterface
+	 */
+	protected function createChatInstance(): ChatInterface
+	{
+		$oConfig = new OllamaConfig();
+		$oConfig->url = $this->url;
+		$oConfig->model = $this->sModel;
+
+		/*
+		set temperature to 0.4 (conservative answers) and the context window to 16384 tokens.
+		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and
+		limited VRAM (e.g. 12 GB)
+		TODO make these configurable in a future version (?)
+		*/
+		$oConfig->modelOptions = array (
+			'num_ctx' => '16384',
+			'temperature' => '0.4',
+		);
+		return new OllamaChat($oConfig);
+	}
 }
