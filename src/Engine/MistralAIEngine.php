@@ -78,8 +78,12 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	protected function createChatInstance(): ChatInterface
 	{
-		return new MistralAIChat(
+		$oChat = new MistralAIChat(
 			new MistralAIConfig($this->sAPIKey, $this->url, $this->sModel)
 		);
+		foreach ($this->aTools as $oTool) {
+			$oChat->addTool($oTool);
+		}
+		return $oChat;
 	}
 }

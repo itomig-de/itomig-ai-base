@@ -98,6 +98,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 			'num_ctx' => '16384',
 			'temperature' => '0.4',
 		);
-		return new OllamaChat($oConfig);
+		$oChat = new OllamaChat($oConfig);
+		foreach ($this->aTools as $oTool) {
+			$oChat->addTool($oTool);
+		}
+		return $oChat;
 	}
 }

@@ -10,7 +10,7 @@
  * iTop is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * (at your "option") any later version.
  *
  * iTop is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -76,6 +76,10 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	protected function createChatInstance(): ChatInterface
 	{
 		$oConfig = new AnthropicConfig($this->sModel, 4096, array() , $this->sAPIKey);
-		return new AnthropicChat($oConfig);
+		$oChat = new AnthropicChat($oConfig);
+		foreach ($this->aTools as $oTool) {
+			$oChat->addTool($oTool);
+		}
+		return $oChat;
 	}
 }

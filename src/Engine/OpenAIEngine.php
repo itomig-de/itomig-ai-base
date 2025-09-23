@@ -88,6 +88,10 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		if(!empty($this->url)) {
 			$oConfig->url = $this->url;
 		}
-		return new OpenAIChat($oConfig);
+		$oChat = new OpenAIChat($oConfig);
+		foreach ($this->aTools as $oTool) {
+			$oChat->addTool($oTool);
+		}
+		return $oChat;
 	}
 }

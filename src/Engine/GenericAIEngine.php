@@ -33,11 +33,21 @@ abstract class GenericAIEngine implements iAIEngineInterface
 {
 	protected string $sAPIKey;
 	protected string $sModel;
+	protected array $aTools = [];
 
 	public function __construct($sAPIKey, $sModel)
 	{
 		$this->sAPIKey = $sAPIKey;
 		$this->sModel = $sModel;
+	}
+
+	/**
+	 * @param \LLPhant\Chat\FunctionInfo\FunctionInfo $oTool
+	 * @return void
+	 */
+	public function addTool(\LLPhant\Chat\FunctionInfo\FunctionInfo $oTool)
+	{
+		$this->aTools[] = $oTool;
 	}
 
 	/**
@@ -76,7 +86,7 @@ abstract class GenericAIEngine implements iAIEngineInterface
 
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
 		$sResponse = $oChat->generateChat($aMessageHistory);
-		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
+		IssueLog::Debug(__METHOD__ . ": AI Response received. Raw response: " . $sResponse, AIBaseHelper::MODULE_CODE);
 		return $sResponse;
 	}
 }

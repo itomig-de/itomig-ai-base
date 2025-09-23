@@ -29,9 +29,12 @@ use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use Itomig\iTop\Extension\AIBase\Helper\AITools;
 use IssueLog;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Message;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
 use MetaModel;
 use utils;
 
@@ -114,6 +117,8 @@ class AIService
 
 		// if only _some_ system prompts are configured, use defaults for the others.
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
+
+		$this->registerDefaultTools();
 	}
 
 	/**
@@ -124,6 +129,30 @@ class AIService
 	 */
 	public function addSystemInstruction($sInstructionName, $sInstruction) {
 		$this->aSystemInstructions[$sInstructionName] = $sInstruction;
+	}
+
+	/**
+	 * Registers a tool (a class method) that the AI can call.
+	 *
+	 * @param string $sFunctionName The name of the method.
+	 * @param string|object $cClassOrObject The class name (for static methods) or an object instance.
+	 * @param string $sDescription A description for the AI to understand what the tool does.
+	 * @param array $aParameterInfo An array of parameter definitions, e.g., [['name' => 'param1', 'type' => 'string', 'description' => '...']]
+	 * @return void
+	 */
+	public function registerTool(string $sFunctionName, string|object $cClassOrObject, string $sDescription, array $aParameterInfo = [])
+	{
+		IssueLog::Debug(__METHOD__ . ": Registering tool '{$sFunctionName}'.", AIBaseHelper::MODULE_CODE);
+		$aParameters = [];
+		foreach ($aParameterInfo as $aInfo) {
+			$aParameters[] = new Parameter($aInfo['name'], $aInfo['type'], $aInfo['description']);
+		}
+
+		$oTool = new FunctionInfo($sFunctionName, $cClassOrObject, $sDescription, $aParameters);
+
+		if ($this->oAIEngine !== null) {
+			$this->oAIEngine->addTool($oTool);
+		}
 	}
 
 	/**
@@ -212,6 +241,20 @@ class AIService
 			'response' => AIBaseHelper::removeThinkTag($sResponseString),
 			'history'  => $aHistory,
 		];
+	}
+
+	/**
+	 * Registers the default, globally available tools.
+	 * @return void
+	 */
+	private function registerDefaultTools()
+	{
+		IssueLog::Debug(__METHOD__ . ": Registering default tools.", AIBaseHelper::MODULE_CODE);
+		$this->registerTool(
+			'getCurrentDate',
+			new AITools(),
+			'Use this function to get the current date and time.'
+		);
 	}
 
 	/**

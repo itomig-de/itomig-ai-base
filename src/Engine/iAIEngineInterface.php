@@ -52,4 +52,11 @@ interface iAIEngineInterface
 	 * @return string The AI's response message.
 	 */
 	public function GetNextTurn(array $aHistory): string;
+
+	/**
+	 * Adds a tool to the engine that can be called by the AI.
+	 * @param \LLPhant\Chat\FunctionInfo\FunctionInfo $oTool
+	 * @return void
+	 */
+	public function addTool(\LLPhant\Chat\FunctionInfo\FunctionInfo $oTool);
 }
