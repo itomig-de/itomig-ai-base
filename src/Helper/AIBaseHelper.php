@@ -76,17 +76,6 @@ class AIBaseHelper
 		return $cleanedString;
 	}
 
-	
-	/**
-	 * Strips HTML tags from a string and decodes HTML entities.
-	 *
-	 * @param string $sString The input string that may contain HTML tags and entities.
-	 * @return string The string with HTML tags removed and HTML entities decoded.
-	 */
-	public function stripHTML(string $sString) {
-		return html_entity_decode(strip_tags($sString));
-	}
-
 
 
 }
