@@ -108,8 +108,16 @@ class AIService
 		}
 		$this->aLanguages = $aLanguages;
 
-		// if only _some_ system prompts are configured, use defaults for the others.
-		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
+		/* if only _some_ system prompts are configured, use defaults for the others, in this order:
+			1. explicitly given in the constructor take precedence over
+			2. configured in the config file over
+			3. defaults from the code (see above)
+		*/
+		$aConfiguredSystemPrompts = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
+		$aConfiguredSystemPrompts = is_array($aConfiguredSystemPrompts) && isset($aConfiguredSystemPrompts['system_prompts']) ? $aConfiguredSystemPrompts['system_prompts'] : [];
+		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aConfiguredSystemPrompts, $aSystemInstructions);
+
+		$this->oAIBaseHelper = new AIBaseHelper();
 	}
 
 	/**
@@ -179,3 +187,5 @@ class AIService
 		return $sDesiredAIEngineClass;
 	}
 }
+
+
