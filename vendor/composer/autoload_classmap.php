@@ -129,6 +129,7 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIConfigurationException' => $baseDir . '/src/Exception/AIConfigurationException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => $baseDir . '/src/Exception/AIResponseException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => $baseDir . '/src/Helper/AIBaseHelper.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Helper\\AITools' => $baseDir . '/src/Helper/AITools.php',
     'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => $baseDir . '/src/Service/AIService.php',
     'LLPhant\\AnthropicConfig' => $vendorDir . '/theodo-group/llphant/src/AnthropicConfig.php',
     'LLPhant\\Audio\\OpenAIAudio' => $vendorDir . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',

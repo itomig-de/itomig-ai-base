@@ -63,8 +63,8 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -246,6 +246,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIConfigurationException' => __DIR__ . '/../..' . '/src/Exception/AIConfigurationException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => __DIR__ . '/../..' . '/src/Exception/AIResponseException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => __DIR__ . '/../..' . '/src/Helper/AIBaseHelper.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Helper\\AITools' => __DIR__ . '/../..' . '/src/Helper/AITools.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
         'LLPhant\\Audio\\OpenAIAudio' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',
