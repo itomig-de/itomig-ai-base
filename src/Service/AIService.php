@@ -119,6 +119,7 @@ class AIService
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
 
 		$this->registerDefaultTools();
+		$this->registerProvidedTools();
 	}
 
 	/**
@@ -140,18 +141,53 @@ class AIService
 	 * @param array $aParameterInfo An array of parameter definitions, e.g., [['name' => 'param1', 'type' => 'string', 'description' => '...']]
 	 * @return void
 	 */
-	public function registerTool(string $sFunctionName, string|object $cClassOrObject, string $sDescription, array $aParameterInfo = [])
+	public function registerTool(string $sFunctionName, string|object $cClassOrObject, string $sDescription, array $aParameters = [])
 	{
-		IssueLog::Debug(__METHOD__ . ": Registering tool '{$sFunctionName}'.", AIBaseHelper::MODULE_CODE);
-		$aParameters = [];
-		foreach ($aParameterInfo as $aInfo) {
-			$aParameters[] = new Parameter($aInfo['name'], $aInfo['type'], $aInfo['description']);
-		}
-
 		$oTool = new FunctionInfo($sFunctionName, $cClassOrObject, $sDescription, $aParameters);
+		$this->addTool($oTool);
+	}
 
+	/**
+	 * Adds a pre-constructed FunctionInfo object to the AI engine.
+	 *
+	 * @param FunctionInfo $oTool
+	 * @return void
+	 */
+	private function addTool(FunctionInfo $oTool)
+	{
+		IssueLog::Debug(__METHOD__ . ": Registering tool '{$oTool->name}'.", AIBaseHelper::MODULE_CODE);
 		if ($this->oAIEngine !== null) {
 			$this->oAIEngine->addTool($oTool);
+		}
+	}
+
+	/**
+	 * Discovers and registers tools from other extensions that implement iAIToolProvider.
+	 * @return void
+	 */
+	private function registerProvidedTools()
+	{
+		IssueLog::Debug(__METHOD__ . ": Searching for tool providers.", AIBaseHelper::MODULE_CODE);
+		$sProviderInterface = 'Itomig\\AiBase\\Contracts\\iAIToolProvider';
+
+		foreach (get_declared_classes() as $sClass) {
+			if (in_array($sProviderInterface, class_implements($sClass))) {
+				IssueLog::Debug(__METHOD__ . ": Found provider '{$sClass}'.", AIBaseHelper::MODULE_CODE);
+				try {
+					/** @var \Itomig\AiBase\Contracts\iAIToolProvider $oProvider */
+					$oProvider = new $sClass();
+					$aTools = $oProvider->getAITools();
+					foreach ($aTools as $aTool) {
+						// $aTool is expected to be [FunctionInfo, callable]
+						// We only need the FunctionInfo object as it contains the callable
+						if (isset($aTool[0]) && $aTool[0] instanceof FunctionInfo) {
+							$this->addTool($aTool[0]);
+						}
+					}
+				} catch (\Exception $e) {
+					IssueLog::Error(__METHOD__ . ": Failed to instantiate or use provider '{$sClass}'.", AIBaseHelper::MODULE_CODE, ['exception' => $e->getMessage()]);
+				}
+			}
 		}
 	}
 
@@ -202,10 +238,6 @@ class AIService
 
 		// 1. Prepare the system message
 		$sSystemMessage = $sCustomSystemMessage ?? $this->aSystemInstructions['default'];
-		if ($oObject !== null) {
-			$sContext = "Context: iTop object '{$oObject->GetName()}' (Class: " . get_class($oObject) . ", ID: {$oObject->GetKey()}).";
-			$sSystemMessage .= "\n\n" . $sContext;
-		}
 
 		// 2. Convert the simple history array to llphant Message objects
 		$aLlphantHistory = [];
@@ -250,10 +282,31 @@ class AIService
 	private function registerDefaultTools()
 	{
 		IssueLog::Debug(__METHOD__ . ": Registering default tools.", AIBaseHelper::MODULE_CODE);
+
+		// Create a single, shared instance for all tools in this class
+		$oAITools = new AITools();
+
 		$this->registerTool(
 			'getCurrentDate',
-			new AITools(),
-			'Use this function to get the current date and time.'
+			$oAITools, // Use the shared instance
+			'Use this function to get the current date, time, or both.'
+		);
+		$this->registerTool(
+			'getObjectName',
+			$oAITools, // Use the same shared instance
+			'Use this function to get the name of the current chat context. Call this when the user asks about the subject of the conversation, or asks "who are you?" or "what is your name?".',
+			[
+				new Parameter(
+					name: 'oObject',
+					type: 'object',
+					description: 'The iTop object to get the name of, identified by its class and ID.',
+					// The 6th argument is the one for the properties
+					itemsOrProperties: [
+						new Parameter('class', 'string', 'The class of the iTop object (e.g., "Organization").'),
+						new Parameter('id', 'string', 'The numeric ID of the iTop object.')
+					]
+				),
+			]
 		);
 	}
 
