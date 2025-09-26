@@ -1,6 +1,6 @@
 <?php
 // /var/www/html/itop320pro3/extensions/itomig-ai-base/src/Contracts/iAIToolProvider.php
-namespace Itomig\AiBase\Contracts;
+namespace Itomig\iTop\Extension\AIBase\Contracts;
 
 /**
  * Interface iAIToolProvider

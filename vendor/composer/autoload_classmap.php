@@ -120,6 +120,7 @@ return array(
     'Http\\Message\\MultipartStream\\CustomMimetypeHelper' => $vendorDir . '/php-http/multipart-stream-builder/src/CustomMimetypeHelper.php',
     'Http\\Message\\MultipartStream\\MimetypeHelper' => $vendorDir . '/php-http/multipart-stream-builder/src/MimetypeHelper.php',
     'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => $vendorDir . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider' => $baseDir . '/src/Contracts/iAIToolProvider.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => $baseDir . '/src/Engine/AnthropicAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => $baseDir . '/src/Engine/GenericAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => $baseDir . '/src/Engine/MistralAIEngine.php',

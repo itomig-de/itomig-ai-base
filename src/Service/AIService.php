@@ -155,41 +155,52 @@ class AIService
 	 * @param FunctionInfo $oTool
 	 * @return void
 	 */
-	private function addTool(FunctionInfo $oTool)
+	    private function addTool(FunctionInfo $oTool)
 	{
-		IssueLog::Debug(__METHOD__ . ": Registering tool '{$oTool->name}'.", AIBaseHelper::MODULE_CODE);
+		IssueLog::Info(__METHOD__ . ": Registering tool '{$oTool->name}'.", AIBaseHelper::MODULE_CODE);
 		if ($this->oAIEngine !== null) {
 			$this->oAIEngine->addTool($oTool);
 		}
 	}
 
-	/**
+	    /**
 	 * Discovers and registers tools from other extensions that implement iAIToolProvider.
+	 *
+	 * It is crucial to use iTop's InterfaceDiscovery service rather than PHP's generic
+	 * get_declared_classes() function. The latter only finds classes that have already been
+	 * loaded into memory, which creates a race condition: if the AIService is instantiated
+	 * before a class from another extension is used, its tool providers will not be found.
+	 * InterfaceDiscovery reliably finds all classes implementing an interface across all
+	 * installed iTop modules.
+	 *
 	 * @return void
 	 */
-	private function registerProvidedTools()
+	    private function registerProvidedTools()
 	{
-		IssueLog::Debug(__METHOD__ . ": Searching for tool providers.", AIBaseHelper::MODULE_CODE);
-		$sProviderInterface = 'Itomig\\AiBase\\Contracts\\iAIToolProvider';
+		IssueLog::Info(__METHOD__ . ": Searching for tool providers.", AIBaseHelper::MODULE_CODE);
+		$sProviderInterface = 'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider';
 
-		foreach (get_declared_classes() as $sClass) {
-			if (in_array($sProviderInterface, class_implements($sClass))) {
-				IssueLog::Debug(__METHOD__ . ": Found provider '{$sClass}'.", AIBaseHelper::MODULE_CODE);
-				try {
-					/** @var \Itomig\AiBase\Contracts\iAIToolProvider $oProvider */
-					$oProvider = new $sClass();
-					$aTools = $oProvider->getAITools();
-					foreach ($aTools as $aTool) {
-						// $aTool is expected to be [FunctionInfo, callable]
-						// We only need the FunctionInfo object as it contains the callable
-						if (isset($aTool[0]) && $aTool[0] instanceof FunctionInfo) {
-							$this->addTool($aTool[0]);
-						}
-					}
-				} catch (\Exception $e) {
-					IssueLog::Error(__METHOD__ . ": Failed to instantiate or use provider '{$sClass}'.", AIBaseHelper::MODULE_CODE, ['exception' => $e->getMessage()]);
-				}
-			}
+		try {
+		    $oInterfaceDiscovery = InterfaceDiscovery::GetInstance();
+		    $aToolProviderClasses = $oInterfaceDiscovery->FindItopClasses($sProviderInterface);
+
+		    foreach ($aToolProviderClasses as $sClass) {
+			    IssueLog::Info(__METHOD__ . ": Found provider '{$sClass}'.", AIBaseHelper::MODULE_CODE);
+			    try {
+				    /** @var \Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider $oProvider */
+				    $oProvider = new $sClass();
+				    $aTools = $oProvider->getAITools();
+				    foreach ($aTools as $aTool) {
+					    if (isset($aTool[0]) && $aTool[0] instanceof FunctionInfo) {
+						    $this->addTool($aTool[0]);
+					    }
+				    }
+			    } catch (\Exception $e) {
+				    IssueLog::Error(__METHOD__ . ": Failed to instantiate or use provider '{$sClass}'.", AIBaseHelper::MODULE_CODE, ['exception' => $e->getMessage()]);
+			    }
+		    }
+		} catch (\ReflectionException $e) {
+		    IssueLog::Error(__METHOD__ . ": Failed during tool provider discovery. The interface may not exist or be autoloadable.", AIBaseHelper::MODULE_CODE, ['exception' => $e->getMessage()]);
 		}
 	}
 

@@ -237,6 +237,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Http\\Message\\MultipartStream\\CustomMimetypeHelper' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/CustomMimetypeHelper.php',
         'Http\\Message\\MultipartStream\\MimetypeHelper' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MimetypeHelper.php',
         'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider' => __DIR__ . '/../..' . '/src/Contracts/iAIToolProvider.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => __DIR__ . '/../..' . '/src/Engine/GenericAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => __DIR__ . '/../..' . '/src/Engine/MistralAIEngine.php',
