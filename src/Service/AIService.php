@@ -64,7 +64,8 @@ class AIService
 		'default' => 'You are a helpful assistant. You answer inquiries politely, precisely, and briefly.'
 	];
 
-	protected ?iAIEngineInterface $oAIEngine;
+	    protected ?iAIEngineInterface $oAIEngine;
+    protected AITools $oAITools;
 
 	/**
 	 * @var string[] $aSystemInstructions
@@ -83,7 +84,7 @@ class AIService
 	 * @param string[] $aLanguages
 	 * @throws AIConfigurationException
 	 */
-	public function __construct(?iAIEngineInterface $oEngine = null , $aSystemInstructions = [], $aLanguages = [])
+	    public function __construct(?iAIEngineInterface $oEngine = null , $aSystemInstructions = [], $aLanguages = [])
 	{
 		if(is_null($oEngine))
 		{
@@ -118,6 +119,7 @@ class AIService
 		// if only _some_ system prompts are configured, use defaults for the others.
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aSystemInstructions);
 
+        $this->oAITools = new AITools();
 		$this->registerDefaultTools();
 		$this->registerProvidedTools();
 	}
@@ -232,9 +234,9 @@ class AIService
 	 * @param string|null $sCustomSystemMessage An optional system message. If not provided, the default is used.
 	 * @return array{response: string, history: array} The AI's response and the updated history array.
 	 */
-	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null): array
+	    public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null): array
 	{
-		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE);
+		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject)]);
 
 		// 1. Prepare the system message
 		$sSystemMessage = $sCustomSystemMessage ?? $this->aSystemInstructions['default'];
@@ -260,6 +262,11 @@ class AIService
 			}
 		}
 
+        // Set the context on the tool helper, making it available for any tool calls
+        if ($oObject !== null) {
+            $this->oAITools->setContext($oObject);
+        }
+
 		// 3. Call the engine
 		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory);
 
@@ -279,34 +286,20 @@ class AIService
 	 * Registers the default, globally available tools.
 	 * @return void
 	 */
-	private function registerDefaultTools()
+	    private function registerDefaultTools()
 	{
 		IssueLog::Debug(__METHOD__ . ": Registering default tools.", AIBaseHelper::MODULE_CODE);
 
-		// Create a single, shared instance for all tools in this class
-		$oAITools = new AITools();
-
 		$this->registerTool(
 			'getCurrentDate',
-			$oAITools, // Use the shared instance
+			$this->oAITools,
 			'Use this function to get the current date, time, or both.'
 		);
 		$this->registerTool(
-			'getObjectName',
-			$oAITools, // Use the same shared instance
-			'Use this function to get the name of the current chat context. Call this when the user asks about the subject of the conversation, or asks "who are you?" or "what is your name?".',
-			[
-				new Parameter(
-					name: 'oObject',
-					type: 'object',
-					description: 'The iTop object to get the name of, identified by its class and ID.',
-					// The 6th argument is the one for the properties
-					itemsOrProperties: [
-						new Parameter('class', 'string', 'The class of the iTop object (e.g., "Organization").'),
-						new Parameter('id', 'string', 'The numeric ID of the iTop object.')
-					]
-				),
-			]
+			'getName',
+			$this->oAITools,
+			                        'Use this function when the user asks about your name, e.g. things like \"who are you?\" or \"what is your name?\".',
+			[]
 		);
 	}
 
