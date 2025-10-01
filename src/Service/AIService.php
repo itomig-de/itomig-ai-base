@@ -103,7 +103,7 @@ class AIService
 		}
 		$this->oAIEngine = $engine;
 
-		if(is_empty($aLanguages)){
+		if(empty($aLanguages)){
 			$aLanguages = ['DE DE', 'EN US', 'FR FR'];
 		}
 		$this->aLanguages = $aLanguages;
