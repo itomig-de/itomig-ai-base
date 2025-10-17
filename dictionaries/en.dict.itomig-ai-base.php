@@ -22,4 +22,5 @@
  */
 
 Dict::Add('EN US', 'English', 'English', array(
+    'Menu:AIBaseDiagnostics' => 'AI Diagnostics',
 ));

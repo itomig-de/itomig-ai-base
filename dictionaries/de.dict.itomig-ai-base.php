@@ -22,4 +22,5 @@
  */
 
 Dict::Add('DE DE', 'Deutsch', 'Deutsch', array(
+    'Menu:AIBaseDiagnostics' => 'AI-Diagnose',
 ));

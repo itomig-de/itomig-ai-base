@@ -1,0 +1,59 @@
+{# templates/diagnostics.html.twig #}
+
+{% extends "itop-standard-page-skeleton.html.twig" %}
+
+{% block _page_content %}
+
+<h1>AI Diagnostics</h1>
+
+<div class="container">
+    <h2>1. Configuration Status</h2>
+
+    {% if sEngineName %}
+        <div class="config-item success"><span class="config-key">AI Engine Name:</span> {{ sEngineName }}</div>
+    {% else %}
+        <div class="config-item error"><span class="config-key">AI Engine Name:</span> Not found in config file.</div>
+    {% endif %}
+
+    {% if sConfigDisplay %}
+        <div class="config-item success"><span class="config-key">Engine Configuration:</span><pre>{{ sConfigDisplay }}</pre></div>
+    {% else %}
+        <div class="config-item error"><span class="config-key">Engine Configuration:</span> Not found or invalid in config file.</div>
+    {% endif %}
+
+    <h2>2. Send a Test Message</h2>
+    <form method="POST" action="{{ utils.GetAbsoluteUrlModulePage('itomig-ai-base', 'diagnostics.php') ~ '&operation=Test' }}">
+        <textarea name="message" placeholder="Enter your test message here..."></textarea>
+        <p><input type="submit" value="Send to AI Engine"></p>
+    </form>
+
+    {% if sResult %}
+        <h2>3. AI Response</h2>
+        <div class="result">{{ sResult }}</div>
+    {% endif %}
+
+    {% if sError %}
+        <h2>3. Error</h2>
+        <div class="error-display">{{ sError }}</div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block _css_includes %}
+{{ parent() }}
+<style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+    h1, h2 { color: #333; }
+    .config-item { margin-bottom: 10px; padding: 10px; border-radius: 3px; }
+    .config-item.success { background-color: #dff0d8; border: 1px solid #d6e9c6; }
+    .config-item.error { background-color: #f2dede; border: 1px solid #ebccd1; }
+    .config-key { font-weight: bold; }
+    textarea { width: 100%; min-height: 100px; padding: 5px; }
+    input[type="submit"] { padding: 10px 15px; font-size: 16px; cursor: pointer; }
+    .result, .error-display { margin-top: 20px; padding: 15px; border-radius: 3px; white-space: pre-wrap; word-wrap: break-word; }
+    .result { background-color: #e7f3fe; border: 1px solid #d0e3f0; }
+    .error-display { background-color: #f2dede; border: 1px solid #ebccd1; color: #a94442; }
+</style>
+{% endblock %}

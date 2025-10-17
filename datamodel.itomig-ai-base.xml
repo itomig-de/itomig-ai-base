@@ -5,6 +5,11 @@
   <classes>
   </classes>
   <menus>
+    <menu id="AIBaseDiagnostics" xsi:type="WebPageMenuNode" _delta="define">
+      <rank>99</rank>
+      <parent>AdminTools</parent>
+      <url>$pages/exec.php?exec_module=itomig-ai-base&amp;exec_page=diagnostics.php</url>
+    </menu>
   </menus>
   <user_rights>
     <groups>
