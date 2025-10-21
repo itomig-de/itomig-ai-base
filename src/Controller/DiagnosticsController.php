@@ -6,14 +6,14 @@ use Combodo\iTop\Application\TwigBase\Controller\Controller;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
 use MetaModel;
 use Exception;
-use utils;
+use Utils;
 
 class DiagnosticsController extends Controller
 {
+    //public const ROUTE_NAMESPACE = 'itomig-ai-base';
     public function OperationShow()
     {
-        $sTemplateName = '@itomig-ai-base/Show.html.twig';
-        \IssueLog::Info("DiagnosticsController::OperationShow(): using template: " . $sTemplateName);
+
 
         $sEngineName = MetaModel::GetConfig()->GetModuleSetting('itomig-ai-base', 'ai_engine.name', null);
         $aEngineConfig = MetaModel::GetConfig()->GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', null);
@@ -27,15 +27,19 @@ class DiagnosticsController extends Controller
             $sConfigDisplay = print_r($aEngineConfig, true);
         }
 
-        $this->DisplayPage([
-            'sEngineName' => $sEngineName,
-            'sConfigDisplay' => $sConfigDisplay,
-        ], $sTemplateName);
+        try {
+            $this->DisplayPage([
+                'sEngineName' => $sEngineName,
+                'sConfigDisplay' => $sConfigDisplay,
+            ]);
+        } catch (\Twig\Error\LoaderError $e) {
+            \IssueLog::Error("Caught Twig LoaderError: " . $e->getMessage());
+        }
     }
 
     public function OperationTest()
     {
-        $sTemplateName = '@itomig-ai-base/Show.html.twig';
+        $sTemplateName = 'Show.html.twig';
         \IssueLog::Info("DiagnosticsController::OperationTest(): using template: " . $sTemplateName);
         $sMessage = utils::ReadParam('message', '', false, 'raw_data');
         $sResult = '';
@@ -62,11 +66,19 @@ class DiagnosticsController extends Controller
             $sConfigDisplay = print_r($aEngineConfig, true);
         }
 
-        $this->DisplayPage([
-            'sEngineName' => $sEngineName,
-            'sConfigDisplay' => $sConfigDisplay,
-            'sResult' => $sResult,
-            'sError' => $sError,
-        ], $sTemplateName);
+        try {
+
+            $this->DisplayPage([
+                'sEngineName' => $sEngineName,
+                'sConfigDisplay' => $sConfigDisplay,
+                'sResult' => $sResult,
+                'sError' => $sError,
+            ], 'show');
+
+
+           // $this->DisplayPage(, $sTemplateName);
+        } catch (\Twig\Error\LoaderError $e) {
+            \IssueLog::Error("Caught Twig LoaderError: " . $e->getMessage());
+        }
     }
 }

@@ -1,9 +1,5 @@
 {# templates/diagnostics.html.twig #}
 
-{% extends "itop-standard-page-skeleton.html.twig" %}
-
-{% block _page_content %}
-
 <h1>AI Diagnostics</h1>
 
 <div class="container">
@@ -22,7 +18,7 @@
     {% endif %}
 
     <h2>2. Send a Test Message</h2>
-    <form method="POST" action="{{ utils.GetAbsoluteUrlModulePage('itomig-ai-base', 'diagnostics.php') ~ '&operation=Test' }}">
+    <form method="POST" action="{{ oPage.utils.GetAbsoluteUrlAppRoot() ~ 'exec.php?exec_module=itomig-ai-base&exec_page=index.php&operation=Test' }}">
         <textarea name="message" placeholder="Enter your test message here..."></textarea>
         <p><input type="submit" value="Send to AI Engine"></p>
     </form>
@@ -38,10 +34,6 @@
     {% endif %}
 </div>
 
-{% endblock %}
-
-{% block _css_includes %}
-{{ parent() }}
 <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     .container { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
@@ -56,4 +48,3 @@
     .result { background-color: #e7f3fe; border: 1px solid #d0e3f0; }
     .error-display { background-color: #f2dede; border: 1px solid #ebccd1; color: #a94442; }
 </style>
-{% endblock %}
