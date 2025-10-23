@@ -29,6 +29,7 @@ SetupWebPage::AddModule(
 			'vendor/autoload.php',
 			'src/Controller/DiagnosticsController.php',
 			'src/Helper/DiagnosticsHelper.php',
+			'src/Service/ConfigurationService.php',
 		),
 		'webservice' => array(
 
