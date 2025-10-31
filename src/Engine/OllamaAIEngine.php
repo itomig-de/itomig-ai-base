@@ -23,6 +23,9 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Dict;
+use Exception;
+use IssueLog;
 use LLPhant\OllamaConfig;
 use LLPhant\Chat\OllamaChat;
 
@@ -53,9 +56,10 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 *
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
-	 * @return string the textual response
+     * @param int $retryNumber Number of retries in case of failure. Must be at least 1.
+     * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion($message, $systemInstruction = '', int $retryNumber = 3): string
 	{
 
 		$config = new OllamaConfig();
@@ -76,12 +80,20 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$chat = new OllamaChat($config);
 		\IssueLog::Debug("OllamaAIEngine: about to set system instruction: ".$systemInstruction);
 		$chat->setSystemMessage($systemInstruction);
-		$response = $chat->generateText($message);
-		\IssueLog::Debug(__METHOD__);
-		\IssueLog::Debug($response);
+		IssueLog::Debug('OllamaAIEngine: system Message set, next step: generateText()..');
+		for ($i = 0; $i < $retryNumber; $i++) {
+			try {
+				$response = $chat->generateText($message);
+				IssueLog::Debug(__METHOD__);
+				IssueLog::Debug($response);
 
-		// TODO error handling in LLPhant ( #2) ?
-		return $response;
+				return $response;
+			}
+			catch (Exception $e) {
+				IssueLog::Error('OllamaAIEngine: Error during generateText() attempt '.($i + 1).'/'.$retryNumber.': '.$e->getMessage());
+			}
+		}
+		throw new Exception(Dict::S('itomig-ai-base/ErrorAIEngineConnexion'));
 	}
 
 }
