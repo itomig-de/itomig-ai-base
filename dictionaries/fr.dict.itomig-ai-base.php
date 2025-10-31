@@ -22,4 +22,5 @@
  */
 
 Dict::Add('FR FR', 'French', 'Français', array(
+	'itomig-ai-base/ErrorAIEngineConnexion' => 'Impossible d\'établir une connexion avec le service d\'IA'
 )) ;
