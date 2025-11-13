@@ -346,7 +346,7 @@ class DiagnosticsController extends Controller
 
         // Submit button
         $sFormHtml .= '<div>';
-        $sFormHtml .= '<input type="submit" value="' . Dict::S('Diagnostics:TestPanel:SubmitButton') . '" style="padding: 0.75em 1.5em; font-size: 1em; cursor: pointer;">';
+        $sFormHtml .= '<button type="submit" class="ibo-btn ibo-btn-primary">' . Dict::S('Diagnostics:TestPanel:SubmitButton') . '</button>';
         $sFormHtml .= '</div>';
 
         $sFormHtml .= '</form>';
@@ -413,7 +413,7 @@ class DiagnosticsController extends Controller
 
         // Generate button
         $sFormHtml .= '<div>';
-        $sFormHtml .= '<input type="submit" value="' . Dict::S('Diagnostics:EditorPanel:GenerateButton') . '" style="padding: 0.75em 1.5em; font-size: 1em; cursor: pointer;">';
+        $sFormHtml .= '<button type="submit" class="ibo-btn ibo-btn-primary">' . Dict::S('Diagnostics:EditorPanel:GenerateButton') . '</button>';
         $sFormHtml .= '</div>';
 
         $sFormHtml .= '</form>';

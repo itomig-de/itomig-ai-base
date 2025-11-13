@@ -23,6 +23,7 @@
 
 Dict::Add('FR FR', 'French', 'Français', array(
     'Menu:AIBaseDiagnostics' => 'Diagnostic IA',
+    'itomig-ai-base/Operation:Show/Title' => 'Diagnostic IA',
     'itomig-ai-base/Operation:show/Title' => 'Diagnostic IA',
 
     // Page and sections

@@ -23,6 +23,7 @@
 
 Dict::Add('EN US', 'English', 'English', array(
     'Menu:AIBaseDiagnostics' => 'AI Diagnostics',
+    'itomig-ai-base/Operation:Show/Title' => 'AI Diagnostics',
     'itomig-ai-base/Operation:show/Title' => 'AI Diagnostics',
 
     // Page and sections

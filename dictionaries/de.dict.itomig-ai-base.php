@@ -23,6 +23,7 @@
 
 Dict::Add('DE DE', 'Deutsch', 'Deutsch', array(
     'Menu:AIBaseDiagnostics' => 'AI-Diagnose',
+    'itomig-ai-base/Operation:Show/Title' => 'AI-Diagnose',
     'itomig-ai-base/Operation:show/Title' => 'AI-Diagnose',
 
     // Page and sections
