@@ -125,6 +125,7 @@ class DiagnosticsController extends Controller
         // Results
         if (!empty($sResult)) {
             $oResultPanel = PanelUIBlockFactory::MakeForSuccess(Dict::S('Diagnostics:ResultPanel:Title'));
+            $oResultPanel->SetIsCollapsible(false);
             $oResultPanel->AddSubBlock(new Html('<pre>' . htmlentities($sResult) . '</pre>'));
             $aParams['oResultPanel'] = $oResultPanel;
         }
