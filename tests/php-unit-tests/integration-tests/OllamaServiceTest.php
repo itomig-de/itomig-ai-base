@@ -16,11 +16,20 @@ class OllamaServiceTest extends ItopTestCase
 		$this->RequireOnceItopFile('/env-production/itomig-ai-base/vendor/autoload.php');
 	}
 
-	public function testOllamaServiceGetCompletion(): void // not consistent test but just for example purposes
+	public function testOllamaServiceGetCompletion(): void // with function mocking, just for example purposes
 	{
-		$oOllamaService = new OllamaAIEngine('http://127.0.0.1:11434/api/', '', 'deepseek-r1:1.5b');
-		$sCompletion = $oOllamaService->GetCompletion('Translate this sentence : "Hello !"', 'You are french and you are translating english sentences to French.');
-		var_dump($sCompletion);
+		$mockOllamaService = $this->createMock(OllamaAIEngine::class);
+		$mockOllamaService->method('GetCompletion')
+			->with(
+				'Translate this sentence : "Hello !"',
+				'You are french and you are translating english sentences to French.'
+			)
+			->willReturn('Bonjour !');
+
+		$sCompletion = $mockOllamaService->GetCompletion(
+			'Translate this sentence : "Hello !"',
+			'You are french and you are translating english sentences to French.'
+		);
 		static::assertStringContainsString('Bonjour', $sCompletion);
 	}
 }

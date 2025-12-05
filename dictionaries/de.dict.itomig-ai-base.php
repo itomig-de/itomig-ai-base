@@ -21,7 +21,7 @@
  * along with iTop. If not, see <http://www.gnu.org/licenses/>
  */
 
-Dict::Add('DE DE', 'Deutsch', 'Deutsch', array(
+Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Menu:AIBaseDiagnostics' => 'AI-Diagnose',
     'itomig-ai-base/Operation:Show/Title' => 'AI-Diagnose',
     'itomig-ai-base/Operation:show/Title' => 'AI-Diagnose',
