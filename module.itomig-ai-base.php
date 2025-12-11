@@ -18,7 +18,7 @@ SetupWebPage::AddModule(
 			'itop-structure/3.2.1',
 
 		),
-		'mandatory' => true,
+		'mandatory' => false,
 		'visible' => true,
 
 		// Components
