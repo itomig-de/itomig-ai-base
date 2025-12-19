@@ -27,9 +27,6 @@ SetupWebPage::AddModule(
             'model.itomig-ai-base.php',
             'main.itomig-ai-base.php',
 			'vendor/autoload.php',
-			'src/Controller/DiagnosticsController.php',
-			'src/Helper/DiagnosticsHelper.php',
-			'src/Service/ConfigurationService.php',
 		),
 		'webservice' => array(
 

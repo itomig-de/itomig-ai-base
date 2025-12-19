@@ -25,7 +25,6 @@ The **itomig-ai-base** extension provides fundamental functionality for integrat
 1. Extract the extension to your iTop extensions directory (e.g., `extensions/itomig-ai-base`)
 2. Run iTop setup and select this extension to enable it
 3. Configure the extension in your iTop configuration file (see Configuration section below)
-4. Access the diagnostics page via the Admin menu to verify the configuration (available in main branch only, not yet in releases)
 
 ## Configuration
 
@@ -305,17 +304,6 @@ $sReview = $oAIService->PerformSystemInstruction(
 );
 ```
 
-## Diagnostics Page
-
-The extension includes a diagnostics page accessible via the Admin menu. This page allows you to:
-
-- Verify the configured AI engine is working correctly
-- Test the connection to the AI provider API
-- View configuration information
-- Perform test queries to validate the system prompt behavior
-
-**Note:** The diagnostics page is currently available in the main branch and not yet included in a stable release.
-
 ## Integration with Other Extensions
 
 This extension serves as a foundation for other iTop extensions that need AI capabilities.
@@ -446,8 +434,6 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 - **Main Service Entry Point**: `src/Service/AIService.php`
 - **Helper Functions**: `src/Helper/AIBaseHelper.php`
 - **Engine Implementations**: `src/Engine/`
-- **Templates**: `templates/`
-- **Diagnostics Page**: `src/Controller/DiagnosticsController.php`
 - **Vendor Dependencies**: `vendor/` (committed to repository, standard for iTop extensions)
 
 ## Version History
@@ -477,7 +463,6 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 For issues, feature requests, or feedback:
 - Create an issue on [GitHub](https://github.com/itomig-de/itomig-ai-base)
 - Check the project documentation for common questions
-- Review the diagnostics page for configuration issues
 
 ## Contributing
 
