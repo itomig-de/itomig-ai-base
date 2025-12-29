@@ -5,11 +5,11 @@
 
 namespace Itomig\iTop\AiBase\Test;
 
-use Combodo\iTop\Test\UnitTest\ItopTestCase;
+use Combodo\iTop\Test\UnitTest\ItopDataTestCase;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
 
-class AiBaseServiceTest extends ItopTestCase
+class AiBaseServiceTest extends ItopDataTestCase
 {
 	protected function setUp(): void
 	{

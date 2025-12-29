@@ -5,7 +5,7 @@
 
 SetupWebPage::AddModule(
 	__FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-	'itomig-ai-base/25.3.1',
+	'itomig-ai-base/26.1.0',
 	array(
 		// Identification
 		//
@@ -27,9 +27,6 @@ SetupWebPage::AddModule(
             'model.itomig-ai-base.php',
             'main.itomig-ai-base.php',
 			'vendor/autoload.php',
-			'src/Controller/DiagnosticsController.php',
-			'src/Helper/DiagnosticsHelper.php',
-			'src/Service/ConfigurationService.php',
 		),
 		'webservice' => array(
 

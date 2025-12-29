@@ -169,7 +169,7 @@ class AIService
 	 * @return class-string<iAIEngineInterface>|'' The class name of the AI engine, or null if no engine is configured.
 	 * @throws \ReflectionException
 	 */
-	protected static function GetAIEngineClass(string $sAIEngineName)
+	public static function GetAIEngineClass(string $sAIEngineName)
 	{
 		$sDesiredAIEngineClass = '';
 		/** @var $aAIEngines */
