@@ -25,6 +25,7 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
+use LLPhant\Chat\ChatInterface;
 
 class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
@@ -56,17 +57,27 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
-
-		$config = new AnthropicConfig($this->model, 4096, array() , $this->apiKey);
-		$chat = new AnthropicChat($config);
-
-		$chat->setSystemMessage ($systemInstruction);
-		$response = $chat->generateText($message);
+		$oChat = $this->createChatInstance();
+		$oChat->setSystemMessage($systemInstruction);
+		$response = $oChat->generateText($message);
 
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
 
 		// TODO error handling in LLPhant: Catch LLPhantException ( #2) ?
 		return $response;
+	}
+
+	/**
+	 * Creates and returns an instance of AnthropicChat.
+	 *
+	 * @return ChatInterface
+	 */
+	protected function createChatInstance(): ChatInterface
+	{
+		// TODO: maxTokens (4096) should be configurable (see Post-Implementation notes in plan)
+		$oConfig = new AnthropicConfig($this->model, 4096, array(), $this->apiKey);
+		$oChat = new AnthropicChat($oConfig);
+		return $oChat;
 	}
 }
