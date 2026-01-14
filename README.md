@@ -169,6 +169,8 @@ The engine layer uses iTop's InterfaceDiscovery system to locate available engin
   - System prompt management with built-in prompts
   - Response cleaning (removes `<think>` tags from reasoning models)
   - JSON markdown block cleanup
+  - Multi-turn conversation support with context retention
+  - Security protection against system message injection
   - Provides both high-level and low-level API methods
 
 ### Helper Classes
@@ -220,6 +222,33 @@ Adds or overrides a system prompt dynamically at runtime.
 - `$sInstructionName`: The name/identifier for the new system prompt
 - `$sInstruction`: The content of the system prompt
 
+### AIService::ContinueConversation()
+
+```php
+public function ContinueConversation(
+    array $aHistory,
+    ?DBObject $oObject = null,
+    ?string $sCustomSystemMessage = null,
+    ?array $aAllowedSystemMessages = null
+): array
+```
+
+Continues a multi-turn conversation by maintaining context across multiple exchanges with the AI.
+
+**Parameters:**
+- `$aHistory`: Array of conversation history. Each entry has `role` (user/assistant) and `content`
+- `$oObject`: (Optional) iTop object for context (reserved for future use)
+- `$sCustomSystemMessage`: (Optional) Custom system message for this turn
+- `$aAllowedSystemMessages`: (Optional) Whitelist of allowed system messages from history
+  - `null` (default): System messages in history are filtered
+  - `array`: Only system messages with content in this array are allowed
+
+**Returns:** Array with two keys:
+- `response`: The AI's response (cleaned, without internal reasoning tags)
+- `history`: Updated conversation history (including the new response)
+
+**Security:** System messages from user-provided history are filtered by default to prevent prompt injection attacks. Use `$aAllowedSystemMessages` to explicitly allow specific context messages.
+
 ## Code Examples
 
 ### Basic Usage
@@ -262,6 +291,78 @@ $aCleanedResponse = json_decode(AIBaseHelper::cleanJSON($sRawResponse), true);
 
 // Strip HTML from responses
 $sCleanText = (new AIBaseHelper())->stripHTML($htmlString);
+```
+
+### Multi-Turn Conversations
+
+```php
+use Itomig\iTop\Extension\AIBase\Service\AIService;
+
+$oAIService = new AIService();
+
+// Start a conversation
+$aHistory = [];
+
+// Turn 1: User introduces themselves
+$aHistory[] = ['role' => 'user', 'content' => 'My name is Alice.'];
+$aResult = $oAIService->ContinueConversation($aHistory);
+echo $aResult['response']; // AI acknowledges
+
+// Update history with AI's response
+$aHistory = $aResult['history'];
+
+// Turn 2: Ask a question that requires previous context
+$aHistory[] = ['role' => 'user', 'content' => 'What is my name?'];
+$aResult = $oAIService->ContinueConversation($aHistory);
+echo $aResult['response']; // AI should remember "Alice"
+
+// Update history again
+$aHistory = $aResult['history'];
+
+// Turn 3: Continue the conversation
+$aHistory[] = ['role' => 'user', 'content' => 'Thank you!'];
+$aResult = $oAIService->ContinueConversation($aHistory);
+```
+
+#### Multi-Turn with Custom System Message
+
+```php
+$oAIService = new AIService();
+
+// Use a custom system message for the conversation
+$sSystemMessage = "You are a technical support assistant. Be helpful and professional.";
+
+$aHistory = [
+    ['role' => 'user', 'content' => 'I need help with my server.']
+];
+
+$aResult = $oAIService->ContinueConversation($aHistory, null, $sSystemMessage);
+echo $aResult['response'];
+```
+
+#### Using Whitelisted System Messages
+
+```php
+$oAIService = new AIService();
+
+// Define allowed context messages
+$aAllowedSystemMessages = [
+    'Context: Technical support ticket',
+    'Context: High priority customer'
+];
+
+$aHistory = [
+    ['role' => 'system', 'content' => 'Context: Technical support ticket'],  // Allowed
+    ['role' => 'user', 'content' => 'My application crashed.']
+];
+
+$aResult = $oAIService->ContinueConversation(
+    $aHistory,
+    null,
+    null,
+    $aAllowedSystemMessages
+);
+// The context message is preserved in the conversation
 ```
 
 ### Using a Custom Engine
