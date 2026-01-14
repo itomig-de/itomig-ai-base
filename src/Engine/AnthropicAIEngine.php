@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\ChatInterface;
@@ -53,19 +54,20 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 *
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
+	 * @param int $retryNumber Number of attempts (default: 3, must be >= 1)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion($message, $systemInstruction = '', int $retryNumber = 3) : string
 	{
 		$oChat = $this->createChatInstance();
 		$oChat->setSystemMessage($systemInstruction);
-		$response = $oChat->generateText($message);
 
-		\IssueLog::Debug(__METHOD__);
-		\IssueLog::Debug($response);
-
-		// TODO error handling in LLPhant: Catch LLPhantException ( #2) ?
-		return $response;
+		// Execute with retry logic and exponential backoff
+		return AIBaseHelper::executeWithRetry(
+			fn() => $oChat->generateText($message),
+			$retryNumber,
+			'AnthropicAIEngine'
+		);
 	}
 
 	/**

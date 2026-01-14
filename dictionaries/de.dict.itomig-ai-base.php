@@ -22,5 +22,5 @@
  */
 
 Dict::Add('DE DE', 'German', 'Deutsch', array(
-	// Reserved for future translations
+	'itomig-ai-base/ErrorAIEngineConnexion' => 'Es konnte keine Verbindung zum KI-Dienst hergestellt werden'
 ));

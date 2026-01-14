@@ -24,6 +24,7 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
@@ -56,21 +57,23 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 *
 	 * @param string $message
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
+	 * @param int $retryNumber Number of attempts (default: 3, must be >= 1)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion($message, $systemInstruction = '', int $retryNumber = 3) : string
 	{
 		IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$oChat = $this->createChatInstance();
 		$oChat->setSystemMessage($systemInstruction);
 
 		IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
-		$response = $oChat->generateText($message);
-		IssueLog::Debug(__METHOD__);
-		IssueLog::Debug($response);
-		return $response;
 
-		// TODO error handling in LLPhant ( #2) ?
+		// Execute with retry logic and exponential backoff
+		return AIBaseHelper::executeWithRetry(
+			fn() => $oChat->generateText($message),
+			$retryNumber,
+			'OpenAIEngine'
+		);
 	}
 
 	/**

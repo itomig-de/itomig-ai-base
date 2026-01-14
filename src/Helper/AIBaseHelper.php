@@ -87,6 +87,47 @@ class AIBaseHelper
 		return html_entity_decode(strip_tags($sString));
 	}
 
+	/**
+	 * Executes an AI operation with automatic retry and exponential backoff.
+	 *
+	 * This method wraps AI operations (like generateText() or generateChat()) with retry logic
+	 * to handle transient failures like network timeouts, rate limiting, or temporary service unavailability.
+	 * Uses exponential backoff strategy: 1s, 2s, 4s, 8s...
+	 *
+	 * @param callable $operation The operation to execute (must return string)
+	 * @param int $maxAttempts Number of attempts (default: 3, must be >= 1)
+	 * @param string $contextName Context for logging (e.g. 'OpenAIEngine')
+	 * @return string The operation result
+	 * @throws \InvalidArgumentException If maxAttempts < 1
+	 * @throws \Exception If all attempts fail
+	 */
+	public static function executeWithRetry(callable $operation, int $maxAttempts = 3, string $contextName = 'AI Engine'): string
+	{
+		if ($maxAttempts < 1) {
+			throw new \InvalidArgumentException('maxAttempts must be at least 1');
+		}
+
+		for ($i = 0; $i < $maxAttempts; $i++) {
+			try {
+				$result = $operation();
+				\IssueLog::Debug("$contextName: Operation succeeded on attempt ".($i + 1), self::MODULE_CODE);
+				return $result;
+			}
+			catch (\Exception $e) {
+				\IssueLog::Error("$contextName: Error during attempt ".($i + 1)."/$maxAttempts: ".$e->getMessage(), self::MODULE_CODE);
+
+				// Exponential Backoff (außer beim letzten Versuch)
+				if ($i < $maxAttempts - 1) {
+					$waitTime = pow(2, $i);  // 1s, 2s, 4s, 8s...
+					\IssueLog::Debug("$contextName: Waiting {$waitTime}s before retry", self::MODULE_CODE);
+					sleep($waitTime);
+				}
+			}
+		}
+
+		// Alle Versuche gescheitert
+		throw new \Exception(\Dict::S('itomig-ai-base/ErrorAIEngineConnexion'));
+	}
 
 
 }

@@ -22,5 +22,5 @@
  */
 
 Dict::Add('EN US', 'English', 'English', array(
-	// Reserved for future translations
+	'itomig-ai-base/ErrorAIEngineConnexion' => 'Unable to establish a connection to the AI service'
 ));

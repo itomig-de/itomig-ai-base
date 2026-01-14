@@ -69,9 +69,10 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 * This method uses the Template Method Pattern, relying on createChatInstance from subclasses.
 	 *
 	 * @param Message[] $aHistory
+	 * @param int $retryNumber Number of attempts (default: 3, must be >= 1)
 	 * @return string
 	 */
-	public function GetNextTurn(array $aHistory): string
+	public function GetNextTurn(array $aHistory, int $retryNumber = 3): string
 	{
 		$oChat = $this->createChatInstance();
 		$sSystemMessage = '';
@@ -99,9 +100,13 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		}
 
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
-		$sResponse = $oChat->generateChat($aMessageHistory);
-		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
-		return $sResponse;
+
+		// Execute with retry logic and exponential backoff
+		return AIBaseHelper::executeWithRetry(
+			fn() => $oChat->generateChat($aMessageHistory),
+			$retryNumber,
+			static::GetEngineName()
+		);
 	}
 }
 
