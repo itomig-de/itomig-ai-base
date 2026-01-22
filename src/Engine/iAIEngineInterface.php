@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
 
 interface iAIEngineInterface
@@ -50,8 +51,11 @@ interface iAIEngineInterface
 
 	/**
 	 * Generates the next response in a conversation given the full message history.
+	 *
 	 * @param Message[] $aHistory The entire conversation history as llphant Message objects.
+	 * @param FunctionInfo[] $aTools Optional array of FunctionInfo objects for function calling.
+	 *                               If provided, the AI can call these tools during the conversation.
 	 * @return string The AI's response message.
 	 */
-	public function GetNextTurn(array $aHistory): string;
+	public function GetNextTurn(array $aHistory, array $aTools = []): string;
 }
