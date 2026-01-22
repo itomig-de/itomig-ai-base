@@ -23,11 +23,15 @@
 namespace Itomig\iTop\Extension\AIBase\Service;
 
 use Combodo\iTop\Service\InterfaceDiscovery\InterfaceDiscovery;
+use DBObject;
 use Dict;
+use IssueLog;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\Message;
 use MetaModel;
 use utils;
 
@@ -161,6 +165,98 @@ class AIService
 	public function GetCompletion($sMessage, $sSystemInstruction = '') : string
 	{
 		return AIBaseHelper::removeThinkTag($this->oAIEngine->GetCompletion($sMessage, $sSystemInstruction));
+	}
+
+	/**
+	 * Processes the next turn in a conversation with multi-turn support.
+	 * The caller is responsible for managing and persisting the history.
+	 *
+	 * Security: System messages in the user-provided history are filtered to prevent prompt injection attacks.
+	 *
+	 * @param array $aHistory An array of associative arrays, each with 'role' and 'content' keys.
+	 *                        Example: [['role' => 'user', 'content' => 'Hello'], ['role' => 'assistant', 'content' => 'Hi!']]
+	 *                        Valid roles: 'user', 'assistant'
+	 *                        System messages: Filtered by default. Use $aAllowedSystemMessages to whitelist specific ones.
+	 * @param DBObject|null $oObject An optional iTop object to add as context for this turn (reserved for future use).
+	 * @param string|null $sCustomSystemMessage An optional custom system message. If not provided, the default is used.
+	 * @param array|null $aAllowedSystemMessages Optional whitelist of allowed system message contents from history.
+	 *                                           - If null (default): System messages are filtered (except official one)
+	 *                                           - If array: Only system messages with content in this array are allowed
+	 *                                           Example: ['Context: Technical support', 'Context: Sales inquiry']
+	 * @return array{response: string, history: array} The AI's response and the updated history array (including the new response).
+	 */
+	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null): array
+	{
+		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject)]);
+
+		// 1. Prepare the system message from trusted sources only
+		$sSystemMessage = $sCustomSystemMessage ?? $this->aSystemInstructions['default'];
+
+		// 2. Convert the simple history array to LLPhant Message objects
+		// SECURITY: Filter out any system messages from user-provided history to prevent prompt injection
+		$aLlphantHistory = [];
+		$aLlphantHistory[] = Message::system($sSystemMessage); // Only official system message at the start
+
+		// Build a clean history without injected system messages
+		$aCleanHistory = [];
+
+		foreach ($aHistory as $aEntry) {
+			if (isset($aEntry['role'], $aEntry['content'])) {
+				// SECURITY: Filter system messages from user history
+				if ($aEntry['role'] === 'system') {
+					// First check: Is it the official system message?
+					// If yes, silently skip (no warning) - we already add it at line 198
+					if ($aEntry['content'] === $sSystemMessage) {
+						continue; // Skip silently - this is the trusted system message
+					}
+
+					// Check if system message is in whitelist (if provided)
+					if ($aAllowedSystemMessages === null) {
+						// Default mode: Reject all OTHER system messages (not the official one)
+						IssueLog::Warning("System message in user history detected and rejected (security).",
+										 AIBaseHelper::MODULE_CODE,
+										 ['content_preview' => substr($aEntry['content'], 0, 50)]);
+						continue; // Skip
+					} elseif (!in_array($aEntry['content'], $aAllowedSystemMessages, true)) {
+						// Whitelist mode: Reject system messages NOT in whitelist
+						IssueLog::Warning("System message not in whitelist, rejected (security).",
+										 AIBaseHelper::MODULE_CODE,
+										 ['content_preview' => substr($aEntry['content'], 0, 50)]);
+						continue; // Skip
+					}
+					// If we reach here: System message is in whitelist -> add it
+					$aLlphantHistory[] = Message::system($aEntry['content']);
+					$aCleanHistory[] = $aEntry;
+					continue;
+				}
+
+				// Only accept user and assistant roles
+				if ($aEntry['role'] === 'user') {
+					$aLlphantHistory[] = Message::user($aEntry['content']);
+					$aCleanHistory[] = $aEntry; // Add to clean history
+				} elseif ($aEntry['role'] === 'assistant') {
+					$aLlphantHistory[] = Message::assistant($aEntry['content']);
+					$aCleanHistory[] = $aEntry; // Add to clean history
+				} else {
+					IssueLog::Warning("Invalid role '{$aEntry['role']}' in conversation history, skipping entry.",
+									 AIBaseHelper::MODULE_CODE);
+				}
+			}
+		}
+
+		// 3. Call the engine with the sanitized history
+		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory);
+
+		// 4. Append the AI's response to the CLEAN history (without injected system messages)
+		$aCleanHistory[] = ['role' => 'assistant', 'content' => $sResponseString];
+
+		IssueLog::Debug("Conversation turn completed.", AIBaseHelper::MODULE_CODE);
+
+		// 5. Return the response and the clean history (without system messages) for the caller to store
+		return [
+			'response' => AIBaseHelper::removeThinkTag($sResponseString),
+			'history'  => $aCleanHistory,
+		];
 	}
 
 	/**

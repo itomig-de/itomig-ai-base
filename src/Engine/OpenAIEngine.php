@@ -24,6 +24,7 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
+use LLPhant\Chat\ChatInterface;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
 
@@ -59,21 +60,12 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	public function GetCompletion($message, $systemInstruction = '') : string
 	{
-
 		IssueLog::Debug("OpenAIEngine: getCompletions() called");
-		$config = new OpenAIConfig();
-		$config->apiKey = $this->apiKey;
-		if(!empty($this->url)) {
-			$config->url = $this->url;
-		}
-		if(!empty($this->model)) {
-			$config->model = $this->model;
-		}
-		$chat = new OpenAIChat($config);
-        $chat->setSystemMessage ($systemInstruction);
+		$oChat = $this->createChatInstance();
+		$oChat->setSystemMessage($systemInstruction);
 
 		IssueLog::Debug("OpenAIEngine: system Message set, next step: generateText()..");
-		$response = $chat->generateText($message);
+		$response = $oChat->generateText($message);
 		IssueLog::Debug(__METHOD__);
 		IssueLog::Debug($response);
 		return $response;
@@ -81,6 +73,22 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		// TODO error handling in LLPhant ( #2) ?
 	}
 
-
-
+	/**
+	 * Creates and returns an instance of OpenAIChat.
+	 *
+	 * @return ChatInterface
+	 */
+	protected function createChatInstance(): ChatInterface
+	{
+		$oConfig = new OpenAIConfig();
+		$oConfig->apiKey = $this->apiKey;
+		if (!empty($this->url)) {
+			$oConfig->url = $this->url;
+		}
+		if (!empty($this->model)) {
+			$oConfig->model = $this->model;
+		}
+		$oChat = new OpenAIChat($oConfig);
+		return $oChat;
+	}
 }
