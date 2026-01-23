@@ -23,6 +23,7 @@
 namespace Itomig\iTop\Extension\AIBase\Helper;
 
 use DBObject;
+use IssueLog;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 
@@ -56,10 +57,13 @@ class AIObjectTools
 	 */
 	public function getObjectName(): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
-		return $this->oContext->GetName();
+		$result = $this->oContext->GetName();
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 
 	/**
@@ -69,10 +73,13 @@ class AIObjectTools
 	 */
 	public function getObjectId(): int
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 0;
 		}
-		return (int) $this->oContext->GetKey();
+		$result = (int) $this->oContext->GetKey();
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 
 	/**
@@ -82,10 +89,13 @@ class AIObjectTools
 	 */
 	public function getObjectClass(): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
-		return get_class($this->oContext);
+		$result = get_class($this->oContext);
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 
 	/**
@@ -96,17 +106,23 @@ class AIObjectTools
 	 */
 	public function getAttribute(string $attributeCode): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called with '$attributeCode', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
 		try {
 			$value = $this->oContext->Get($attributeCode);
 			if (is_object($value)) {
-				return (string) $value;
+				$result = (string) $value;
+			} else {
+				$result = (string) $value;
 			}
-			return (string) $value;
+			IssueLog::Debug(__METHOD__ . ": Returning: " . substr($result, 0, 100), AIBaseHelper::MODULE_CODE);
+			return $result;
 		} catch (\Exception $e) {
-			return "Attribute '$attributeCode' not found or not accessible";
+			$error = "Attribute '$attributeCode' not found or not accessible";
+			IssueLog::Debug(__METHOD__ . ": Error: " . $error, AIBaseHelper::MODULE_CODE);
+			return $error;
 		}
 	}
 
@@ -118,13 +134,18 @@ class AIObjectTools
 	 */
 	public function getAttributeLabel(string $attributeCode): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called with '$attributeCode', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
 		try {
-			return $this->oContext->GetLabel($attributeCode);
+			$result = $this->oContext->GetLabel($attributeCode);
+			IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+			return $result;
 		} catch (\Exception $e) {
-			return "Attribute '$attributeCode' not found";
+			$error = "Attribute '$attributeCode' not found";
+			IssueLog::Debug(__METHOD__ . ": Error: " . $error, AIBaseHelper::MODULE_CODE);
+			return $error;
 		}
 	}
 
@@ -135,6 +156,7 @@ class AIObjectTools
 	 */
 	public function getState(): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
@@ -142,6 +164,7 @@ class AIObjectTools
 		if (empty($sState)) {
 			return 'Object has no lifecycle state';
 		}
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $sState, AIBaseHelper::MODULE_CODE);
 		return $sState;
 	}
 
@@ -152,6 +175,7 @@ class AIObjectTools
 	 */
 	public function getStateLabel(): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
@@ -159,6 +183,7 @@ class AIObjectTools
 		if (empty($sLabel)) {
 			return 'Object has no lifecycle state';
 		}
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $sLabel, AIBaseHelper::MODULE_CODE);
 		return $sLabel;
 	}
 
@@ -169,6 +194,7 @@ class AIObjectTools
 	 */
 	public function getAvailableTransitions(): string
 	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
@@ -176,7 +202,9 @@ class AIObjectTools
 		if (empty($aTransitions)) {
 			return 'No transitions available';
 		}
-		return implode(', ', array_keys($aTransitions));
+		$result = implode(', ', array_keys($aTransitions));
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 
 	/**
@@ -186,7 +214,10 @@ class AIObjectTools
 	 */
 	public function getCurrentDateTime(): string
 	{
-		return date('Y-m-d H:i:s');
+		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
+		$result = date('Y-m-d H:i:s');
+		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 
 	/**
@@ -200,63 +231,63 @@ class AIObjectTools
 			new FunctionInfo(
 				'getObjectName',
 				$this,
-				'Get the friendly name of the iTop object the user is currently looking at.',
+				'Get the friendly name. No parameters required - context is provided automatically.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getObjectId',
 				$this,
-				'Get the unique ID of the current iTop object.',
+				'Get the unique ID. No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getObjectClass',
 				$this,
-				'Get the class name (type) of the current iTop object.',
+				'Get the class name (type). No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getAttribute',
 				$this,
-				'Get the value of a specific attribute from the current iTop object. Common attributes include: title, description, status, org_id, caller_id, team_id, agent_id, start_date, end_date, etc.',
+				'Get the value of a specific attribute. Requires: attributeCode (string). Common attributes: title, description, status, org_id, caller_id, team_id, agent_id, start_date, end_date.',
 				[new Parameter('attributeCode', 'string', 'The attribute code to retrieve (e.g., "title", "description", "status")')],
 				[new Parameter('attributeCode', 'string', 'The attribute code to retrieve')]
 			),
 			new FunctionInfo(
 				'getAttributeLabel',
 				$this,
-				'Get the human-readable label (display name) of an attribute definition.',
+				'Get the label of an attribute. Requires: attributeCode (string).',
 				[new Parameter('attributeCode', 'string', 'The attribute code to get the label for')],
 				[new Parameter('attributeCode', 'string', 'The attribute code')]
 			),
 			new FunctionInfo(
 				'getState',
 				$this,
-				'Get the current lifecycle state code of the iTop object (e.g., "new", "assigned", "resolved").',
+				'Get the current lifecycle state code (e.g., "new", "assigned", "resolved"). No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getStateLabel',
 				$this,
-				'Get the human-readable label of the current lifecycle state.',
+				'Get the human-readable state label. No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getAvailableTransitions',
 				$this,
-				'List all available state transitions (actions) that can be performed on the current object from its current state.',
+				'List available state transitions. No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
 				'getCurrentDateTime',
 				$this,
-				'Get the current server date and time.',
+				'Get current server date and time. No parameters required.',
 				[],
 				[]
 			),
