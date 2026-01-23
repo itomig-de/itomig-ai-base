@@ -85,6 +85,8 @@ abstract class GenericAIEngine implements iAIEngineInterface
 				$oChat->addTool($oTool);
 			}
 			IssueLog::Debug(__METHOD__ . ": Registered " . count($aTools) . " tools for function calling.", AIBaseHelper::MODULE_CODE);
+			$aToolNames = array_map(fn($t) => $t->name, $aTools);
+			IssueLog::Debug(__METHOD__ . ": Tool names: " . implode(', ', $aToolNames), AIBaseHelper::MODULE_CODE);
 		}
 
 		// Extract the FIRST (and only) System-Message if present
@@ -108,9 +110,24 @@ abstract class GenericAIEngine implements iAIEngineInterface
 			$oChat->setSystemMessage($sSystemMessage);
 		}
 
+		// Debug: Log message details including tool call information
+		foreach ($aMessageHistory as $idx => $oMsg) {
+			$aDetails = ['role' => $oMsg->role->value, 'content_length' => strlen($oMsg->content ?? '')];
+			if (!empty($oMsg->tool_calls)) {
+				$aDetails['tool_calls_count'] = count($oMsg->tool_calls);
+			}
+			if (!empty($oMsg->tool_call_id)) {
+				$aDetails['tool_call_id'] = $oMsg->tool_call_id;
+			}
+			IssueLog::Debug(__METHOD__ . ": Message[$idx]: " . json_encode($aDetails), AIBaseHelper::MODULE_CODE);
+		}
+
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
 		$sResponse = $oChat->generateChat($aMessageHistory);
-		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
+
+		// Debug: Log raw response (truncated if too long)
+		$sResponsePreview = strlen($sResponse) > 500 ? substr($sResponse, 0, 500) . '...[truncated]' : $sResponse;
+		IssueLog::Debug(__METHOD__ . ": Raw response: " . $sResponsePreview, AIBaseHelper::MODULE_CODE);
 		return $sResponse;
 	}
 }

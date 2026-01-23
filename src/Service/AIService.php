@@ -309,6 +309,12 @@ class AIService
 		// 5. Call the engine with the sanitized history and tools
 		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory, $aEffectiveTools);
 
+		// Debug: Check if response looks like unprocessed JSON (potential tool call issue)
+		$bLooksLikeJson = str_starts_with(trim($sResponseString), '{') || str_starts_with(trim($sResponseString), '[');
+		if ($bLooksLikeJson) {
+			IssueLog::Debug(__METHOD__ . ": Response appears to be JSON (potential unprocessed tool call): " . substr($sResponseString, 0, 200), AIBaseHelper::MODULE_CODE);
+		}
+
 		// 6. Append the AI's response to the CLEAN history (without injected system messages)
 		$aCleanHistory[] = ['role' => 'assistant', 'content' => $sResponseString];
 
