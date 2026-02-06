@@ -69,15 +69,15 @@ class AIObjectTools
 	/**
 	 * Get the ID of the current object.
 	 *
-	 * @return int The object's ID, or 0 if no context.
+	 * @return string The object's ID, or '0' if no context.
 	 */
-	public function getObjectId(): int
+	public function getObjectId(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
-			return 0;
+			return '0';
 		}
-		$result = (int) $this->oContext->GetKey();
+		$result = (string) $this->oContext->GetKey();
 		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
 		return $result;
 	}
