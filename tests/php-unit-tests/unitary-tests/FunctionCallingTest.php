@@ -33,7 +33,7 @@ class FunctionCallingTest extends ItopDataTestCase
 		$oTools = new AIObjectTools();
 
 		static::assertEquals('No object in context', $oTools->getObjectName());
-		static::assertEquals(0, $oTools->getObjectId());
+		static::assertEquals('0', $oTools->getObjectId());
 		static::assertEquals('No object in context', $oTools->getObjectClass());
 		static::assertEquals('No object in context', $oTools->getAttribute('title'));
 		static::assertEquals('No object in context', $oTools->getState());
@@ -337,6 +337,121 @@ class FunctionCallingTest extends ItopDataTestCase
 		);
 
 		static::assertEquals('Response without tools', $aResult['response']);
+	}
+
+	/**
+	 * Test multi-step tool loop: engine returns tool calls, service executes them, then engine returns text
+	 */
+	public function testMultiStepToolLoop(): void
+	{
+		// Create a tool provider with a working method
+		$oTestProvider = new class {
+			public function lookupValue(string $key): string
+			{
+				return "value_for_$key";
+			}
+		};
+
+		$oToolInfo = new FunctionInfo(
+			'lookupValue',
+			$oTestProvider,
+			'Look up a value by key',
+			[new Parameter('key', 'string', 'The key to look up')],
+			[new Parameter('key', 'string', 'The key to look up')]
+		);
+
+		$iCallCount = 0;
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->expects(static::exactly(2))
+			->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) use (&$iCallCount, $oTestProvider) {
+				$iCallCount++;
+				if ($iCallCount === 1) {
+					// First call: simulate LLM requesting a tool call
+					$oTool = new FunctionInfo(
+						'lookupValue',
+						$oTestProvider,
+						'Look up a value by key',
+						[new Parameter('key', 'string', 'The key to look up')],
+						[new Parameter('key', 'string', 'The key to look up')]
+					);
+					$oTool->setToolCallId('call_abc123');
+					$oTool->jsonArgs = json_encode(['key' => 'test_key']);
+					return [$oTool];
+				}
+				// Second call: return final text response (history should now contain tool messages)
+				static::assertGreaterThan(2, count($aHistory), 'History should contain tool call and result messages');
+				return 'Final answer based on tool result: value_for_test_key';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+
+		$aResult = $oAIService->ContinueConversation(
+			[['role' => 'user', 'content' => 'Look up test_key']],
+			null,
+			null,
+			null,
+			[$oToolInfo]
+		);
+
+		static::assertEquals('Final answer based on tool result: value_for_test_key', $aResult['response']);
+		static::assertArrayHasKey('history', $aResult);
+	}
+
+	/**
+	 * Test tool loop handles tool execution errors gracefully
+	 */
+	public function testToolLoopHandlesToolErrors(): void
+	{
+		$oTestProvider = new class {
+			public function failingTool(): string
+			{
+				throw new \RuntimeException('Tool execution failed');
+			}
+		};
+
+		$oToolInfo = new FunctionInfo(
+			'failingTool',
+			$oTestProvider,
+			'A tool that always fails',
+			[],
+			[]
+		);
+
+		$iCallCount = 0;
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->expects(static::exactly(2))
+			->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) use (&$iCallCount, $oTestProvider) {
+				$iCallCount++;
+				if ($iCallCount === 1) {
+					// Return a tool call that will fail
+					$oTool = new FunctionInfo(
+						'failingTool',
+						$oTestProvider,
+						'A tool that always fails',
+						[],
+						[]
+					);
+					$oTool->setToolCallId('call_fail_123');
+					$oTool->jsonArgs = '{}';
+					return [$oTool];
+				}
+				// Second call: LLM sees the error and responds with text
+				return 'I encountered an error with the tool';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+
+		$aResult = $oAIService->ContinueConversation(
+			[['role' => 'user', 'content' => 'Use the tool']],
+			null,
+			null,
+			null,
+			[$oToolInfo]
+		);
+
+		static::assertEquals('I encountered an error with the tool', $aResult['response']);
 	}
 
 	/**

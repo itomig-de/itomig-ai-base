@@ -55,7 +55,7 @@ interface iAIEngineInterface
 	 * @param Message[] $aHistory The entire conversation history as llphant Message objects.
 	 * @param FunctionInfo[] $aTools Optional array of FunctionInfo objects for function calling.
 	 *                               If provided, the AI can call these tools during the conversation.
-	 * @return string The AI's response message.
+	 * @return string|FunctionInfo[] String for text response, FunctionInfo[] for tool calls
 	 */
-	public function GetNextTurn(array $aHistory, array $aTools = []): string;
+	public function GetNextTurn(array $aHistory, array $aTools = []): string|array;
 }
