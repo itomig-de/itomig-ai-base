@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d8be68bed68b2e666ec5f78f725945c1",
+    "content-hash": "62029f942136a04f4779e500feacedf4",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -333,20 +333,20 @@
         },
         {
             "name": "openai-php/client",
-            "version": "v0.10.3",
+            "version": "v0.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openai-php/client.git",
-                "reference": "4a565d145e0fb3ea1baba8fffe39d86c56b6dc2c"
+                "reference": "399229860cea244843753bf1d9c28aee0e74c3a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openai-php/client/zipball/4a565d145e0fb3ea1baba8fffe39d86c56b6dc2c",
-                "reference": "4a565d145e0fb3ea1baba8fffe39d86c56b6dc2c",
+                "url": "https://api.github.com/repos/openai-php/client/zipball/399229860cea244843753bf1d9c28aee0e74c3a6",
+                "reference": "399229860cea244843753bf1d9c28aee0e74c3a6",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1.0",
+                "php": "^8.2.0",
                 "php-http/discovery": "^1.20.0",
                 "php-http/multipart-stream-builder": "^1.4.2",
                 "psr/http-client": "^1.0.3",
@@ -355,16 +355,16 @@
                 "psr/http-message": "^1.1.0|^2.0.0"
             },
             "require-dev": {
-                "guzzlehttp/guzzle": "^7.9.2",
-                "guzzlehttp/psr7": "^2.7.0",
-                "laravel/pint": "^1.18.1",
+                "guzzlehttp/guzzle": "^7.9.3",
+                "guzzlehttp/psr7": "^2.7.1",
+                "laravel/pint": "^1.22.0",
                 "mockery/mockery": "^1.6.12",
-                "nunomaduro/collision": "^7.11.0|^8.5.0",
-                "pestphp/pest": "^2.36.0|^3.5.0",
-                "pestphp/pest-plugin-arch": "^2.7|^3.0",
-                "pestphp/pest-plugin-type-coverage": "^2.8.7|^3.1.0",
-                "phpstan/phpstan": "^1.12.7",
-                "symfony/var-dumper": "^6.4.11|^7.1.5"
+                "nunomaduro/collision": "^8.8.0",
+                "pestphp/pest": "^3.8.2|^4.0.0",
+                "pestphp/pest-plugin-arch": "^3.1.1|^4.0.0",
+                "pestphp/pest-plugin-type-coverage": "^3.5.1|^4.0.0",
+                "phpstan/phpstan": "^1.12.25",
+                "symfony/var-dumper": "^7.2.6"
             },
             "type": "library",
             "autoload": {
@@ -404,7 +404,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openai-php/client/issues",
-                "source": "https://github.com/openai-php/client/tree/v0.10.3"
+                "source": "https://github.com/openai-php/client/tree/v0.13.0"
             },
             "funding": [
                 {
@@ -420,7 +420,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-11-12T20:51:16+00:00"
+            "time": "2025-05-14T21:43:59+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -718,6 +718,59 @@
             "time": "2025-06-05T10:32:36+00:00"
         },
         {
+            "name": "psr/container",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/container.git",
+                "reference": "c71ecc56dfe541dbd90c5360474fbc405f8d5963"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/container/zipball/c71ecc56dfe541dbd90c5360474fbc405f8d5963",
+                "reference": "c71ecc56dfe541dbd90c5360474fbc405f8d5963",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Container\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common Container Interface (PHP FIG PSR-11)",
+            "homepage": "https://github.com/php-fig/container",
+            "keywords": [
+                "PSR-11",
+                "container",
+                "container-interface",
+                "container-interop",
+                "psr"
+            ],
+            "support": {
+                "issues": "https://github.com/php-fig/container/issues",
+                "source": "https://github.com/php-fig/container/tree/2.0.2"
+            },
+            "time": "2021-11-05T16:47:00+00:00"
+        },
+        {
             "name": "psr/http-client",
             "version": "1.0.3",
             "source": {
@@ -973,16 +1026,16 @@
         },
         {
             "name": "smalot/pdfparser",
-            "version": "v2.12.1",
+            "version": "v2.12.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/smalot/pdfparser.git",
-                "reference": "98d31ba34ef5b5a98897ef4b6c3925d502ea53b1"
+                "reference": "61c9bcafcb92899b76d8ebda6508267bae77e264"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/smalot/pdfparser/zipball/98d31ba34ef5b5a98897ef4b6c3925d502ea53b1",
-                "reference": "98d31ba34ef5b5a98897ef4b6c3925d502ea53b1",
+                "url": "https://api.github.com/repos/smalot/pdfparser/zipball/61c9bcafcb92899b76d8ebda6508267bae77e264",
+                "reference": "61c9bcafcb92899b76d8ebda6508267bae77e264",
                 "shasum": ""
             },
             "require": {
@@ -1018,9 +1071,9 @@
             ],
             "support": {
                 "issues": "https://github.com/smalot/pdfparser/issues",
-                "source": "https://github.com/smalot/pdfparser/tree/v2.12.1"
+                "source": "https://github.com/smalot/pdfparser/tree/v2.12.3"
             },
-            "time": "2025-07-31T06:19:56+00:00"
+            "time": "2026-01-08T08:04:04+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -1175,28 +1228,119 @@
             "time": "2024-12-23T08:48:59+00:00"
         },
         {
-            "name": "theodo-group/llphant",
-            "version": "0.10.1",
+            "name": "symfony/service-contracts",
+            "version": "v3.6.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/LLPhant/LLPhant.git",
-                "reference": "79e32a81fc872934a8cff6389f98a354046dd1c9"
+                "url": "https://github.com/symfony/service-contracts.git",
+                "reference": "45112560a3ba2d715666a509a0bc9521d10b6c43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/79e32a81fc872934a8cff6389f98a354046dd1c9",
-                "reference": "79e32a81fc872934a8cff6389f98a354046dd1c9",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/45112560a3ba2d715666a509a0bc9521d10b6c43",
+                "reference": "45112560a3ba2d715666a509a0bc9521d10b6c43",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "psr/container": "^1.1|^2.0",
+                "symfony/deprecation-contracts": "^2.5|^3"
+            },
+            "conflict": {
+                "ext-psr": "<1.1|>=2"
+            },
+            "type": "library",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
+                "branch-alias": {
+                    "dev-main": "3.6-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Contracts\\Service\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Test/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Generic abstractions related to writing services",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "abstractions",
+                "contracts",
+                "decoupling",
+                "interfaces",
+                "interoperability",
+                "standards"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/service-contracts/tree/v3.6.1"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2025-07-15T11:30:57+00:00"
+        },
+        {
+            "name": "theodo-group/llphant",
+            "version": "0.10.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LLPhant/LLPhant.git",
+                "reference": "23163245d32b254a5e156e6514168225b0db3416"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/23163245d32b254a5e156e6514168225b0db3416",
+                "reference": "23163245d32b254a5e156e6514168225b0db3416",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.4.5",
                 "guzzlehttp/psr7": "^2.7",
-                "openai-php/client": "^v0.10.3",
+                "openai-php/client": "^v0.13.0",
                 "php": "^8.1.0",
-                "phpoffice/phpword": "^1.3.0",
+                "php-http/discovery": "^1.20.0",
+                "php-http/multipart-stream-builder": "^1.4.2",
+                "phpoffice/phpword": "^1.4.0",
+                "psr/http-client": "^1.0.3",
                 "psr/http-message": "^2.0",
                 "psr/log": "^3.0",
-                "smalot/pdfparser": "^2.11"
+                "smalot/pdfparser": "^2.11",
+                "yethee/tiktoken": "^0.10.0"
             },
             "require-dev": {
                 "codewithkyrian/chromadb-php": "^0.3.0",
@@ -1255,9 +1399,63 @@
             ],
             "support": {
                 "issues": "https://github.com/LLPhant/LLPhant/issues",
-                "source": "https://github.com/LLPhant/LLPhant/tree/0.10.1"
+                "source": "https://github.com/LLPhant/LLPhant/tree/0.10.8"
             },
-            "time": "2025-05-06T13:32:56+00:00"
+            "time": "2025-07-03T20:03:48+00:00"
+        },
+        {
+            "name": "yethee/tiktoken",
+            "version": "0.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yethee/tiktoken-php.git",
+                "reference": "59a93e34b90469021a4b8ed3a98765e8dc23f3cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yethee/tiktoken-php/zipball/59a93e34b90469021a4b8ed3a98765e8dc23f3cc",
+                "reference": "59a93e34b90469021a4b8ed3a98765e8dc23f3cc",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1",
+                "symfony/service-contracts": "^2.5 || ^3.0"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^13",
+                "mikey179/vfsstream": "^1.6.11",
+                "phpbench/phpbench": "^1.2",
+                "phpunit/phpunit": "^10.5.45",
+                "psalm/plugin-phpunit": "^0.19.2",
+                "vimeo/psalm": "6.10.0"
+            },
+            "suggest": {
+                "ext-ffi": "To allow use LibEncoder"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Yethee\\Tiktoken\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP version of tiktoken",
+            "keywords": [
+                "bpe",
+                "decode",
+                "encode",
+                "openai",
+                "tiktoken",
+                "tokenizer"
+            ],
+            "support": {
+                "issues": "https://github.com/yethee/tiktoken-php/issues",
+                "source": "https://github.com/yethee/tiktoken-php/tree/0.10.0"
+            },
+            "time": "2025-04-19T13:47:00+00:00"
         }
     ],
     "packages-dev": [],

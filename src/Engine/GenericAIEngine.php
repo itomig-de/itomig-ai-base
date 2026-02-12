@@ -28,6 +28,7 @@ use IssueLog;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
@@ -68,14 +69,28 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 * Generic implementation for handling a conversational turn.
 	 * This method uses the Template Method Pattern, relying on createChatInstance from subclasses.
 	 *
-	 * @param Message[] $aHistory
-	 * @return string
+	 * The engine does NOT execute tools - it returns FunctionInfo[] to the caller (AIService)
+	 * which handles tool execution and the multi-step loop.
+	 *
+	 * @param Message[] $aHistory The conversation history.
+	 * @param FunctionInfo[] $aTools Optional array of tools for function calling.
+	 * @return string|FunctionInfo[] String for text response, FunctionInfo[] for tool calls
 	 */
-	public function GetNextTurn(array $aHistory): string
+	public function GetNextTurn(array $aHistory, array $aTools = []): string|array
 	{
 		$oChat = $this->createChatInstance();
 		$sSystemMessage = '';
 		$aMessageHistory = [];
+
+		// Register tools on the chat instance if provided
+		if (!empty($aTools)) {
+			foreach ($aTools as $oTool) {
+				$oChat->addTool($oTool);
+			}
+			IssueLog::Debug(__METHOD__ . ": Registered " . count($aTools) . " tools for function calling.", AIBaseHelper::MODULE_CODE);
+			$aToolNames = array_map(fn($t) => $t->name, $aTools);
+			IssueLog::Debug(__METHOD__ . ": Tool names: " . implode(', ', $aToolNames), AIBaseHelper::MODULE_CODE);
+		}
 
 		// Extract the FIRST (and only) System-Message if present
 		// (System-Message was set by ContinueConversation as first message)
@@ -98,10 +113,31 @@ abstract class GenericAIEngine implements iAIEngineInterface
 			$oChat->setSystemMessage($sSystemMessage);
 		}
 
+		// Debug: Log message details including tool call information
+		foreach ($aMessageHistory as $idx => $oMsg) {
+			$aDetails = ['role' => $oMsg->role->value, 'content_length' => strlen($oMsg->content ?? '')];
+			if (!empty($oMsg->tool_calls)) {
+				$aDetails['tool_calls_count'] = count($oMsg->tool_calls);
+			}
+			if (!empty($oMsg->tool_call_id)) {
+				$aDetails['tool_call_id'] = $oMsg->tool_call_id;
+			}
+			IssueLog::Debug(__METHOD__ . ": Message[$idx]: " . json_encode($aDetails), AIBaseHelper::MODULE_CODE);
+		}
+
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
-		$sResponse = $oChat->generateChat($aMessageHistory);
-		IssueLog::Debug(__METHOD__ . ": AI Response received.", AIBaseHelper::MODULE_CODE);
-		return $sResponse;
+		$result = $oChat->generateChatOrReturnFunctionCalled($aMessageHistory);
+
+		if (is_string($result)) {
+			$sResponsePreview = strlen($result) > 500 ? substr($result, 0, 500) . '...[truncated]' : $result;
+			IssueLog::Debug(__METHOD__ . ": Text response: " . $sResponsePreview, AIBaseHelper::MODULE_CODE);
+			return $result;
+		}
+
+		// Tool calls requested by LLM - return FunctionInfo[] to caller (AIService)
+		$aToolNames = array_map(fn($t) => $t->name, $result);
+		IssueLog::Debug(__METHOD__ . ": LLM requested tool calls: " . implode(', ', $aToolNames), AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 }
 

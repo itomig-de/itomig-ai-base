@@ -26,17 +26,25 @@ use Combodo\iTop\Service\InterfaceDiscovery\InterfaceDiscovery;
 use DBObject;
 use Dict;
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
 use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
 use MetaModel;
 use utils;
 
 class AIService
 {
+	/**
+	 * Maximum number of tool call round-trips before forcing a text response.
+	 */
+	private const MAX_TOOL_ROUNDS = 5;
+
 	/**
 	 * @var string[] $aDefaultSystemPrompts
 	 */
@@ -72,6 +80,16 @@ class AIService
 	 * @var string[]
 	 */
 	public $aLanguages;
+
+	/**
+	 * @var AIObjectTools Default object tools instance
+	 */
+	protected AIObjectTools $oObjectTools;
+
+	/**
+	 * @var FunctionInfo[] Discovered tools from external providers
+	 */
+	protected array $aDiscoveredTools = [];
 
 	/**
 	 *
@@ -122,6 +140,40 @@ class AIService
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aConfiguredSystemPrompts, $aSystemInstructions);
 
 		$this->oAIBaseHelper = new AIBaseHelper();
+
+		// Initialize default object tools
+		$this->oObjectTools = new AIObjectTools();
+
+		// Discover external tool providers
+		$this->discoverToolProviders();
+	}
+
+	/**
+	 * Discovers and registers tools from external providers implementing iAIToolProvider.
+	 */
+	protected function discoverToolProviders(): void
+	{
+		try {
+			$oInterfaceDiscovery = InterfaceDiscovery::GetInstance();
+			$aProviderClasses = $oInterfaceDiscovery->FindItopClasses(iAIToolProvider::class);
+
+			foreach ($aProviderClasses as $sProviderClass) {
+				try {
+					$oProvider = new $sProviderClass();
+					$aTools = $oProvider->getAITools();
+					foreach ($aTools as $oTool) {
+						if ($oTool instanceof FunctionInfo) {
+							$this->aDiscoveredTools[] = $oTool;
+						}
+					}
+					IssueLog::Debug(__METHOD__ . ": Discovered " . count($aTools) . " tools from provider " . $sProviderClass, AIBaseHelper::MODULE_CODE);
+				} catch (\Exception $e) {
+					IssueLog::Warning(__METHOD__ . ": Failed to instantiate tool provider " . $sProviderClass . ": " . $e->getMessage(), AIBaseHelper::MODULE_CODE);
+				}
+			}
+		} catch (\Exception $e) {
+			IssueLog::Warning(__METHOD__ . ": Failed to discover tool providers: " . $e->getMessage(), AIBaseHelper::MODULE_CODE);
+		}
 	}
 
 	/**
@@ -168,7 +220,7 @@ class AIService
 	}
 
 	/**
-	 * Processes the next turn in a conversation with multi-turn support.
+	 * Processes the next turn in a conversation with multi-turn support and optional function calling.
 	 * The caller is responsible for managing and persisting the history.
 	 *
 	 * Security: System messages in the user-provided history are filtered to prevent prompt injection attacks.
@@ -177,22 +229,37 @@ class AIService
 	 *                        Example: [['role' => 'user', 'content' => 'Hello'], ['role' => 'assistant', 'content' => 'Hi!']]
 	 *                        Valid roles: 'user', 'assistant'
 	 *                        System messages: Filtered by default. Use $aAllowedSystemMessages to whitelist specific ones.
-	 * @param DBObject|null $oObject An optional iTop object to add as context for this turn (reserved for future use).
+	 * @param DBObject|null $oObject An optional iTop object to use as context for tools. When provided, the default
+	 *                               object tools (getObjectName, getAttribute, etc.) will have access to this object.
 	 * @param string|null $sCustomSystemMessage An optional custom system message. If not provided, the default is used.
 	 * @param array|null $aAllowedSystemMessages Optional whitelist of allowed system message contents from history.
 	 *                                           - If null (default): System messages are filtered (except official one)
 	 *                                           - If array: Only system messages with content in this array are allowed
 	 *                                           Example: ['Context: Technical support', 'Context: Sales inquiry']
+	 * @param FunctionInfo[] $aTools Optional array of FunctionInfo objects for function calling.
+	 *                               If empty and $oObject is provided, default object tools will be used.
+	 *                               Pass an empty array explicitly to disable all tools.
 	 * @return array{response: string, history: array} The AI's response and the updated history array (including the new response).
 	 */
-	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null): array
+	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null, array $aTools = []): array
 	{
-		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject)]);
+		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject), 'tool_count' => count($aTools)]);
 
-		// 1. Prepare the system message from trusted sources only
+		// 1. Set object context for default tools if an object is provided
+		$this->oObjectTools->setContext($oObject);
+
+		// 2. Prepare tools: Use provided tools, or default object tools if object is provided and no tools specified
+		$aEffectiveTools = $aTools;
+		if (empty($aEffectiveTools) && $oObject !== null) {
+			// Auto-register default object tools when an object is provided
+			$aEffectiveTools = $this->getDefaultTools();
+			IssueLog::Debug("Auto-registered default object tools for context object.", AIBaseHelper::MODULE_CODE);
+		}
+
+		// 3. Prepare the system message from trusted sources only
 		$sSystemMessage = $sCustomSystemMessage ?? $this->aSystemInstructions['default'];
 
-		// 2. Convert the simple history array to LLPhant Message objects
+		// 4. Convert the simple history array to LLPhant Message objects
 		// SECURITY: Filter out any system messages from user-provided history to prevent prompt injection
 		$aLlphantHistory = [];
 		$aLlphantHistory[] = Message::system($sSystemMessage); // Only official system message at the start
@@ -244,15 +311,53 @@ class AIService
 			}
 		}
 
-		// 3. Call the engine with the sanitized history
-		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory);
+		// 5. Call the engine with the sanitized history and tools (multi-step tool loop)
+		$sResponseString = '';
+		for ($iRound = 0; $iRound < self::MAX_TOOL_ROUNDS; $iRound++) {
+			$result = $this->oAIEngine->GetNextTurn($aLlphantHistory, $aEffectiveTools);
 
-		// 4. Append the AI's response to the CLEAN history (without injected system messages)
+			// Text response: exit loop
+			if (is_string($result)) {
+				$sResponseString = $result;
+				IssueLog::Debug(__METHOD__ . ": Final response after $iRound tool round(s).", AIBaseHelper::MODULE_CODE);
+				break;
+			}
+
+			// FunctionInfo[]: Execute tools, add results to history
+			IssueLog::Debug(__METHOD__ . ": Tool round $iRound: " . count($result) . " tool(s) requested.", AIBaseHelper::MODULE_CODE);
+
+			foreach ($result as $oToolCall) {
+				try {
+					$toolResult = $oToolCall->call();
+				} catch (\Throwable $e) {
+					$toolResult = "Error executing tool '{$oToolCall->name}': " . $e->getMessage();
+					IssueLog::Warning(__METHOD__ . ": Tool '{$oToolCall->name}' failed: " . $e->getMessage(), AIBaseHelper::MODULE_CODE);
+				}
+
+				IssueLog::Debug(__METHOD__ . ": Tool '{$oToolCall->name}' returned: " . substr((string)$toolResult, 0, 200), AIBaseHelper::MODULE_CODE);
+
+				// Add tool call and result as messages to the history
+				$aNewMessages = $oToolCall->asOpenAIMessages($toolResult);
+				array_push($aLlphantHistory, ...$aNewMessages);
+			}
+		}
+
+		// Safety: Max rounds reached without final text response
+		if ($sResponseString === '' && $iRound >= self::MAX_TOOL_ROUNDS) {
+			IssueLog::Warning(__METHOD__ . ": Max tool rounds (" . self::MAX_TOOL_ROUNDS . ") reached, forcing text response.", AIBaseHelper::MODULE_CODE);
+			// Call without tools to force a text response
+			$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory, []);
+			if (!is_string($sResponseString)) {
+				$sResponseString = 'The AI was unable to provide a final answer after multiple tool calls.';
+			}
+		}
+
+		// 6. Append the AI's response to the CLEAN history (without injected system messages)
 		$aCleanHistory[] = ['role' => 'assistant', 'content' => $sResponseString];
 
 		IssueLog::Debug("Conversation turn completed.", AIBaseHelper::MODULE_CODE);
 
-		// 5. Return the response and the clean history (without system messages) for the caller to store
+		// 7. Return the response and the clean history (without system messages) for the caller to store
 		return [
 			'response' => AIBaseHelper::removeThinkTag($sResponseString),
 			'history'  => $aCleanHistory,
@@ -281,6 +386,60 @@ class AIService
 			}
 		}
 		return $sDesiredAIEngineClass;
+	}
+
+	/**
+	 * Returns the default object tools for interacting with iTop DBObjects.
+	 *
+	 * These tools provide read-only access to object properties:
+	 * - getObjectName: Get the friendly name
+	 * - getObjectId: Get the object ID
+	 * - getObjectClass: Get the class name
+	 * - getAttribute: Get an attribute value
+	 * - getAttributeLabel: Get an attribute's display label
+	 * - getState: Get the lifecycle state code
+	 * - getStateLabel: Get the lifecycle state label
+	 * - getAvailableTransitions: List available state transitions
+	 * - getCurrentDateTime: Get current server time
+	 *
+	 * @return FunctionInfo[] Array of default tool definitions.
+	 */
+	public function getDefaultTools(): array
+	{
+		return $this->oObjectTools->getToolDefinitions();
+	}
+
+	/**
+	 * Returns all tools discovered from external iAIToolProvider implementations.
+	 *
+	 * Extensions can provide additional tools by implementing iAIToolProvider
+	 * and registering with iTop's InterfaceDiscovery mechanism.
+	 *
+	 * @return FunctionInfo[] Array of discovered tools from external providers.
+	 */
+	public function getDiscoveredTools(): array
+	{
+		return $this->aDiscoveredTools;
+	}
+
+	/**
+	 * Returns all available tools: default tools plus discovered tools.
+	 *
+	 * @return FunctionInfo[] Combined array of all available tools.
+	 */
+	public function getAllTools(): array
+	{
+		return array_merge($this->getDefaultTools(), $this->getDiscoveredTools());
+	}
+
+	/**
+	 * Returns the AIObjectTools instance for direct access or testing.
+	 *
+	 * @return AIObjectTools The object tools instance.
+	 */
+	public function getObjectToolsInstance(): AIObjectTools
+	{
+		return $this->oObjectTools;
 	}
 }
 
