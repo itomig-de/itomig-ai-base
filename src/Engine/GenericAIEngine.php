@@ -69,11 +69,14 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 * Generic implementation for handling a conversational turn.
 	 * This method uses the Template Method Pattern, relying on createChatInstance from subclasses.
 	 *
+	 * The engine does NOT execute tools - it returns FunctionInfo[] to the caller (AIService)
+	 * which handles tool execution and the multi-step loop.
+	 *
 	 * @param Message[] $aHistory The conversation history.
 	 * @param FunctionInfo[] $aTools Optional array of tools for function calling.
-	 * @return string
+	 * @return string|FunctionInfo[] String for text response, FunctionInfo[] for tool calls
 	 */
-	public function GetNextTurn(array $aHistory, array $aTools = []): string
+	public function GetNextTurn(array $aHistory, array $aTools = []): string|array
 	{
 		$oChat = $this->createChatInstance();
 		$sSystemMessage = '';
@@ -123,12 +126,18 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		}
 
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
-		$sResponse = $oChat->generateChat($aMessageHistory);
+		$result = $oChat->generateChatOrReturnFunctionCalled($aMessageHistory);
 
-		// Debug: Log raw response (truncated if too long)
-		$sResponsePreview = strlen($sResponse) > 500 ? substr($sResponse, 0, 500) . '...[truncated]' : $sResponse;
-		IssueLog::Debug(__METHOD__ . ": Raw response: " . $sResponsePreview, AIBaseHelper::MODULE_CODE);
-		return $sResponse;
+		if (is_string($result)) {
+			$sResponsePreview = strlen($result) > 500 ? substr($result, 0, 500) . '...[truncated]' : $result;
+			IssueLog::Debug(__METHOD__ . ": Text response: " . $sResponsePreview, AIBaseHelper::MODULE_CODE);
+			return $result;
+		}
+
+		// Tool calls requested by LLM - return FunctionInfo[] to caller (AIService)
+		$aToolNames = array_map(fn($t) => $t->name, $result);
+		IssueLog::Debug(__METHOD__ . ": LLM requested tool calls: " . implode(', ', $aToolNames), AIBaseHelper::MODULE_CODE);
+		return $result;
 	}
 }
 

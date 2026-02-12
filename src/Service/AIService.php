@@ -41,6 +41,11 @@ use utils;
 class AIService
 {
 	/**
+	 * Maximum number of tool call round-trips before forcing a text response.
+	 */
+	private const MAX_TOOL_ROUNDS = 5;
+
+	/**
 	 * @var string[] $aDefaultSystemPrompts
 	 */
 	const DEFAULT_SYSTEM_INSTRUCTIONS = [
@@ -306,13 +311,45 @@ class AIService
 			}
 		}
 
-		// 5. Call the engine with the sanitized history and tools
-		$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory, $aEffectiveTools);
+		// 5. Call the engine with the sanitized history and tools (multi-step tool loop)
+		$sResponseString = '';
+		for ($iRound = 0; $iRound < self::MAX_TOOL_ROUNDS; $iRound++) {
+			$result = $this->oAIEngine->GetNextTurn($aLlphantHistory, $aEffectiveTools);
 
-		// Debug: Check if response looks like unprocessed JSON (potential tool call issue)
-		$bLooksLikeJson = str_starts_with(trim($sResponseString), '{') || str_starts_with(trim($sResponseString), '[');
-		if ($bLooksLikeJson) {
-			IssueLog::Debug(__METHOD__ . ": Response appears to be JSON (potential unprocessed tool call): " . substr($sResponseString, 0, 200), AIBaseHelper::MODULE_CODE);
+			// Text response: exit loop
+			if (is_string($result)) {
+				$sResponseString = $result;
+				IssueLog::Debug(__METHOD__ . ": Final response after $iRound tool round(s).", AIBaseHelper::MODULE_CODE);
+				break;
+			}
+
+			// FunctionInfo[]: Execute tools, add results to history
+			IssueLog::Debug(__METHOD__ . ": Tool round $iRound: " . count($result) . " tool(s) requested.", AIBaseHelper::MODULE_CODE);
+
+			foreach ($result as $oToolCall) {
+				try {
+					$toolResult = $oToolCall->call();
+				} catch (\Throwable $e) {
+					$toolResult = "Error executing tool '{$oToolCall->name}': " . $e->getMessage();
+					IssueLog::Warning(__METHOD__ . ": Tool '{$oToolCall->name}' failed: " . $e->getMessage(), AIBaseHelper::MODULE_CODE);
+				}
+
+				IssueLog::Debug(__METHOD__ . ": Tool '{$oToolCall->name}' returned: " . substr((string)$toolResult, 0, 200), AIBaseHelper::MODULE_CODE);
+
+				// Add tool call and result as messages to the history
+				$aNewMessages = $oToolCall->asOpenAIMessages($toolResult);
+				array_push($aLlphantHistory, ...$aNewMessages);
+			}
+		}
+
+		// Safety: Max rounds reached without final text response
+		if ($sResponseString === '' && $iRound >= self::MAX_TOOL_ROUNDS) {
+			IssueLog::Warning(__METHOD__ . ": Max tool rounds (" . self::MAX_TOOL_ROUNDS . ") reached, forcing text response.", AIBaseHelper::MODULE_CODE);
+			// Call without tools to force a text response
+			$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory, []);
+			if (!is_string($sResponseString)) {
+				$sResponseString = 'The AI was unable to provide a final answer after multiple tool calls.';
+			}
 		}
 
 		// 6. Append the AI's response to the CLEAN history (without injected system messages)
