@@ -33,6 +33,7 @@ use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 use MetaModel;
+use UserRights;
 
 /**
  * Default AI tools for interacting with iTop DBObjects.
@@ -232,6 +233,93 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	}
 
 	/**
+	 * Get information about the currently logged-in user.
+	 *
+	 * @return string JSON with user info (id, login, language, contact details).
+	 */
+	public function getCurrentUser(): string
+	{
+		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
+		$oUser = UserRights::GetUserObject();
+		if ($oUser === null) {
+			return json_encode(['error' => 'No user logged in']);
+		}
+
+		$aResult = [
+			'user' => [
+				'id' => (string) $oUser->GetKey(),
+				'login' => $oUser->Get('login'),
+				'language' => $oUser->Get('language'),
+				'contact' => null,
+			],
+		];
+
+		$iContactId = (int) $oUser->Get('contactid');
+		if ($iContactId > 0) {
+			$oContact = MetaModel::GetObject('Contact', $iContactId, false);
+			if ($oContact !== null) {
+				$aContact = [
+					'id' => (string) $oContact->GetKey(),
+					'class' => get_class($oContact),
+					'friendlyname' => $oContact->GetName(),
+					'name' => $oContact->Get('name'),
+					'email' => $oContact->Get('email'),
+					'org_id' => (string) $oContact->Get('org_id'),
+					'org_name' => $oContact->Get('org_name'),
+				];
+
+				// Person hat zusätzlich first_name
+				if ($oContact instanceof \Person) {
+					$aContact['first_name'] = $oContact->Get('first_name');
+				}
+
+				$aResult['user']['contact'] = $aContact;
+			}
+		}
+
+		IssueLog::Debug(__METHOD__ . ": Returning user info for " . $oUser->Get('login'), AIBaseHelper::MODULE_CODE);
+		return json_encode($aResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	}
+
+	/**
+	 * Get the permission profiles (roles) assigned to the currently logged-in user.
+	 *
+	 * @return string JSON with user_id, login, and array of profiles with name and description.
+	 */
+	public function getCurrentUserProfiles(): string
+	{
+		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
+		$oUser = UserRights::GetUserObject();
+		if ($oUser === null) {
+			return json_encode(['error' => 'No user logged in']);
+		}
+
+		$aProfiles = UserRights::ListProfiles();
+		$aProfileDetails = [];
+
+		foreach ($aProfiles as $iProfileId => $sProfileName) {
+			$aProfileInfo = [
+				'name' => $sProfileName,
+				'description' => '',
+			];
+			$oProfile = MetaModel::GetObject('URP_Profiles', $iProfileId, false);
+			if ($oProfile !== null) {
+				$aProfileInfo['description'] = $oProfile->Get('description');
+			}
+			$aProfileDetails[] = $aProfileInfo;
+		}
+
+		$aResult = [
+			'user_id' => (string) $oUser->GetKey(),
+			'login' => $oUser->Get('login'),
+			'profiles' => $aProfileDetails,
+		];
+
+		IssueLog::Debug(__METHOD__ . ": Returning " . count($aProfileDetails) . " profiles for " . $oUser->Get('login'), AIBaseHelper::MODULE_CODE);
+		return json_encode($aResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	}
+
+	/**
 	 * Get a JSON schema describing the current object's class and all its attributes.
 	 *
 	 * Returns attribute codes, labels, types, and descriptions so the LLM can
@@ -376,6 +464,20 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 				'describeObject',
 				$this,
 				'Get a JSON schema describing the current object\'s class, all attributes with their codes, labels, types, and descriptions. Call this to discover which attribute codes are available for getAttribute(). No parameters required.',
+				[],
+				[]
+			),
+			new FunctionInfo(
+				'getCurrentUser',
+				$this,
+				'Get information about the currently logged-in user: user ID, login, language, and linked contact/person details (name, email, organization). No parameters required.',
+				[],
+				[]
+			),
+			new FunctionInfo(
+				'getCurrentUserProfiles',
+				$this,
+				'Get the permission profiles (roles) assigned to the currently logged-in user. Each profile has a name and description explaining what permissions it grants. No parameters required.',
 				[],
 				[]
 			),
