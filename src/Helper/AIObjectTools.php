@@ -22,12 +22,17 @@
 
 namespace Itomig\iTop\Extension\AIBase\Helper;
 
+use AttributeEnum;
+use AttributeExternalField;
+use AttributeExternalKey;
+use AttributeLinkedSet;
 use DBObject;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use MetaModel;
 
 /**
  * Default AI tools for interacting with iTop DBObjects.
@@ -227,6 +232,93 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	}
 
 	/**
+	 * Get a JSON schema describing the current object's class and all its attributes.
+	 *
+	 * Returns attribute codes, labels, types, and descriptions so the LLM can
+	 * discover which attributes are available for getAttribute().
+	 *
+	 * @return string JSON-encoded schema, or JSON error if no context.
+	 */
+	public function describeObject(): string
+	{
+		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
+		if ($this->oContext === null) {
+			return json_encode(['error' => 'No object in context']);
+		}
+
+		$sClass = get_class($this->oContext);
+		$aSchema = [
+			'class' => $sClass,
+			'class_label' => MetaModel::GetName($sClass),
+			'class_description' => MetaModel::GetClassDescription($sClass),
+			'attributes' => [],
+		];
+
+		foreach (MetaModel::ListAttributeDefs($sClass) as $sAttCode => $oAttDef) {
+			if ($sAttCode === 'id') {
+				continue;
+			}
+
+			$aAttrInfo = [
+				'label' => $oAttDef->GetLabel(),
+				'description' => $oAttDef->GetDescription(),
+				'type' => self::MapAttributeType($oAttDef),
+			];
+
+			if ($oAttDef instanceof AttributeExternalKey) {
+				$aAttrInfo['target_class'] = $oAttDef->GetTargetClass();
+			} elseif ($oAttDef instanceof AttributeExternalField) {
+				$aAttrInfo['ext_key_attcode'] = $oAttDef->GetKeyAttCode();
+			} elseif ($oAttDef instanceof AttributeEnum) {
+				$aAllowedValues = [];
+				$oValuesDef = $oAttDef->GetValuesDef();
+				if ($oValuesDef !== null) {
+					$aRawValues = $oValuesDef->GetValues([], '');
+					foreach (array_keys($aRawValues) as $sValue) {
+						$aAllowedValues[$sValue] = $oAttDef->GetValueLabel($sValue);
+					}
+				}
+				$aAttrInfo['allowed_values'] = $aAllowedValues;
+			} elseif ($oAttDef instanceof AttributeLinkedSet) {
+				$aAttrInfo['linked_class'] = $oAttDef->GetLinkedClass();
+			}
+
+			$aSchema['attributes'][$sAttCode] = $aAttrInfo;
+		}
+
+		IssueLog::Debug(__METHOD__ . ": Returning schema for class $sClass with " . count($aSchema['attributes']) . " attributes", AIBaseHelper::MODULE_CODE);
+		return json_encode($aSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	}
+
+	/**
+	 * Maps an iTop attribute definition to an LLM-friendly type name.
+	 *
+	 * @param \AttributeDefinition $oAttDef The attribute definition to map.
+	 * @return string The LLM-friendly type name.
+	 */
+	public static function MapAttributeType(\AttributeDefinition $oAttDef): string
+	{
+		return match (true) {
+			$oAttDef instanceof \AttributeLinkedSet => 'LinkedSet',
+			$oAttDef instanceof \AttributeExternalKey => 'ExternalKey',
+			$oAttDef instanceof \AttributeExternalField => 'ExternalField',
+			$oAttDef instanceof \AttributeEnum => 'Enum',
+			$oAttDef instanceof \AttributeBoolean => 'Boolean',
+			$oAttDef instanceof \AttributeInteger => 'Integer',
+			$oAttDef instanceof \AttributeDecimal => 'Decimal',
+			$oAttDef instanceof \AttributeDateTime => 'DateTime',
+			$oAttDef instanceof \AttributeDate => 'Date',
+			$oAttDef instanceof \AttributeEmailAddress => 'Email',
+			$oAttDef instanceof \AttributeURL => 'URL',
+			$oAttDef instanceof \AttributeIPAddress => 'IPAddress',
+			$oAttDef instanceof \AttributePhoneNumber => 'PhoneNumber',
+			$oAttDef instanceof \AttributePassword,
+			$oAttDef instanceof \AttributeEncryptedString => 'Password',
+			default => 'String',
+		};
+	}
+
+	/**
 	 * Returns an array of FunctionInfo objects for the default AI tools.
 	 *
 	 * Note: Lifecycle tools (getState, getStateLabel, getAvailableTransitions) are not
@@ -277,6 +369,13 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 				'getCurrentDateTime',
 				$this,
 				'Get current server date and time. No parameters required.',
+				[],
+				[]
+			),
+			new FunctionInfo(
+				'describeObject',
+				$this,
+				'Get a JSON schema describing the current object\'s class, all attributes with their codes, labels, types, and descriptions. Call this to discover which attribute codes are available for getAttribute(). No parameters required.',
 				[],
 				[]
 			),
