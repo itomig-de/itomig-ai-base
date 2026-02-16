@@ -26,6 +26,7 @@ use Combodo\iTop\Service\InterfaceDiscovery\InterfaceDiscovery;
 use DBObject;
 use Dict;
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
@@ -41,9 +42,14 @@ use utils;
 class AIService
 {
 	/**
-	 * Maximum number of tool call round-trips before forcing a text response.
+	 * Absolute upper limit for tool call round-trips to prevent excessive API calls.
 	 */
-	private const MAX_TOOL_ROUNDS = 5;
+	private const MAX_TOOL_ROUNDS_HARD_CAP = 20;
+
+	/**
+	 * Default number of tool call round-trips before forcing a text response.
+	 */
+	private const MAX_TOOL_ROUNDS_DEFAULT = 5;
 
 	/**
 	 * @var string[] $aDefaultSystemPrompts
@@ -90,6 +96,16 @@ class AIService
 	 * @var FunctionInfo[] Discovered tools from external providers
 	 */
 	protected array $aDiscoveredTools = [];
+
+	/**
+	 * @var iAIContextAwareToolProvider[] Providers that need object context
+	 */
+	protected array $aContextAwareProviders = [];
+
+	/**
+	 * @var int Maximum number of tool call round-trips (overridable at runtime)
+	 */
+	protected int $iMaxToolRounds = self::MAX_TOOL_ROUNDS_DEFAULT;
 
 	/**
 	 *
@@ -141,11 +157,28 @@ class AIService
 
 		$this->oAIBaseHelper = new AIBaseHelper();
 
-		// Initialize default object tools
+		// Initialize default object tools (registered as context-aware, but tools are separate from discovered)
 		$this->oObjectTools = new AIObjectTools();
+		$this->aContextAwareProviders[] = $this->oObjectTools;
 
 		// Discover external tool providers
 		$this->discoverToolProviders();
+	}
+
+	/**
+	 * Registers a tool provider: collects its tools and tracks context-aware providers.
+	 */
+	protected function registerProvider(iAIToolProvider $oProvider): void
+	{
+		$aTools = $oProvider->getAITools();
+		foreach ($aTools as $oTool) {
+			if ($oTool instanceof FunctionInfo) {
+				$this->aDiscoveredTools[] = $oTool;
+			}
+		}
+		if ($oProvider instanceof iAIContextAwareToolProvider) {
+			$this->aContextAwareProviders[] = $oProvider;
+		}
 	}
 
 	/**
@@ -160,13 +193,8 @@ class AIService
 			foreach ($aProviderClasses as $sProviderClass) {
 				try {
 					$oProvider = new $sProviderClass();
-					$aTools = $oProvider->getAITools();
-					foreach ($aTools as $oTool) {
-						if ($oTool instanceof FunctionInfo) {
-							$this->aDiscoveredTools[] = $oTool;
-						}
-					}
-					IssueLog::Debug(__METHOD__ . ": Discovered " . count($aTools) . " tools from provider " . $sProviderClass, AIBaseHelper::MODULE_CODE);
+					$this->registerProvider($oProvider);
+					IssueLog::Debug(__METHOD__ . ": Discovered tools from provider " . $sProviderClass, AIBaseHelper::MODULE_CODE);
 				} catch (\Exception $e) {
 					IssueLog::Warning(__METHOD__ . ": Failed to instantiate tool provider " . $sProviderClass . ": " . $e->getMessage(), AIBaseHelper::MODULE_CODE);
 				}
@@ -245,8 +273,10 @@ class AIService
 	{
 		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject), 'tool_count' => count($aTools)]);
 
-		// 1. Set object context for default tools if an object is provided
-		$this->oObjectTools->setContext($oObject);
+		// 1. Set object context on all context-aware tool providers
+		foreach ($this->aContextAwareProviders as $oProvider) {
+			$oProvider->setContext($oObject);
+		}
 
 		// 2. Prepare tools: Use provided tools, or default object tools if object is provided and no tools specified
 		$aEffectiveTools = $aTools;
@@ -313,7 +343,7 @@ class AIService
 
 		// 5. Call the engine with the sanitized history and tools (multi-step tool loop)
 		$sResponseString = '';
-		for ($iRound = 0; $iRound < self::MAX_TOOL_ROUNDS; $iRound++) {
+		for ($iRound = 0; $iRound < $this->iMaxToolRounds; $iRound++) {
 			$result = $this->oAIEngine->GetNextTurn($aLlphantHistory, $aEffectiveTools);
 
 			// Text response: exit loop
@@ -343,8 +373,8 @@ class AIService
 		}
 
 		// Safety: Max rounds reached without final text response
-		if ($sResponseString === '' && $iRound >= self::MAX_TOOL_ROUNDS) {
-			IssueLog::Warning(__METHOD__ . ": Max tool rounds (" . self::MAX_TOOL_ROUNDS . ") reached, forcing text response.", AIBaseHelper::MODULE_CODE);
+		if ($sResponseString === '' && $iRound >= $this->iMaxToolRounds) {
+			IssueLog::Warning(__METHOD__ . ": Max tool rounds (" . $this->iMaxToolRounds . ") reached, forcing text response.", AIBaseHelper::MODULE_CODE);
 			// Call without tools to force a text response
 			$sResponseString = $this->oAIEngine->GetNextTurn($aLlphantHistory, []);
 			if (!is_string($sResponseString)) {
@@ -389,6 +419,28 @@ class AIService
 	}
 
 	/**
+	 * Sets the maximum number of tool call round-trips for the tool execution loop.
+	 *
+	 * @param int $iMaxToolRounds The maximum number of rounds (clamped between 1 and hard cap of 20).
+	 * @return self Fluent interface.
+	 */
+	public function setMaxToolRounds(int $iMaxToolRounds): self
+	{
+		$this->iMaxToolRounds = min(max($iMaxToolRounds, 1), self::MAX_TOOL_ROUNDS_HARD_CAP);
+		return $this;
+	}
+
+	/**
+	 * Returns the current maximum number of tool call round-trips.
+	 *
+	 * @return int
+	 */
+	public function getMaxToolRounds(): int
+	{
+		return $this->iMaxToolRounds;
+	}
+
+	/**
 	 * Returns the default object tools for interacting with iTop DBObjects.
 	 *
 	 * These tools provide read-only access to object properties:
@@ -397,23 +449,17 @@ class AIService
 	 * - getObjectClass: Get the class name
 	 * - getAttribute: Get an attribute value
 	 * - getAttributeLabel: Get an attribute's display label
-	 * - getState: Get the lifecycle state code
-	 * - getStateLabel: Get the lifecycle state label
-	 * - getAvailableTransitions: List available state transitions
 	 * - getCurrentDateTime: Get current server time
 	 *
 	 * @return FunctionInfo[] Array of default tool definitions.
 	 */
 	public function getDefaultTools(): array
 	{
-		return $this->oObjectTools->getToolDefinitions();
+		return $this->oObjectTools->getAITools();
 	}
 
 	/**
 	 * Returns all tools discovered from external iAIToolProvider implementations.
-	 *
-	 * Extensions can provide additional tools by implementing iAIToolProvider
-	 * and registering with iTop's InterfaceDiscovery mechanism.
 	 *
 	 * @return FunctionInfo[] Array of discovered tools from external providers.
 	 */
@@ -423,7 +469,7 @@ class AIService
 	}
 
 	/**
-	 * Returns all available tools: default tools plus discovered tools.
+	 * Returns all available tools: default object tools plus discovered tools.
 	 *
 	 * @return FunctionInfo[] Combined array of all available tools.
 	 */

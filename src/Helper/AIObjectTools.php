@@ -24,6 +24,8 @@ namespace Itomig\iTop\Extension\AIBase\Helper;
 
 use DBObject;
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 
@@ -31,12 +33,16 @@ use LLPhant\Chat\FunctionInfo\Parameter;
  * Default AI tools for interacting with iTop DBObjects.
  *
  * These tools are read-only and safe for AI use. They provide access to
- * object properties, state information, and available transitions.
+ * object properties and attribute information.
+ *
+ * Lifecycle-specific tools (getState, getStateLabel, getAvailableTransitions) are
+ * available as methods but not registered as default AI tools, since not all
+ * iTop objects have a lifecycle. Extensions can register them selectively.
  *
  * SECURITY NOTE: Only read-only methods are exposed. Write operations
  * (Set, ApplyStimulus, DBWrite) are intentionally not included.
  */
-class AIObjectTools
+class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 {
 	private ?DBObject $oContext = null;
 
@@ -221,11 +227,15 @@ class AIObjectTools
 	}
 
 	/**
-	 * Creates and returns an array of FunctionInfo objects for all available tools.
+	 * Returns an array of FunctionInfo objects for the default AI tools.
+	 *
+	 * Note: Lifecycle tools (getState, getStateLabel, getAvailableTransitions) are not
+	 * included here as they only work on objects with a lifecycle. The methods remain
+	 * available on this class for use by lifecycle-aware extensions.
 	 *
 	 * @return FunctionInfo[] Array of FunctionInfo objects ready for use with LLPhant.
 	 */
-	public function getToolDefinitions(): array
+	public function getAITools(): array
 	{
 		return [
 			new FunctionInfo(
@@ -262,27 +272,6 @@ class AIObjectTools
 				'Get the label of an attribute. Requires: attributeCode (string).',
 				[new Parameter('attributeCode', 'string', 'The attribute code to get the label for')],
 				[new Parameter('attributeCode', 'string', 'The attribute code')]
-			),
-			new FunctionInfo(
-				'getState',
-				$this,
-				'Get the current lifecycle state code (e.g., "new", "assigned", "resolved"). No parameters required.',
-				[],
-				[]
-			),
-			new FunctionInfo(
-				'getStateLabel',
-				$this,
-				'Get the human-readable state label. No parameters required.',
-				[],
-				[]
-			),
-			new FunctionInfo(
-				'getAvailableTransitions',
-				$this,
-				'List available state transitions. No parameters required.',
-				[],
-				[]
 			),
 			new FunctionInfo(
 				'getCurrentDateTime',

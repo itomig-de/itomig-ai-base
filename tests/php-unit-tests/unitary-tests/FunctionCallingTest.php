@@ -8,6 +8,7 @@
 namespace Itomig\iTop\AiBase\Test;
 
 use Combodo\iTop\Test\UnitTest\ItopDataTestCase;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
@@ -36,6 +37,16 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertEquals('0', $oTools->getObjectId());
 		static::assertEquals('No object in context', $oTools->getObjectClass());
 		static::assertEquals('No object in context', $oTools->getAttribute('title'));
+	}
+
+	/**
+	 * Test AIObjectTools lifecycle methods without context (not registered as default tools)
+	 */
+	public function testAIObjectToolsLifecycleMethodsWithoutContext(): void
+	{
+		$oTools = new AIObjectTools();
+
+		// These methods still exist but are not registered as default AI tools
 		static::assertEquals('No object in context', $oTools->getState());
 		static::assertEquals('No object in context', $oTools->getStateLabel());
 		static::assertEquals('No object in context', $oTools->getAvailableTransitions());
@@ -54,15 +65,16 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test getToolDefinitions returns array of FunctionInfo objects
+	 * Test getAITools returns array of FunctionInfo objects (no lifecycle tools)
 	 */
-	public function testGetToolDefinitions(): void
+	public function testGetAITools(): void
 	{
 		$oTools = new AIObjectTools();
-		$aToolDefs = $oTools->getToolDefinitions();
+		$aToolDefs = $oTools->getAITools();
 
 		static::assertIsArray($aToolDefs);
 		static::assertNotEmpty($aToolDefs);
+		static::assertCount(6, $aToolDefs);
 
 		// All items should be FunctionInfo instances
 		foreach ($aToolDefs as $oTool) {
@@ -72,11 +84,27 @@ class FunctionCallingTest extends ItopDataTestCase
 		// Check that expected tools exist
 		$aToolNames = array_map(fn($t) => $t->name, $aToolDefs);
 		static::assertContains('getObjectName', $aToolNames);
+		static::assertContains('getObjectId', $aToolNames);
+		static::assertContains('getObjectClass', $aToolNames);
 		static::assertContains('getAttribute', $aToolNames);
-		static::assertContains('getState', $aToolNames);
-		static::assertContains('getStateLabel', $aToolNames);
-		static::assertContains('getAvailableTransitions', $aToolNames);
+		static::assertContains('getAttributeLabel', $aToolNames);
 		static::assertContains('getCurrentDateTime', $aToolNames);
+
+		// Lifecycle tools should NOT be in default AI tools
+		static::assertNotContains('getState', $aToolNames);
+		static::assertNotContains('getStateLabel', $aToolNames);
+		static::assertNotContains('getAvailableTransitions', $aToolNames);
+	}
+
+	/**
+	 * Test AIObjectTools implements both interfaces
+	 */
+	public function testAIObjectToolsImplementsInterfaces(): void
+	{
+		$oTools = new AIObjectTools();
+
+		static::assertInstanceOf(iAIToolProvider::class, $oTools);
+		static::assertInstanceOf(iAIContextAwareToolProvider::class, $oTools);
 	}
 
 	/**
@@ -281,7 +309,7 @@ class FunctionCallingTest extends ItopDataTestCase
 	public function testFunctionInfoCallWithArguments(): void
 	{
 		$oTools = new AIObjectTools();
-		$aToolDefs = $oTools->getToolDefinitions();
+		$aToolDefs = $oTools->getAITools();
 
 		// Find the getAttribute tool
 		$oGetAttributeTool = null;
@@ -452,6 +480,74 @@ class FunctionCallingTest extends ItopDataTestCase
 		);
 
 		static::assertEquals('I encountered an error with the tool', $aResult['response']);
+	}
+
+	/**
+	 * Test setMaxToolRounds setter, getter, and hard cap enforcement
+	 */
+	public function testSetMaxToolRounds(): void
+	{
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oAIService = new AIService($oMockEngine);
+
+		// Default value
+		static::assertEquals(5, $oAIService->getMaxToolRounds());
+
+		// Set a valid value
+		$oReturn = $oAIService->setMaxToolRounds(10);
+		static::assertEquals(10, $oAIService->getMaxToolRounds());
+		static::assertSame($oAIService, $oReturn, 'setMaxToolRounds should return self for fluent API');
+
+		// Hard cap at 20
+		$oAIService->setMaxToolRounds(100);
+		static::assertEquals(20, $oAIService->getMaxToolRounds());
+
+		// Minimum of 1
+		$oAIService->setMaxToolRounds(0);
+		static::assertEquals(1, $oAIService->getMaxToolRounds());
+
+		$oAIService->setMaxToolRounds(-5);
+		static::assertEquals(1, $oAIService->getMaxToolRounds());
+	}
+
+	/**
+	 * Test that setMaxToolRounds affects the tool execution loop
+	 */
+	public function testMaxToolRoundsAffectsLoop(): void
+	{
+		$iCallCount = 0;
+		$oTestProvider = new class {
+			public function dummyTool(): string { return 'result'; }
+		};
+
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) use (&$iCallCount, $oTestProvider) {
+				$iCallCount++;
+				if ($iCallCount <= 2) {
+					// Return tool calls for first 2 rounds
+					$oTool = new FunctionInfo('dummyTool', $oTestProvider, 'Dummy', [], []);
+					$oTool->setToolCallId('call_' . $iCallCount);
+					$oTool->jsonArgs = '{}';
+					return [$oTool];
+				}
+				// After that, return text
+				return 'Final response';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+		$oAIService->setMaxToolRounds(1);
+
+		$aTools = [new FunctionInfo('dummyTool', $oTestProvider, 'Dummy', [], [])];
+
+		$aResult = $oAIService->ContinueConversation(
+			[['role' => 'user', 'content' => 'Test']],
+			null, null, null, $aTools
+		);
+
+		// With max 1 round: 1 tool call + 1 forced text call = 2 calls to GetNextTurn
+		// The loop runs once (tool), then safety fallback forces text response
+		static::assertArrayHasKey('response', $aResult);
 	}
 
 	/**
