@@ -219,39 +219,7 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test getDefaultTools returns FunctionInfo array
-	 */
-	public function testGetDefaultTools(): void
-	{
-		$oMockEngine = $this->createMock(iAIEngineInterface::class);
-		$oAIService = new AIService($oMockEngine);
-
-		$aDefaultTools = $oAIService->getDefaultTools();
-
-		static::assertIsArray($aDefaultTools);
-		static::assertNotEmpty($aDefaultTools);
-
-		foreach ($aDefaultTools as $oTool) {
-			static::assertInstanceOf(FunctionInfo::class, $oTool);
-		}
-	}
-
-	/**
-	 * Test getDiscoveredTools returns array (may be empty if no providers registered)
-	 */
-	public function testGetDiscoveredTools(): void
-	{
-		$oMockEngine = $this->createMock(iAIEngineInterface::class);
-		$oAIService = new AIService($oMockEngine);
-
-		$aDiscoveredTools = $oAIService->getDiscoveredTools();
-
-		static::assertIsArray($aDiscoveredTools);
-		// May be empty if no providers are registered, that's OK
-	}
-
-	/**
-	 * Test getAllTools returns combined default and discovered tools
+	 * Test getAllTools returns FunctionInfo array from all discovered providers
 	 */
 	public function testGetAllTools(): void
 	{
@@ -259,24 +227,33 @@ class FunctionCallingTest extends ItopDataTestCase
 		$oAIService = new AIService($oMockEngine);
 
 		$aAllTools = $oAIService->getAllTools();
-		$aDefaultTools = $oAIService->getDefaultTools();
-		$aDiscoveredTools = $oAIService->getDiscoveredTools();
 
 		static::assertIsArray($aAllTools);
-		static::assertCount(count($aDefaultTools) + count($aDiscoveredTools), $aAllTools);
+		static::assertNotEmpty($aAllTools);
+
+		foreach ($aAllTools as $oTool) {
+			static::assertInstanceOf(FunctionInfo::class, $oTool);
+		}
 	}
 
 	/**
-	 * Test getObjectToolsInstance returns AIObjectTools
+	 * Test getAllTools includes AIObjectTools discovered via InterfaceDiscovery
 	 */
-	public function testGetObjectToolsInstance(): void
+	public function testGetAllToolsIncludesAIObjectTools(): void
 	{
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
 		$oAIService = new AIService($oMockEngine);
 
-		$oTools = $oAIService->getObjectToolsInstance();
+		$aAllTools = $oAIService->getAllTools();
+		$aToolNames = array_map(fn($t) => $t->name, $aAllTools);
 
-		static::assertInstanceOf(AIObjectTools::class, $oTools);
+		// All 6 AIObjectTools must be present (discovered via InterfaceDiscovery)
+		static::assertContains('getObjectName', $aToolNames);
+		static::assertContains('getObjectId', $aToolNames);
+		static::assertContains('getObjectClass', $aToolNames);
+		static::assertContains('getAttribute', $aToolNames);
+		static::assertContains('getAttributeLabel', $aToolNames);
+		static::assertContains('getCurrentDateTime', $aToolNames);
 	}
 
 	/**
