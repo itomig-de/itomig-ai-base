@@ -74,7 +74,7 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		static::assertIsArray($aToolDefs);
 		static::assertNotEmpty($aToolDefs);
-		static::assertCount(7, $aToolDefs);
+		static::assertCount(9, $aToolDefs);
 
 		// All items should be FunctionInfo instances
 		foreach ($aToolDefs as $oTool) {
@@ -90,6 +90,8 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertContains('getAttributeLabel', $aToolNames);
 		static::assertContains('getCurrentDateTime', $aToolNames);
 		static::assertContains('describeObject', $aToolNames);
+		static::assertContains('getCurrentUser', $aToolNames);
+		static::assertContains('getCurrentUserProfiles', $aToolNames);
 
 		// Lifecycle tools should NOT be in default AI tools
 		static::assertNotContains('getState', $aToolNames);
@@ -632,6 +634,64 @@ class FunctionCallingTest extends ItopDataTestCase
 			if ($aEntry['role'] === 'system') {
 				static::assertStringNotContainsString('INJECTED', $aEntry['content']);
 			}
+		}
+	}
+
+	/**
+	 * Test getCurrentUser returns valid JSON with expected structure
+	 */
+	public function testGetCurrentUserReturnsJson(): void
+	{
+		$oTools = new AIObjectTools();
+		$sResult = $oTools->getCurrentUser();
+
+		$aDecoded = json_decode($sResult, true);
+		static::assertNotNull($aDecoded, 'getCurrentUser() should return valid JSON');
+
+		// In ItopDataTestCase a user is logged in
+		static::assertArrayHasKey('user', $aDecoded);
+		$aUser = $aDecoded['user'];
+		static::assertArrayHasKey('id', $aUser);
+		static::assertArrayHasKey('login', $aUser);
+		static::assertArrayHasKey('language', $aUser);
+		static::assertArrayHasKey('contact', $aUser);
+
+		// contact is either null (admin/technical user) or an object with expected fields
+		if ($aUser['contact'] !== null) {
+			$aContact = $aUser['contact'];
+			static::assertArrayHasKey('id', $aContact);
+			static::assertArrayHasKey('class', $aContact);
+			static::assertArrayHasKey('friendlyname', $aContact);
+			static::assertArrayHasKey('name', $aContact);
+			static::assertArrayHasKey('email', $aContact);
+			static::assertArrayHasKey('org_id', $aContact);
+			static::assertArrayHasKey('org_name', $aContact);
+		}
+	}
+
+	/**
+	 * Test getCurrentUserProfiles returns valid JSON with expected structure
+	 */
+	public function testGetCurrentUserProfilesReturnsJson(): void
+	{
+		$oTools = new AIObjectTools();
+		$sResult = $oTools->getCurrentUserProfiles();
+
+		$aDecoded = json_decode($sResult, true);
+		static::assertNotNull($aDecoded, 'getCurrentUserProfiles() should return valid JSON');
+
+		// In ItopDataTestCase a user is logged in
+		static::assertArrayHasKey('user_id', $aDecoded);
+		static::assertArrayHasKey('login', $aDecoded);
+		static::assertArrayHasKey('profiles', $aDecoded);
+
+		static::assertIsArray($aDecoded['profiles']);
+
+		// Each profile should have name and description (but no id)
+		foreach ($aDecoded['profiles'] as $aProfile) {
+			static::assertArrayHasKey('name', $aProfile);
+			static::assertArrayHasKey('description', $aProfile);
+			static::assertArrayNotHasKey('id', $aProfile);
 		}
 	}
 }
