@@ -29,9 +29,7 @@ class VisionMessage extends Message implements JsonSerializable
     }
 
     /**
-     * @phpstan-ignore-next-line
-     *
-     * @return array{role: string, content: array{type: string, text: string}[]|\LLPhant\Chat\Vision\ImageSource[]&mixed[]}
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
