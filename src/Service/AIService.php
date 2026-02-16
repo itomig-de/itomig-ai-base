@@ -32,7 +32,6 @@ use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
-use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
@@ -88,12 +87,7 @@ class AIService
 	public $aLanguages;
 
 	/**
-	 * @var AIObjectTools Default object tools instance
-	 */
-	protected AIObjectTools $oObjectTools;
-
-	/**
-	 * @var FunctionInfo[] Discovered tools from external providers
+	 * @var FunctionInfo[] All tools from discovered providers (including AIObjectTools)
 	 */
 	protected array $aDiscoveredTools = [];
 
@@ -157,11 +151,7 @@ class AIService
 
 		$this->oAIBaseHelper = new AIBaseHelper();
 
-		// Initialize default object tools (registered as context-aware, but tools are separate from discovered)
-		$this->oObjectTools = new AIObjectTools();
-		$this->aContextAwareProviders[] = $this->oObjectTools;
-
-		// Discover external tool providers
+		// Discover all tool providers (including AIObjectTools) via InterfaceDiscovery
 		$this->discoverToolProviders();
 	}
 
@@ -278,12 +268,12 @@ class AIService
 			$oProvider->setContext($oObject);
 		}
 
-		// 2. Prepare tools: Use provided tools, or default object tools if object is provided and no tools specified
+		// 2. Prepare tools: Use provided tools, or all discovered tools if object is provided and no tools specified
 		$aEffectiveTools = $aTools;
 		if (empty($aEffectiveTools) && $oObject !== null) {
-			// Auto-register default object tools when an object is provided
-			$aEffectiveTools = $this->getDefaultTools();
-			IssueLog::Debug("Auto-registered default object tools for context object.", AIBaseHelper::MODULE_CODE);
+			// Auto-register all discovered tools when an object is provided
+			$aEffectiveTools = $this->getAllTools();
+			IssueLog::Debug("Auto-registered all discovered tools for context object.", AIBaseHelper::MODULE_CODE);
 		}
 
 		// 3. Prepare the system message from trusted sources only
@@ -441,51 +431,13 @@ class AIService
 	}
 
 	/**
-	 * Returns the default object tools for interacting with iTop DBObjects.
+	 * Returns all available tools from all discovered providers (including AIObjectTools).
 	 *
-	 * These tools provide read-only access to object properties:
-	 * - getObjectName: Get the friendly name
-	 * - getObjectId: Get the object ID
-	 * - getObjectClass: Get the class name
-	 * - getAttribute: Get an attribute value
-	 * - getAttributeLabel: Get an attribute's display label
-	 * - getCurrentDateTime: Get current server time
-	 *
-	 * @return FunctionInfo[] Array of default tool definitions.
-	 */
-	public function getDefaultTools(): array
-	{
-		return $this->oObjectTools->getAITools();
-	}
-
-	/**
-	 * Returns all tools discovered from external iAIToolProvider implementations.
-	 *
-	 * @return FunctionInfo[] Array of discovered tools from external providers.
-	 */
-	public function getDiscoveredTools(): array
-	{
-		return $this->aDiscoveredTools;
-	}
-
-	/**
-	 * Returns all available tools: default object tools plus discovered tools.
-	 *
-	 * @return FunctionInfo[] Combined array of all available tools.
+	 * @return FunctionInfo[] Array of all available tools.
 	 */
 	public function getAllTools(): array
 	{
-		return array_merge($this->getDefaultTools(), $this->getDiscoveredTools());
-	}
-
-	/**
-	 * Returns the AIObjectTools instance for direct access or testing.
-	 *
-	 * @return AIObjectTools The object tools instance.
-	 */
-	public function getObjectToolsInstance(): AIObjectTools
-	{
-		return $this->oObjectTools;
+		return $this->aDiscoveredTools;
 	}
 }
 
