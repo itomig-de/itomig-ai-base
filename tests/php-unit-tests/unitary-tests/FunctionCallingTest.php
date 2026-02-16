@@ -74,7 +74,7 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		static::assertIsArray($aToolDefs);
 		static::assertNotEmpty($aToolDefs);
-		static::assertCount(6, $aToolDefs);
+		static::assertCount(7, $aToolDefs);
 
 		// All items should be FunctionInfo instances
 		foreach ($aToolDefs as $oTool) {
@@ -89,6 +89,7 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertContains('getAttribute', $aToolNames);
 		static::assertContains('getAttributeLabel', $aToolNames);
 		static::assertContains('getCurrentDateTime', $aToolNames);
+		static::assertContains('describeObject', $aToolNames);
 
 		// Lifecycle tools should NOT be in default AI tools
 		static::assertNotContains('getState', $aToolNames);
@@ -313,6 +314,72 @@ class FunctionCallingTest extends ItopDataTestCase
 		$oTools->setContext(null);
 
 		static::assertEquals('No object in context', $oTools->getObjectName());
+	}
+
+	/**
+	 * Test describeObject without context returns error JSON
+	 */
+	public function testDescribeObjectWithoutContext(): void
+	{
+		$oTools = new AIObjectTools();
+		$sResult = $oTools->describeObject();
+
+		$aDecoded = json_decode($sResult, true);
+		static::assertNotNull($aDecoded, 'describeObject() should return valid JSON');
+		static::assertArrayHasKey('error', $aDecoded);
+		static::assertEquals('No object in context', $aDecoded['error']);
+	}
+
+	/**
+	 * Test describeObject returns valid JSON schema with expected structure
+	 */
+	public function testDescribeObjectReturnsValidSchema(): void
+	{
+		$oTools = new AIObjectTools();
+
+		// Create a Person object as test context
+		$oPerson = $this->createObject('Person', [
+			'name' => 'TestPerson',
+			'first_name' => 'Test',
+			'org_id' => $this->createObject('Organization', ['name' => 'TestOrg'])->GetKey(),
+		]);
+
+		$oTools->setContext($oPerson);
+		$sResult = $oTools->describeObject();
+
+		$aDecoded = json_decode($sResult, true);
+		static::assertNotNull($aDecoded, 'describeObject() should return valid JSON');
+
+		// Check top-level keys
+		static::assertArrayHasKey('class', $aDecoded);
+		static::assertArrayHasKey('class_label', $aDecoded);
+		static::assertArrayHasKey('class_description', $aDecoded);
+		static::assertArrayHasKey('attributes', $aDecoded);
+
+		static::assertEquals('Person', $aDecoded['class']);
+		static::assertIsArray($aDecoded['attributes']);
+		static::assertNotEmpty($aDecoded['attributes']);
+
+		// Known attributes should be present
+		static::assertArrayHasKey('name', $aDecoded['attributes']);
+		static::assertArrayHasKey('email', $aDecoded['attributes']);
+		static::assertArrayHasKey('friendlyname', $aDecoded['attributes']);
+
+		// id should NOT be in the schema
+		static::assertArrayNotHasKey('id', $aDecoded['attributes']);
+
+		// Each attribute should have label, description, type
+		foreach ($aDecoded['attributes'] as $sCode => $aInfo) {
+			static::assertArrayHasKey('label', $aInfo, "Attribute '$sCode' missing 'label'");
+			static::assertArrayHasKey('description', $aInfo, "Attribute '$sCode' missing 'description'");
+			static::assertArrayHasKey('type', $aInfo, "Attribute '$sCode' missing 'type'");
+		}
+
+		// org_id should be an ExternalKey with target_class
+		static::assertArrayHasKey('org_id', $aDecoded['attributes']);
+		static::assertEquals('ExternalKey', $aDecoded['attributes']['org_id']['type']);
+		static::assertArrayHasKey('target_class', $aDecoded['attributes']['org_id']);
+		static::assertEquals('Organization', $aDecoded['attributes']['org_id']['target_class']);
 	}
 
 	/**
