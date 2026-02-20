@@ -424,9 +424,7 @@ A comprehensive tutorial demonstrating how to build AI-powered features for iTop
 
 - **Task-Specific Engines**: Currently, it is not possible to configure different LLMs or different engines depending on the task. All requests use the single configured engine.
 
-- **Advanced Parameters**: Some AI providers support parameters like `temperature` and `num_ctx` to fine-tune LLM behavior. These are currently not configurable. For Ollama, these are fixed at:
-  - `temperature: 0.4`
-  - `num_ctx: 16384`
+- **Advanced Parameters**: Some AI providers support parameters like `temperature` and `num_ctx` to fine-tune LLM behavior. These are currently not configurable through the iTop configuration. See [#41](https://github.com/itomig-de/itomig-ai-base/issues/41) for planned improvements.
 
 - **Async Interactions**: There is currently no support for asynchronous interaction with LLMs. This may be added in a later version.
 
@@ -538,6 +536,16 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 - **Vendor Dependencies**: `vendor/` (committed to repository, standard for iTop extensions)
 
 ## Version History
+
+### 26.1.1 (2026-02-20)
+- Add multi-turn conversation support with security protection against prompt injection
+- Fix #32: MistralAIEngine uses non-existent MistralAIConfig class
+- Remove hardcoded Ollama model_options (temperature, num_ctx)
+- Code cleanup: Add type hints, remove unused imports, fix PSR-12 compliance
+
+### 26.1.0 (2025-12-29)
+- Major refactoring and diagnostics separation
+- Update LLPhant library (compatible with iTop 3.2)
 
 ### 25.3.1 (2025-08-27)
 - Improved AIService constructor handling for engine and system prompts
