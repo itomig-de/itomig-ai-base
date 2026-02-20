@@ -81,16 +81,6 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$oConfig->url = $this->url;
 		$oConfig->model = $this->model;
 
-		/*
-		set temperature to 0.4 (conservative answers) and the context window to 16384 tokens.
-		These settings are suitable for most pure-text scenarios even with smaller, Q4 LLMs and
-		limited VRAM (e.g. 12 GB)
-		TODO make these configurable in a future version (?)
-		*/
-		$oConfig->modelOptions = array (
-			'num_ctx' => '16384',
-			'temperature' => '0.4',
-		);
 		$oChat = new OllamaChat($oConfig);
 		return $oChat;
 	}
