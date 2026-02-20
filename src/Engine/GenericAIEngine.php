@@ -23,7 +23,6 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
-use Dict;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\ChatInterface;
@@ -49,7 +48,7 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 */
 	protected $model;
 
-	public function __construct($url, $apiKey, $model)
+	public function __construct(string $url, string $apiKey, string $model)
 	{
 		$this->url = $url;
 		$this->apiKey = $apiKey;

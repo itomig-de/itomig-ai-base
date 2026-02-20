@@ -40,7 +40,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetEngine($configuration): OllamaAIEngine
+	public static function GetEngine(array $configuration): OllamaAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
@@ -56,7 +56,7 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion(string $message, string $systemInstruction = '') : string
 	{
 		$oChat = $this->createChatInstance();
 		\IssueLog::Debug("OllamaAIEngine: about to set system instruction: ".$systemInstruction);

@@ -33,7 +33,6 @@ use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Message;
 use MetaModel;
-use utils;
 
 class AIService
 {
@@ -120,8 +119,6 @@ class AIService
 		$aConfiguredSystemPrompts = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
 		$aConfiguredSystemPrompts = is_array($aConfiguredSystemPrompts) && isset($aConfiguredSystemPrompts['system_prompts']) ? $aConfiguredSystemPrompts['system_prompts'] : [];
 		$this->aSystemInstructions = array_merge(self::DEFAULT_SYSTEM_INSTRUCTIONS, $aConfiguredSystemPrompts, $aSystemInstructions);
-
-		$this->oAIBaseHelper = new AIBaseHelper();
 	}
 
 	/**
@@ -130,7 +127,7 @@ class AIService
 	 * @param string $sInstructionName The name of the new system instruction.
 	 * @param string $sInstruction The content of the new system instruction.
 	 */
-	public function addSystemInstruction($sInstructionName, $sInstruction) {
+	public function addSystemInstruction(string $sInstructionName, string $sInstruction): void {
 		$this->aSystemInstructions[$sInstructionName] = $sInstruction;
 	}
 
@@ -142,14 +139,14 @@ class AIService
 	 * @return string
 	 * @throws AIResponseException
 	 */
-	public function PerformSystemInstruction($message, $sInstructionName): string
+	public function PerformSystemInstruction(string $message, string $sInstructionName): string
 	{
 		$systemInstruction = $this->aSystemInstructions[$sInstructionName] ?? $this->aSystemInstructions['default'];
 		if($sInstructionName === 'translate')
 		{
 			$sLanguage = Dict::GetUserLanguage();
 			if (!in_array($sLanguage, $this->aLanguages)) {
-				throw new AIResponseException("Invalid locale identifer \"$sLanguage\", valid locales :" .print_r($this->aLanguages, true));
+				throw new AIResponseException("Invalid locale identifer \"$sLanguage\", valid locales :" .json_encode($this->aLanguages));
 			}
 			$systemInstruction = sprintf($systemInstruction, $sLanguage);
 		}
@@ -162,7 +159,7 @@ class AIService
 	 * @return string
 	 * @throws AIResponseException
 	 */
-	public function GetCompletion($sMessage, $sSystemInstruction = '') : string
+	public function GetCompletion(string $sMessage, string $sSystemInstruction = '') : string
 	{
 		return AIBaseHelper::removeThinkTag($this->oAIEngine->GetCompletion($sMessage, $sSystemInstruction));
 	}
@@ -265,7 +262,7 @@ class AIService
 	 * @return class-string<iAIEngineInterface>|'' The class name of the AI engine, or null if no engine is configured.
 	 * @throws \ReflectionException
 	 */
-	public static function GetAIEngineClass(string $sAIEngineName)
+	public static function GetAIEngineClass(string $sAIEngineName): string
 	{
 		$sDesiredAIEngineClass = '';
 		/** @var $aAIEngines */

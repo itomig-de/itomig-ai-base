@@ -42,7 +42,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetEngine($configuration): OpenAIEngine
+	public static function GetEngine(array $configuration): OpenAIEngine
 	{
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
@@ -58,7 +58,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion(string $message, string $systemInstruction = '') : string
 	{
 		IssueLog::Debug("OpenAIEngine: getCompletions() called");
 		$oChat = $this->createChatInstance();

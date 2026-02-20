@@ -29,23 +29,23 @@ use LLPhant\Chat\ChatInterface;
 
 class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
-    /**
-     * @inheritDoc
-     */
-    public static function GetEngineName(): string
-    {
-        return 'AnthropicAI';
-    }
+	/**
+	 * @inheritDoc
+	 */
+	public static function GetEngineName(): string
+	{
+		return 'AnthropicAI';
+	}
 
-    /**
-     * @inheritDoc
-     */
-	public static function GetEngine($configuration): AnthropicAIEngine
+	/**
+	 * @inheritDoc
+	 */
+	public static function GetEngine(array $configuration): AnthropicAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
-        return new self($url, $apiKey, $model);
+		return new self($url, $apiKey, $model);
 	}
 
 	/**
@@ -55,7 +55,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion(string $message, string $systemInstruction = '') : string
 	{
 		$oChat = $this->createChatInstance();
 		$oChat->setSystemMessage($systemInstruction);
