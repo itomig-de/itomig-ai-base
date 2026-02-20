@@ -38,7 +38,7 @@ interface iAIEngineInterface
 	 * @param array $configuration
 	 * @return iAIEngineInterface
 	 */
-	public static function GetEngine($configuration) : iAIEngineInterface;
+	public static function GetEngine(array $configuration) : iAIEngineInterface;
 
 	/**
 	 * Perform prompt and return result
@@ -46,7 +46,7 @@ interface iAIEngineInterface
 	 * @param string $systemInstruction
 	 * @return string
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string;
+	public function GetCompletion(string $message, string $systemInstruction = '') : string;
 
 	/**
 	 * Generates the next response in a conversation given the full message history.

@@ -41,13 +41,13 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function GetEngine($configuration): MistralAIEngine
+	public static function GetEngine(array $configuration): MistralAIEngine
 	{
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
 		$apiKey = $configuration['api_key'] ?? '';
 
-        return new self($url, $apiKey, $model);
+		return new self($url, $apiKey, $model);
 	}
 
 	/**
@@ -57,7 +57,7 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 * @param string $systemInstruction optional - the System prompt (if a specific one is required)
 	 * @return string the textual response
 	 */
-	public function GetCompletion($message, $systemInstruction = '') : string
+	public function GetCompletion(string $message, string $systemInstruction = '') : string
 	{
 		$oChat = $this->createChatInstance();
 		$oChat->setSystemMessage($systemInstruction);
