@@ -7,7 +7,6 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine\Embedding;
 
-use Itomig\iTop\Extension\AIBase\Generator\OpenAICompatibleGenerator;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3LargeEmbeddingGenerator;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;

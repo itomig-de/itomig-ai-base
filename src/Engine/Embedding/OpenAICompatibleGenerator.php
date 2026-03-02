@@ -5,7 +5,7 @@
  * @license     http://opensource.org/licenses/AGPL-3.0
  */
 
-namespace Itomig\iTop\Extension\AIBase\Generator;
+namespace Itomig\iTop\Extension\AIBase\Engine\Embedding;
 
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\AbstractOpenAIEmbeddingGenerator;
 use LLPhant\OpenAIConfig;
