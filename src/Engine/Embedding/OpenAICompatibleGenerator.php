@@ -5,7 +5,7 @@
  * @license     http://opensource.org/licenses/AGPL-3.0
  */
 
-namespace Itomig\iTop\Extension\AIBase\Engine\Embedding;
+namespace Itomig\iTop\Extension\AIBase\Generator;
 
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\AbstractOpenAIEmbeddingGenerator;
 use LLPhant\OpenAIConfig;
@@ -15,6 +15,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 class OpenAICompatibleGenerator extends AbstractOpenAIEmbeddingGenerator
 {
 	public int $batch_size_limit = 25;
+
+	protected string $uri = 'https://openrouter.ai/api/v1';
 
 	private string $sModel;
 	private int $iDim;
