@@ -1,7 +1,7 @@
 parameters:
     level: 5                                                    # Be brave !
     #phpVersion: null                                           # ??? Explicitly commented as we rather use the detected version from the above include (`php-includes/target-php-version.php`)
-    editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'    # Open in PHPStorm as it's Combodo's default IDE
+    editorUrl: 'vscode://file/%%file%%:%%line%%'
     bootstrapFiles:
         - ../../../../../approot.inc.php
         - ../../../../../bootstrap.inc.php

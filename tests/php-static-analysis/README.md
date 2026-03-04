@@ -1,52 +1,45 @@
-# How to use phpstan's static analysis for this extension
+# PHPStan — Static Analysis for itomig-ai-base
 
-The test has to be run on a fully installed iTop instance which contains this extension.
+This extension supports two PHPStan variants:
 
-First install phptstan:
-- Open a terminal in the folder **tests/php-static-analysis** of iTop.
-- Notice the composer.json file. The run the following command:
+## Variant A: Standalone (recommended for CI/CD and local development)
 
+Uses stub files instead of real iTop classes. No iTop installation required.
+
+```bash
+# From the extension root directory:
+composer install
+vendor/bin/phpstan analyse
 ```
+
+See also: `tests/phpstan/README.md`
+
+## Variant B: iTop-Integrated (for deep analysis with real classes)
+
+Runs within a fully installed iTop instance, using the real iTop bootstrap. This catches issues that stubs cannot detect (e.g. wrong method signatures against a specific iTop version).
+
+### Setup
+
+1. Install phpstan in iTop's `tests/php-static-analysis/` directory:
+
+```bash
+cd /path/to/itop/tests/php-static-analysis
 composer install
 ```
 
-Then launch phpstan for this extension.
-- Open a terminal in **the root folder of iTop** and
-- Launch the command:
+2. Run the analysis from the iTop root directory:
 
+```bash
+./tests/php-static-analysis/vendor/bin/phpstan analyse \
+  -c ./env-production/itomig-ai-base/tests/php-static-analysis/config/itomig-ai-base.neon
 ```
-./tests/php-static-analysis/vendor/bin/phpstan analyse -c ./env-production/itomig-ai-base/tests/php-static-analysis/config/itomig-ai-base.neon
-```
 
-You should see something like:
+## When to Use Which Variant
 
-```
-10/10 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
-
- ------ ---------------------------------------------------------------------------------------------------------------------------------------- 
-  Line   Engine/MistralAIEngine.php                                                                                                              
- ------ ---------------------------------------------------------------------------------------------------------------------------------------- 
-  63     Instantiated class LLPhant\MistralAIConfig not found.                                                                                   
-         🪪  class.notFound                                                                                                                      
-         💡  Learn more at https://phpstan.org/user-guide/discovering-symbols                                                                    
-         ✏️  Engine/MistralAIEngine.php                                                                                                          
-  63     Parameter #1 $config of class LLPhant\Chat\MistralAIChat constructor expects LLPhant\OpenAIConfig|null, LLPhant\MistralAIConfig given.  
-         🪪  argument.type                                                                                                                       
-         ✏️  Engine/MistralAIEngine.php                                                                                                          
- ------ ---------------------------------------------------------------------------------------------------------------------------------------- 
-
- ------ -------------------------------------------------------------------------------------------------------------------------------- 
-  Line   Service/AIService.php                                                                                                           
- ------ -------------------------------------------------------------------------------------------------------------------------------- 
-  120    Access to an undefined property Itomig\iTop\Extension\AIBase\Service\AIService::$oAIBaseHelper.                                 
-         🪪  property.notFound                                                                                                           
-         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-undefined-property                                           
-         ✏️  Service/AIService.php                                                                                                       
-  175    PHPDoc tag @var has invalid value ($aAIEngines): Unexpected token "$aAIEngines", expected type at offset 9 on line 1            
-         🪪  phpDoc.parseError                                                                                                           
-         ✏️  Service/AIService.php                                                                                                       
-  179    Variable $AIEngineClass in PHPDoc tag @var does not match any variable in the foreach loop: $aAIEngineClasses, $sAIEngineClass  
-         🪪  varTag.differentVariable                                                                                                    
-         ✏️  Service/AIService.php                                                                                                       
- ------ -------------------------------------------------------------------------------------------------------------------------------- 
-```
+| Scenario | Variant |
+|----------|---------|
+| CI/CD pipeline | Standalone |
+| Quick local check | Standalone |
+| Pre-commit verification | Standalone |
+| Verify against specific iTop version | iTop-Integrated |
+| Debug iTop API compatibility issues | iTop-Integrated |
