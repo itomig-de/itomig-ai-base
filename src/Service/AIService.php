@@ -265,10 +265,9 @@ class AIService
 	public static function GetAIEngineClass(string $sAIEngineName): string
 	{
 		$sDesiredAIEngineClass = '';
-		/** @var $aAIEngines */
 		$oInterfaceDiscovery = InterfaceDiscovery::GetInstance();
 		$aAIEngineClasses = $oInterfaceDiscovery->FindItopClasses(iAIEngineInterface::class);
-		/** @var class-string<iAIEngineInterface> $AIEngineClass */
+		/** @var class-string<iAIEngineInterface> $sAIEngineClass */
 		foreach ($aAIEngineClasses as $sAIEngineClass)
 		{
 			if ($sAIEngineName === $sAIEngineClass::GetEngineName())
