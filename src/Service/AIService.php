@@ -159,9 +159,7 @@ class AIService
 	{
 		$aTools = $oProvider->getAITools();
 		foreach ($aTools as $oTool) {
-			if ($oTool instanceof FunctionInfo) {
-				$this->aDiscoveredTools[] = $oTool;
-			}
+			$this->aDiscoveredTools[] = $oTool;
 		}
 		if ($oProvider instanceof iAIContextAwareToolProvider) {
 			$this->aContextAwareProviders[] = $oProvider;
@@ -390,10 +388,9 @@ class AIService
 	public static function GetAIEngineClass(string $sAIEngineName): string
 	{
 		$sDesiredAIEngineClass = '';
-		/** @var $aAIEngines */
 		$oInterfaceDiscovery = InterfaceDiscovery::GetInstance();
 		$aAIEngineClasses = $oInterfaceDiscovery->FindItopClasses(iAIEngineInterface::class);
-		/** @var class-string<iAIEngineInterface> $AIEngineClass */
+		/** @var class-string<iAIEngineInterface> $sAIEngineClass */
 		foreach ($aAIEngineClasses as $sAIEngineClass)
 		{
 			if ($sAIEngineName === $sAIEngineClass::GetEngineName())
