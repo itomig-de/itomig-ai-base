@@ -3,7 +3,7 @@
         'name' => 'itomig-de/itomig-ai-base',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'bee7c7313c5ea3ad1d7d26067b8ed6784ef33a7f',
+        'reference' => '6f9772dbe981279cf81f66593144d231ad8e5c4f',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -40,16 +40,16 @@
         'itomig-de/itomig-ai-base' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'bee7c7313c5ea3ad1d7d26067b8ed6784ef33a7f',
+            'reference' => '6f9772dbe981279cf81f66593144d231ad8e5c4f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
         'openai-php/client' => array(
-            'pretty_version' => 'v0.10.3',
-            'version' => '0.10.3.0',
-            'reference' => '4a565d145e0fb3ea1baba8fffe39d86c56b6dc2c',
+            'pretty_version' => 'v0.13.0',
+            'version' => '0.13.0.0',
+            'reference' => '399229860cea244843753bf1d9c28aee0e74c3a6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../openai-php/client',
             'aliases' => array(),
@@ -103,6 +103,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'psr/container' => array(
+            'pretty_version' => '2.0.2',
+            'version' => '2.0.2.0',
+            'reference' => 'c71ecc56dfe541dbd90c5360474fbc405f8d5963',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../psr/container',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'psr/http-client' => array(
             'pretty_version' => '1.0.3',
             'version' => '1.0.3.0',
@@ -115,8 +124,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-factory' => array(
@@ -131,8 +140,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-message' => array(
@@ -147,8 +156,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/log' => array(
@@ -170,9 +179,9 @@
             'dev_requirement' => false,
         ),
         'smalot/pdfparser' => array(
-            'pretty_version' => 'v2.12.1',
-            'version' => '2.12.1.0',
-            'reference' => '98d31ba34ef5b5a98897ef4b6c3925d502ea53b1',
+            'pretty_version' => 'v2.12.3',
+            'version' => '2.12.3.0',
+            'reference' => '61c9bcafcb92899b76d8ebda6508267bae77e264',
             'type' => 'library',
             'install_path' => __DIR__ . '/../smalot/pdfparser',
             'aliases' => array(),
@@ -196,12 +205,30 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'symfony/service-contracts' => array(
+            'pretty_version' => 'v3.6.1',
+            'version' => '3.6.1.0',
+            'reference' => '45112560a3ba2d715666a509a0bc9521d10b6c43',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/service-contracts',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'theodo-group/llphant' => array(
-            'pretty_version' => '0.10.1',
-            'version' => '0.10.1.0',
-            'reference' => '79e32a81fc872934a8cff6389f98a354046dd1c9',
+            'pretty_version' => '0.10.8',
+            'version' => '0.10.8.0',
+            'reference' => '23163245d32b254a5e156e6514168225b0db3416',
             'type' => 'library',
             'install_path' => __DIR__ . '/../theodo-group/llphant',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'yethee/tiktoken' => array(
+            'pretty_version' => '0.10.0',
+            'version' => '0.10.0.0',
+            'reference' => '59a93e34b90469021a4b8ed3a98765e8dc23f3cc',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../yethee/tiktoken',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
