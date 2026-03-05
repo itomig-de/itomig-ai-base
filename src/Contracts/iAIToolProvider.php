@@ -22,7 +22,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Contracts;
 
-use LLPhant\Tool\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 
 /**
  * Interface for external Tool Providers that can register AI tools.

@@ -159,9 +159,7 @@ class AIService
 	{
 		$aTools = $oProvider->getAITools();
 		foreach ($aTools as $oTool) {
-			if ($oTool instanceof FunctionInfo) {
-				$this->aDiscoveredTools[] = $oTool;
-			}
+			$this->aDiscoveredTools[] = $oTool;
 		}
 		if ($oProvider instanceof iAIContextAwareToolProvider) {
 			$this->aContextAwareProviders[] = $oProvider;
