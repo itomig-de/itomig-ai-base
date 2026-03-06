@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * iTop InterfaceDiscovery stub for standalone PHPStan analysis.
+ *
+ * Contains only the methods actually used by itomig-ai-base.
+ */
+
+namespace Combodo\iTop\Service\InterfaceDiscovery;
+
+class InterfaceDiscovery
+{
+    /**
+     * @return static
+     */
+    public static function GetInstance(): self
+    {
+        return new self();
+    }
+
+    /**
+     * @param string $sInterfaceName
+     * @return array<int, class-string>
+     */
+    public function FindItopClasses(string $sInterfaceName): array
+    {
+        return [];
+    }
+}

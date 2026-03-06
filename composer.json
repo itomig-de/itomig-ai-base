@@ -15,5 +15,8 @@
   "require": {
     "composer-runtime-api": "^2.0",
     "theodo-group/llphant": "^0.10.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.0"
   }
 }

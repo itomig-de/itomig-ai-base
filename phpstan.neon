@@ -1,0 +1,21 @@
+#
+# Standalone PHPStan configuration for itomig-ai-base.
+#
+# Runs without a full iTop installation by using stub files for iTop classes.
+# For analysis within an iTop installation, see tests/php-static-analysis/.
+#
+# Usage:
+#   composer install
+#   vendor/bin/phpstan analyse
+#
+parameters:
+    level: 5
+    paths:
+        - src
+    excludePaths:
+        - vendor
+    scanFiles:
+        - tests/phpstan/stubs/itop-core.stub
+        - tests/phpstan/stubs/itop-interface-discovery.stub
+    scanDirectories:
+        - vendor

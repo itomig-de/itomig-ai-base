@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * iTop core class stubs for standalone PHPStan analysis.
+ *
+ * Contains only the methods actually used by itomig-ai-base.
+ * For full analysis with real iTop classes, use the iTop-integrated variant
+ * in tests/php-static-analysis/.
+ */
+
+class CoreException extends Exception
+{
+    /**
+     * @param string $sIssue
+     * @param array<string, mixed>|null $aContextData
+     * @param string $sImpact
+     * @param \Exception|null $oPrevious
+     */
+    public function __construct($sIssue, $aContextData = null, $sImpact = '', $oPrevious = null)
+    {
+    }
+}
+
+class IssueLog
+{
+    /**
+     * @param string $sMessage
+     * @param string|null $sChannel
+     * @param array<string, mixed> $aContext
+     */
+    public static function Debug(string $sMessage, ?string $sChannel = null, array $aContext = []): void
+    {
+    }
+
+    /**
+     * @param string $sMessage
+     * @param string|null $sChannel
+     * @param array<string, mixed> $aContext
+     */
+    public static function Warning(string $sMessage, ?string $sChannel = null, array $aContext = []): void
+    {
+    }
+
+    /**
+     * @param string $sMessage
+     * @param string|null $sChannel
+     * @param array<string, mixed> $aContext
+     */
+    public static function Error(string $sMessage, ?string $sChannel = null, array $aContext = []): void
+    {
+    }
+}
+
+class MetaModel
+{
+    /**
+     * @param string $sModuleName
+     * @param string $sProperty
+     * @param mixed $defaultvalue
+     * @return mixed
+     */
+    public static function GetModuleSetting(string $sModuleName, string $sProperty, $defaultvalue = null)
+    {
+    }
+}
+
+class Dict
+{
+    /**
+     * @return string
+     */
+    public static function GetUserLanguage(): string
+    {
+        return '';
+    }
+
+    /**
+     * @param string $sLanguageCode
+     * @param string $sEnglishLanguageDesc
+     * @param string $sLocalizedLanguageDesc
+     * @param array<string, string> $aEntries
+     */
+    public static function Add(string $sLanguageCode, string $sEnglishLanguageDesc, string $sLocalizedLanguageDesc, array $aEntries): void
+    {
+    }
+}
+
+class DBObject
+{
+}
+
+class SetupWebPage
+{
+    /**
+     * @param string $sFilePath
+     * @param string $sVersion
+     * @param array<string, mixed> $aModuleInfo
+     */
+    public static function AddModule(string $sFilePath, string $sVersion, array $aModuleInfo): void
+    {
+    }
+}
