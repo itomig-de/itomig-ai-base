@@ -86,9 +86,19 @@ class AIService
 	public $aLanguages;
 
 	/**
-	 * @var FunctionInfo[] All tools from discovered providers (including AIObjectTools)
+	 * @var FunctionInfo[] All tools from discovered providers (including AIObjectTools and AISystemTools)
 	 */
 	protected array $aDiscoveredTools = [];
+
+	/**
+	 * @var FunctionInfo[] Tools from non-context-aware providers (always available)
+	 */
+	protected array $aAlwaysAvailableTools = [];
+
+	/**
+	 * @var FunctionInfo[] Tools from context-aware providers (only available with object)
+	 */
+	protected array $aContextDependentTools = [];
 
 	/**
 	 * @var iAIContextAwareToolProvider[] Providers that need object context
@@ -157,11 +167,17 @@ class AIService
 	 */
 	protected function registerProvider(iAIToolProvider $oProvider): void
 	{
+		$bIsContextAware = $oProvider instanceof iAIContextAwareToolProvider;
 		$aTools = $oProvider->getAITools();
 		foreach ($aTools as $oTool) {
 			$this->aDiscoveredTools[] = $oTool;
+			if ($bIsContextAware) {
+				$this->aContextDependentTools[] = $oTool;
+			} else {
+				$this->aAlwaysAvailableTools[] = $oTool;
+			}
 		}
-		if ($oProvider instanceof iAIContextAwareToolProvider) {
+		if ($bIsContextAware) {
 			$this->aContextAwareProviders[] = $oProvider;
 		}
 	}
@@ -249,26 +265,32 @@ class AIService
 	 *                                           - If null (default): System messages are filtered (except official one)
 	 *                                           - If array: Only system messages with content in this array are allowed
 	 *                                           Example: ['Context: Technical support', 'Context: Sales inquiry']
-	 * @param FunctionInfo[] $aTools Optional array of FunctionInfo objects for function calling.
-	 *                               If empty and $oObject is provided, default object tools will be used.
-	 *                               Pass an empty array explicitly to disable all tools.
+	 * @param FunctionInfo[]|null $aTools Optional array of FunctionInfo objects for function calling.
+	 *                                   If null (default): always-available tools are used, plus context-dependent
+	 *                                   tools when $oObject is provided.
+	 *                                   Pass an empty array explicitly to disable all tools.
 	 * @return array{response: string, history: array} The AI's response and the updated history array (including the new response).
 	 */
-	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null, array $aTools = []): array
+	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null, ?array $aTools = null): array
 	{
-		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject), 'tool_count' => count($aTools)]);
+		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject), 'tool_count' => $aTools !== null ? count($aTools) : 'auto']);
 
 		// 1. Set object context on all context-aware tool providers
 		foreach ($this->aContextAwareProviders as $oProvider) {
 			$oProvider->setContext($oObject);
 		}
 
-		// 2. Prepare tools: Use provided tools, or all discovered tools if object is provided and no tools specified
-		$aEffectiveTools = $aTools;
-		if (empty($aEffectiveTools) && $oObject !== null) {
-			// Auto-register all discovered tools when an object is provided
-			$aEffectiveTools = $this->getAllTools();
-			IssueLog::Debug("Auto-registered all discovered tools for context object.", AIBaseHelper::MODULE_CODE);
+		// 2. Prepare tools
+		if ($aTools !== null) {
+			// Explicit tools provided (including empty array = no tools)
+			$aEffectiveTools = $aTools;
+		} else {
+			// Auto: always-available tools + context-dependent tools when object is provided
+			$aEffectiveTools = $this->aAlwaysAvailableTools;
+			if ($oObject !== null) {
+				$aEffectiveTools = array_merge($aEffectiveTools, $this->aContextDependentTools);
+				IssueLog::Debug("Auto-registered all discovered tools for context object.", AIBaseHelper::MODULE_CODE);
+			}
 		}
 
 		// 3. Prepare the system message from trusted sources only

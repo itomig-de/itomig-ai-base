@@ -12,6 +12,7 @@ use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
+use Itomig\iTop\Extension\AIBase\Helper\AISystemTools;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
@@ -57,7 +58,7 @@ class FunctionCallingTest extends ItopDataTestCase
 	 */
 	public function testGetCurrentDateTime(): void
 	{
-		$oTools = new AIObjectTools();
+		$oTools = new AISystemTools();
 		$sDateTime = $oTools->getCurrentDateTime();
 
 		// Should match Y-m-d H:i:s format
@@ -74,24 +75,26 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		static::assertIsArray($aToolDefs);
 		static::assertNotEmpty($aToolDefs);
-		static::assertCount(9, $aToolDefs);
+		static::assertCount(6, $aToolDefs);
 
 		// All items should be FunctionInfo instances
 		foreach ($aToolDefs as $oTool) {
 			static::assertInstanceOf(FunctionInfo::class, $oTool);
 		}
 
-		// Check that expected tools exist
+		// Check that expected context-dependent tools exist
 		$aToolNames = array_map(fn($t) => $t->name, $aToolDefs);
 		static::assertContains('getObjectName', $aToolNames);
 		static::assertContains('getObjectId', $aToolNames);
 		static::assertContains('getObjectClass', $aToolNames);
 		static::assertContains('getAttribute', $aToolNames);
 		static::assertContains('getAttributeLabel', $aToolNames);
-		static::assertContains('getCurrentDateTime', $aToolNames);
 		static::assertContains('describeObject', $aToolNames);
-		static::assertContains('getCurrentUser', $aToolNames);
-		static::assertContains('getCurrentUserProfiles', $aToolNames);
+
+		// Context-free tools should NOT be in AIObjectTools (moved to AISystemTools)
+		static::assertNotContains('getCurrentDateTime', $aToolNames);
+		static::assertNotContains('getCurrentUser', $aToolNames);
+		static::assertNotContains('getCurrentUserProfiles', $aToolNames);
 
 		// Lifecycle tools should NOT be in default AI tools
 		static::assertNotContains('getState', $aToolNames);
@@ -111,18 +114,25 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test ContinueConversation without tools (default behavior)
+	 * Test ContinueConversation without object provides always-available system tools
 	 */
-	public function testContinueConversationWithoutTools(): void
+	public function testContinueConversationWithoutObject(): void
 	{
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
 		$oMockEngine->expects(static::once())
 			->method('GetNextTurn')
 			->willReturnCallback(function ($aHistory, $aTools) {
-				// Should receive empty tools array when no object provided
+				// Should receive always-available system tools even without object
 				static::assertIsArray($aTools);
-				static::assertEmpty($aTools);
-				return 'AI Response without tools';
+				static::assertNotEmpty($aTools);
+				$aToolNames = array_map(fn($t) => $t->name, $aTools);
+				static::assertContains('getCurrentDateTime', $aToolNames);
+				static::assertContains('getCurrentUser', $aToolNames);
+				static::assertContains('getCurrentUserProfiles', $aToolNames);
+				// Context-dependent tools should NOT be present
+				static::assertNotContains('getObjectName', $aToolNames);
+				static::assertNotContains('getAttribute', $aToolNames);
+				return 'AI Response with system tools';
 			});
 
 		$oAIService = new AIService($oMockEngine);
@@ -133,7 +143,7 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		$aResult = $oAIService->ContinueConversation($aHistory);
 
-		static::assertEquals('AI Response without tools', $aResult['response']);
+		static::assertEquals('AI Response with system tools', $aResult['response']);
 	}
 
 	/**
@@ -240,9 +250,9 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test getAllTools includes AIObjectTools discovered via InterfaceDiscovery
+	 * Test getAllTools includes tools from both AIObjectTools and AISystemTools
 	 */
-	public function testGetAllToolsIncludesAIObjectTools(): void
+	public function testGetAllToolsIncludesAllDiscoveredTools(): void
 	{
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
 		$oAIService = new AIService($oMockEngine);
@@ -256,7 +266,12 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertContains('getObjectClass', $aToolNames);
 		static::assertContains('getAttribute', $aToolNames);
 		static::assertContains('getAttributeLabel', $aToolNames);
+		static::assertContains('describeObject', $aToolNames);
+
+		// All 3 AISystemTools must be present (discovered via InterfaceDiscovery)
 		static::assertContains('getCurrentDateTime', $aToolNames);
+		static::assertContains('getCurrentUser', $aToolNames);
+		static::assertContains('getCurrentUserProfiles', $aToolNames);
 	}
 
 	/**
@@ -642,7 +657,7 @@ class FunctionCallingTest extends ItopDataTestCase
 	 */
 	public function testGetCurrentUserReturnsJson(): void
 	{
-		$oTools = new AIObjectTools();
+		$oTools = new AISystemTools();
 		$sResult = $oTools->getCurrentUser();
 
 		$aDecoded = json_decode($sResult, true);
@@ -674,7 +689,7 @@ class FunctionCallingTest extends ItopDataTestCase
 	 */
 	public function testGetCurrentUserProfilesReturnsJson(): void
 	{
-		$oTools = new AIObjectTools();
+		$oTools = new AISystemTools();
 		$sResult = $oTools->getCurrentUserProfiles();
 
 		$aDecoded = json_decode($sResult, true);
@@ -693,5 +708,71 @@ class FunctionCallingTest extends ItopDataTestCase
 			static::assertArrayHasKey('description', $aProfile);
 			static::assertArrayNotHasKey('id', $aProfile);
 		}
+	}
+
+	/**
+	 * Test AISystemTools implements only iAIToolProvider, NOT iAIContextAwareToolProvider
+	 */
+	public function testAISystemToolsImplementsOnlyBaseInterface(): void
+	{
+		$oTools = new AISystemTools();
+
+		static::assertInstanceOf(iAIToolProvider::class, $oTools);
+		static::assertNotInstanceOf(iAIContextAwareToolProvider::class, $oTools);
+	}
+
+	/**
+	 * Test AISystemTools getAITools returns exactly 3 context-free tools
+	 */
+	public function testAISystemToolsGetAITools(): void
+	{
+		$oTools = new AISystemTools();
+		$aToolDefs = $oTools->getAITools();
+
+		static::assertIsArray($aToolDefs);
+		static::assertCount(3, $aToolDefs);
+
+		$aToolNames = array_map(fn($t) => $t->name, $aToolDefs);
+		static::assertContains('getCurrentDateTime', $aToolNames);
+		static::assertContains('getCurrentUser', $aToolNames);
+		static::assertContains('getCurrentUserProfiles', $aToolNames);
+	}
+
+	/**
+	 * Test that context-free tools are available without object, but context-dependent tools are not
+	 */
+	public function testContextFreeToolsAvailableWithoutObject(): void
+	{
+		$aReceivedTools = null;
+
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->expects(static::once())
+			->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) use (&$aReceivedTools) {
+				$aReceivedTools = $aTools;
+				return 'Response';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+
+		// Call without object (null) and without explicit tools (null default)
+		$oAIService->ContinueConversation(
+			[['role' => 'user', 'content' => 'What time is it?']]
+		);
+
+		static::assertNotNull($aReceivedTools);
+		$aToolNames = array_map(fn($t) => $t->name, $aReceivedTools);
+
+		// System tools should be available
+		static::assertContains('getCurrentDateTime', $aToolNames);
+		static::assertContains('getCurrentUser', $aToolNames);
+		static::assertContains('getCurrentUserProfiles', $aToolNames);
+
+		// Object tools should NOT be available without context
+		static::assertNotContains('getObjectName', $aToolNames);
+		static::assertNotContains('getObjectId', $aToolNames);
+		static::assertNotContains('getObjectClass', $aToolNames);
+		static::assertNotContains('getAttribute', $aToolNames);
+		static::assertNotContains('describeObject', $aToolNames);
 	}
 }
