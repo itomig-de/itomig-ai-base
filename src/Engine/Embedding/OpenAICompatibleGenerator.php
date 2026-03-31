@@ -16,8 +16,6 @@ class OpenAICompatibleGenerator extends AbstractOpenAIEmbeddingGenerator
 {
 	public int $batch_size_limit = 25;
 
-	protected string $uri = 'https://openrouter.ai/api/v1';
-
 	private string $sModel;
 	private int $iDim;
 
