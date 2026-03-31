@@ -135,7 +135,10 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => $baseDir . '/src/Helper/AIBaseHelper.php',
     'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => $baseDir . '/src/Service/AIService.php',
     'Itomig\\iTop\\Extension\\AIBase\\Service\\EmbeddingService' => $baseDir . '/src/Service/EmbeddingService.php',
+<<<<<<< HEAD
     'LLPhant\\AIConfig' => $vendorDir . '/theodo-group/llphant/src/AIConfig.php',
+=======
+>>>>>>> 3306f2f (vendor push)
     'LLPhant\\AnthropicConfig' => $vendorDir . '/theodo-group/llphant/src/AnthropicConfig.php',
     'LLPhant\\Audio\\OpenAIAudio' => $vendorDir . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',
     'LLPhant\\Audio\\OpenAIAudioModel' => $vendorDir . '/theodo-group/llphant/src/Audio/OpenAIAudioModel.php',
