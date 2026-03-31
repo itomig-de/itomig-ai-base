@@ -63,8 +63,8 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -238,6 +238,10 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Http\\Message\\MultipartStream\\MimetypeHelper' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MimetypeHelper.php',
         'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\GenericEmbeddingEngine' => __DIR__ . '/../..' . '/src/Engine/Embedding/GenericEmbeddingEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAICompatibleGenerator' => __DIR__ . '/../..' . '/src/Engine/Embedding/OpenAICompatibleGenerator.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAIEmbeddingEngine' => __DIR__ . '/../..' . '/src/Engine/Embedding/OpenAIEmbeddingEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\iEmbeddingEngineInterface' => __DIR__ . '/../..' . '/src/Engine/Embedding/iEmbeddingEngineInterface.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => __DIR__ . '/../..' . '/src/Engine/GenericAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => __DIR__ . '/../..' . '/src/Engine/MistralAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\OllamaAIEngine' => __DIR__ . '/../..' . '/src/Engine/OllamaAIEngine.php',
@@ -247,6 +251,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => __DIR__ . '/../..' . '/src/Exception/AIResponseException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => __DIR__ . '/../..' . '/src/Helper/AIBaseHelper.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Service\\EmbeddingService' => __DIR__ . '/../..' . '/src/Service/EmbeddingService.php',
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
         'LLPhant\\Audio\\OpenAIAudio' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',
         'LLPhant\\Audio\\OpenAIAudioModel' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudioModel.php',
