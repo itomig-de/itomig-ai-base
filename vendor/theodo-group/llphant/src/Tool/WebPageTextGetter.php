@@ -46,7 +46,12 @@ class WebPageTextGetter extends ToolBase
         $this->outputAgent->renderTitleAndMessageOrange('🔧 retrieving web page content', $url, true);
 
         try {
-            $html = file_get_contents($url);
+            $html = \file_get_contents($url, false, \stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => "User-Agent: Mozilla/5.0\r\n",
+                ],
+            ]));
             if ($html === false) {
                 throw new \Exception('Unable to retrieve web page content');
             }
