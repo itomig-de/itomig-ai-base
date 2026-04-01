@@ -271,9 +271,13 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\EmbeddingService' => __DIR__ . '/../..' . '/src/Service/EmbeddingService.php',
 <<<<<<< HEAD
+<<<<<<< HEAD
         'LLPhant\\AIConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AIConfig.php',
 =======
 >>>>>>> 3306f2f (vendor push)
+=======
+        'LLPhant\\AIConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AIConfig.php',
+>>>>>>> def8cd8 (removed uri)
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
         'LLPhant\\Audio\\OpenAIAudio' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudio.php',
         'LLPhant\\Audio\\OpenAIAudioModel' => __DIR__ . '/..' . '/theodo-group/llphant/src/Audio/OpenAIAudioModel.php',
