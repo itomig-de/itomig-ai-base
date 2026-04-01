@@ -4,7 +4,7 @@ namespace LLPhant\Embeddings\VectorStores\ChromaDB;
 
 use Codewithkyrian\ChromaDB\ChromaDB;
 use Codewithkyrian\ChromaDB\Client;
-use Codewithkyrian\ChromaDB\Resources\CollectionResource;
+use Codewithkyrian\ChromaDB\Models\Collection;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;
@@ -13,7 +13,7 @@ class ChromaDBVectorStore extends VectorStoreBase
 {
     private readonly Client $chromaDB;
 
-    private CollectionResource $currentCollection;
+    private Collection $currentCollection;
 
     public function __construct(
         string $host = 'localhost',
@@ -49,10 +49,13 @@ class ChromaDBVectorStore extends VectorStoreBase
     public function addDocument(Document $document): void
     {
         $this->currentCollection->add(
-            [$this->getId($document)],
-            [$document->embedding],
-            [$this->metadataFromDocument($document)],
-            [$document->content]
+            ids: [$this->getId($document)],
+            embeddings: [$document->embedding ?? []],
+            /**
+             * @phpstan-ignore-next-line
+             */
+            metadatas: [$this->metadataFromDocument($document)],
+            documents: [$document->content]
         );
     }
 
@@ -84,10 +87,11 @@ class ChromaDBVectorStore extends VectorStoreBase
         $result = [];
 
         if ($queryResult->documents !== null && $queryResult->metadatas !== null) {
-            $itemsCount = \count($queryResult->documents[0]);
+            $itemsCount = is_countable($queryResult->documents[0]) ? \count($queryResult->documents[0]) : 0;
 
             for ($i = 0; $i < $itemsCount; $i++) {
                 $newDocument = new Document();
+                //@phpstan-ignore-next-line
                 $newDocument->content = $queryResult->documents[0][$i];
                 $metadata = $queryResult->metadatas[0][$i];
                 $newDocument->hash = $metadata['hash'];

@@ -3,15 +3,15 @@
 namespace LLPhant\Image;
 
 use Exception;
+use GuzzleHttp\Client as GuzzleClient;
 use LLPhant\Image\Enums\OpenAIImageModel;
 use LLPhant\Image\Enums\OpenAIImageSize;
 use LLPhant\Image\Enums\OpenAIImageStyle;
 use LLPhant\OpenAIConfig;
+use LLPhant\Utility;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Images\CreateResponse;
-
-use function getenv;
 
 class OpenAIImage implements ImageInterface
 {
@@ -27,16 +27,28 @@ class OpenAIImage implements ImageInterface
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
+            $apiKey = $config->apiKey ?? Utility::readEnvironment('OPENAI_API_KEY');
             if (! $apiKey) {
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
 
-            $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
-                ->make();
+            $factory = OpenAI::factory()
+                ->withApiKey($apiKey);
+
+            if ($config?->url != null) {
+                $factory->withBaseUri($config->url);
+            }
+
+            if ($config?->timeout !== null) {
+                $options = [
+                    'timeout' => $config->timeout,
+                    'connect_timeout' => $config->timeout,
+                    'read_timeout' => $config->timeout,
+                ];
+                $factory->withHttpClient(new GuzzleClient($options));
+            }
+
+            $this->client = $factory->make();
         }
         $this->model = $config->model ?? OpenAIImageModel::DallE3->value;
         $this->modelOptions = $config->modelOptions ?? [];

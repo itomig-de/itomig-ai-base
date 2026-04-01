@@ -22,6 +22,7 @@ class RedisVectorStore extends VectorStoreBase
 
     public function addDocument(Document $document): void
     {
+        //@phpstan-ignore argument.named
         $this->client->jsonmset(...$this->generateRedisJsonSetArguments($document));
     }
 
@@ -124,7 +125,7 @@ class RedisVectorStore extends VectorStoreBase
         try {
             $this->client->ftinfo($this->redisIndex);
         } catch (ServerException $e) {
-            if ($e->getMessage() !== 'Unknown index name') {
+            if (! $this->isMissingIndexError($e)) {
                 throw $e;
             }
             $this->createIndex($vectorDimension);
@@ -163,5 +164,10 @@ class RedisVectorStore extends VectorStoreBase
             '$',
             json_encode($document, JSON_THROW_ON_ERROR),
         ];
+    }
+
+    private function isMissingIndexError(\Exception|ServerException $e): bool
+    {
+        return ($e->getMessage() == 'Unknown index name') || (str_ends_with($e->getMessage(), 'no such index'));
     }
 }
