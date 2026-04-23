@@ -180,6 +180,28 @@ The engine layer uses iTop's InterfaceDiscovery system to locate available engin
   - `removeThinkTag(string $sRawString)`: Removes `<think>` tags from reasoning model outputs
   - `stripHTML(string $sString)`: Removes HTML tags and decodes HTML entities
 
+## Security Model
+
+AI-Base is used to process content that may contain attacker-controlled text (ticket descriptions, customer chat messages, object attributes, etc.). The extension applies several defenses against prompt-injection attacks; downstream extensions should be aware of them to avoid undoing them.
+
+### Prompt-injection defenses
+
+- **System-message filtering in conversation history:** `ContinueConversation()` removes any `role: system` entries from the caller-supplied history by default, allowing through only entries whose content is listed in an explicit `$aAllowedSystemMessages` whitelist.
+- **Opt-in function calling:** tools are attached only when the caller passes them explicitly via `$aTools`. Passing `$oObject` for context does **not** auto-attach object tools. `getDefaultTools()` is provided for callers that intentionally want the previously broad default set.
+- **Hardened default system prompt:** the built-in `default` system instruction tells the model to treat any content retrieved from user messages, tool outputs, or iTop object attributes as data rather than instructions, and not to call tools or disclose information based on directives embedded in such content.
+- **Read-only tool set:** the shipped `AIObjectTools` provider exposes read-only methods only. No setter, stimulus, or `DBWrite` call is reachable through function calling.
+- **Tool-round hard cap:** the multi-step tool loop is capped at 20 rounds to bound cost and prevent runaway recursion.
+
+### Known limitations
+
+See issue [#49](../../issues/49) for the full threat model. Currently out of scope in this layer:
+
+- Indirect prompt injection via tool outputs (tool poisoning) is not fully mitigated. Use a narrow, purpose-built `$aTools` list in sensitive contexts instead of `getDefaultTools()`.
+- There is no per-user / per-tool access control. Every caller of `ContinueConversation()` gets the same tool visibility — do not expose tools that read privileged data from low-trust user sessions.
+- User messages and tool outputs are not wrapped in an "untrusted content" delimiter that the system prompt could reference structurally.
+
+Downstream extensions that process untrusted content should also take care not to store raw AI responses (which may contain attacker-shaped payloads) back into fields that a malicious author would then read.
+
 ## Provided Functions
 
 ### AIService::GetCompletion()
@@ -229,25 +251,35 @@ public function ContinueConversation(
     array $aHistory,
     ?DBObject $oObject = null,
     ?string $sCustomSystemMessage = null,
-    ?array $aAllowedSystemMessages = null
+    ?array $aAllowedSystemMessages = null,
+    array $aTools = []
 ): array
 ```
 
-Continues a multi-turn conversation by maintaining context across multiple exchanges with the AI.
+Continues a multi-turn conversation by maintaining context across multiple exchanges with the AI, with optional function/tool calling.
 
 **Parameters:**
 - `$aHistory`: Array of conversation history. Each entry has `role` (user/assistant) and `content`
-- `$oObject`: (Optional) iTop object for context (reserved for future use)
+- `$oObject`: (Optional) iTop object context. When set, context-aware tool providers receive it via `setContext()`. Passing `$oObject` does **not** by itself attach any tools — see `$aTools`.
 - `$sCustomSystemMessage`: (Optional) Custom system message for this turn
 - `$aAllowedSystemMessages`: (Optional) Whitelist of allowed system messages from history
   - `null` (default): System messages in history are filtered
   - `array`: Only system messages with content in this array are allowed
+- `$aTools`: (Optional) Array of `FunctionInfo` objects for function calling. **Opt-in by default (empty array):** no tools are attached unless the caller passes them explicitly. This reduces the prompt-injection surface for use cases that only need text processing (e.g. summarization). Callers that want the full discovered tool set can pass `$oAIService->getDefaultTools($oObject)`.
 
 **Returns:** Array with two keys:
 - `response`: The AI's response (cleaned, without internal reasoning tags)
 - `history`: Updated conversation history (including the new response)
 
-**Security:** System messages from user-provided history are filtered by default to prevent prompt injection attacks. Use `$aAllowedSystemMessages` to explicitly allow specific context messages.
+**Security:** System messages from user-provided history are filtered by default to prevent prompt injection. Tools are opt-in to avoid silently exposing them to injected instructions in user-controlled content. See the [Security Model](#security-model) section and issue #49 for the full threat model.
+
+### AIService::getDefaultTools()
+
+```php
+public function getDefaultTools(?DBObject $oObject = null): array
+```
+
+Convenience helper that returns the broad default tool set: all always-available tools (`AISystemTools`), plus all context-dependent tools (`AIObjectTools`) when an object is passed. Use together with `ContinueConversation()` when the full discovered tool set is actually desired; prefer a narrower hand-picked list otherwise.
 
 ## Code Examples
 

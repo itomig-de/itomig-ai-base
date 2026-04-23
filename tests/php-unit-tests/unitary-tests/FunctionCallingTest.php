@@ -114,25 +114,21 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test ContinueConversation without object provides always-available system tools
+	 * Test that ContinueConversation without explicit $aTools attaches no tools (opt-in model).
+	 *
+	 * This is the baseline for the prompt-injection hardening: callers that only want to
+	 * summarize or translate content must not unintentionally expose tools to the LLM.
+	 * See issue #49 for the threat model.
 	 */
-	public function testContinueConversationWithoutObject(): void
+	public function testContinueConversationWithoutObjectAttachesNoTools(): void
 	{
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
 		$oMockEngine->expects(static::once())
 			->method('GetNextTurn')
 			->willReturnCallback(function ($aHistory, $aTools) {
-				// Should receive always-available system tools even without object
 				static::assertIsArray($aTools);
-				static::assertNotEmpty($aTools);
-				$aToolNames = array_map(fn($t) => $t->name, $aTools);
-				static::assertContains('getCurrentDateTime', $aToolNames);
-				static::assertContains('getCurrentUser', $aToolNames);
-				static::assertContains('getCurrentUserProfiles', $aToolNames);
-				// Context-dependent tools should NOT be present
-				static::assertNotContains('getObjectName', $aToolNames);
-				static::assertNotContains('getAttribute', $aToolNames);
-				return 'AI Response with system tools';
+				static::assertEmpty($aTools, 'No tools must be attached without an explicit $aTools argument.');
+				return 'AI Response without tools';
 			});
 
 		$oAIService = new AIService($oMockEngine);
@@ -143,7 +139,76 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		$aResult = $oAIService->ContinueConversation($aHistory);
 
-		static::assertEquals('AI Response with system tools', $aResult['response']);
+		static::assertEquals('AI Response without tools', $aResult['response']);
+	}
+
+	/**
+	 * Test that even with an object context, no tools are attached unless the caller
+	 * explicitly requests them (covers the opt-in behaviour for context-dependent tools).
+	 */
+	public function testContinueConversationWithObjectAttachesNoToolsByDefault(): void
+	{
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->expects(static::once())
+			->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) {
+				static::assertIsArray($aTools);
+				static::assertEmpty($aTools, 'Passing $oObject must not silently attach object tools.');
+				return 'AI Response without tools';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+
+		/** @var \DBObject $oObject */
+		$oObject = $this->createMock(\DBObject::class);
+
+		$aHistory = [
+			['role' => 'user', 'content' => 'Summarize this object'],
+		];
+
+		$aResult = $oAIService->ContinueConversation($aHistory, $oObject);
+
+		static::assertEquals('AI Response without tools', $aResult['response']);
+	}
+
+	/**
+	 * Test the getDefaultTools() convenience helper: callers that explicitly want the
+	 * previously auto-attached broad tool set must get it by passing getDefaultTools()
+	 * into ContinueConversation().
+	 */
+	public function testContinueConversationWithGetDefaultTools(): void
+	{
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oMockEngine->expects(static::once())
+			->method('GetNextTurn')
+			->willReturnCallback(function ($aHistory, $aTools) {
+				static::assertIsArray($aTools);
+				static::assertNotEmpty($aTools);
+				$aToolNames = array_map(fn($t) => $t->name, $aTools);
+				static::assertContains('getCurrentDateTime', $aToolNames);
+				static::assertContains('getCurrentUser', $aToolNames);
+				static::assertContains('getCurrentUserProfiles', $aToolNames);
+				// Without an object we should not see context-dependent tools.
+				static::assertNotContains('getObjectName', $aToolNames);
+				static::assertNotContains('getAttribute', $aToolNames);
+				return 'AI Response with default tools';
+			});
+
+		$oAIService = new AIService($oMockEngine);
+
+		$aHistory = [
+			['role' => 'user', 'content' => 'Hello'],
+		];
+
+		$aResult = $oAIService->ContinueConversation(
+			$aHistory,
+			null,
+			null,
+			null,
+			$oAIService->getDefaultTools()
+		);
+
+		static::assertEquals('AI Response with default tools', $aResult['response']);
 	}
 
 	/**
@@ -275,9 +340,10 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test that conversation still works with tools (backward compatibility)
+	 * Test that conversation returns a well-formed result when the $aTools argument is omitted.
+	 * With the opt-in tool model the call receives zero tools; the response shape is unaffected.
 	 */
-	public function testBackwardCompatibilityWithoutTools(): void
+	public function testContinueConversationWithoutToolsReturnsWellFormedResult(): void
 	{
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
 		$oMockEngine->expects(static::once())
@@ -286,7 +352,6 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		$oAIService = new AIService($oMockEngine);
 
-		// Call without the tools parameter (backward compatible)
 		$aResult = $oAIService->ContinueConversation(
 			[['role' => 'user', 'content' => 'Hello']],
 			null,
@@ -739,40 +804,50 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test that context-free tools are available without object, but context-dependent tools are not
+	 * Test getDefaultTools() without object returns only the context-free tools.
+	 *
+	 * This mirrors the old auto-registration behaviour for the no-object case, but now
+	 * reached via the explicit convenience helper instead of a silent default.
 	 */
-	public function testContextFreeToolsAvailableWithoutObject(): void
+	public function testGetDefaultToolsWithoutObjectReturnsContextFreeToolsOnly(): void
 	{
-		$aReceivedTools = null;
-
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
-		$oMockEngine->expects(static::once())
-			->method('GetNextTurn')
-			->willReturnCallback(function ($aHistory, $aTools) use (&$aReceivedTools) {
-				$aReceivedTools = $aTools;
-				return 'Response';
-			});
-
 		$oAIService = new AIService($oMockEngine);
 
-		// Call without object (null) and without explicit tools (null default)
-		$oAIService->ContinueConversation(
-			[['role' => 'user', 'content' => 'What time is it?']]
-		);
+		$aDefaultTools = $oAIService->getDefaultTools();
+		$aToolNames = array_map(fn($t) => $t->name, $aDefaultTools);
 
-		static::assertNotNull($aReceivedTools);
-		$aToolNames = array_map(fn($t) => $t->name, $aReceivedTools);
-
-		// System tools should be available
+		// System tools should be present
 		static::assertContains('getCurrentDateTime', $aToolNames);
 		static::assertContains('getCurrentUser', $aToolNames);
 		static::assertContains('getCurrentUserProfiles', $aToolNames);
 
-		// Object tools should NOT be available without context
+		// Object tools should NOT be present without context
 		static::assertNotContains('getObjectName', $aToolNames);
 		static::assertNotContains('getObjectId', $aToolNames);
 		static::assertNotContains('getObjectClass', $aToolNames);
 		static::assertNotContains('getAttribute', $aToolNames);
 		static::assertNotContains('describeObject', $aToolNames);
+	}
+
+	/**
+	 * Test getDefaultTools() with object returns context-free + context-dependent tools.
+	 */
+	public function testGetDefaultToolsWithObjectReturnsAllTools(): void
+	{
+		$oMockEngine = $this->createMock(iAIEngineInterface::class);
+		$oAIService = new AIService($oMockEngine);
+
+		/** @var \DBObject $oObject */
+		$oObject = $this->createMock(\DBObject::class);
+
+		$aDefaultTools = $oAIService->getDefaultTools($oObject);
+		$aToolNames = array_map(fn($t) => $t->name, $aDefaultTools);
+
+		// Both sets must be present
+		static::assertContains('getCurrentDateTime', $aToolNames);
+		static::assertContains('getObjectName', $aToolNames);
+		static::assertContains('getAttribute', $aToolNames);
+		static::assertContains('describeObject', $aToolNames);
 	}
 }
