@@ -2,43 +2,36 @@
 
 namespace LLPhant\Chat;
 
-use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;
 use LLPhant\Chat\Enums\MistralAIChatModel;
-use LLPhant\OpenAIConfig;
+use LLPhant\Exception\MissingParameterException;
+use LLPhant\MistralAIConfig;
 use OpenAI\Client;
 use OpenAI\Factory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
-
-use function getenv;
+use Psr\Log\NullLogger;
 
 class MistralAIChat extends OpenAIChat
 {
-    private const BASE_URL = 'api.mistral.ai/v1';
-
-    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
+    public function __construct(MistralAIConfig $config = new MistralAIConfig(), LoggerInterface $logger = new NullLogger())
     {
-        if (! $config instanceof OpenAIConfig) {
-            $config = new OpenAIConfig();
-        }
-
+        $config->model ??= MistralAIChatModel::large->value;
         if (! $config->client instanceof Client) {
-            $apiKey = $config->apiKey ?? getenv('MISTRAL_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a MISTRAL_API_KEY env var to request Mistral AI.');
+            if (! $config->apiKey) {
+                throw new MissingParameterException('You have to provide a OPENAI_API_KEY env var to request OpenAI.');
             }
-
+            if (! $config->url) {
+                throw new MissingParameterException('You have to provide an url o to set OPENAI_BASE_URL env var to request OpenAI.');
+            }
             $clientFactory = new Factory();
             $config->client = $clientFactory
-                ->withApiKey($apiKey)
-                ->withBaseUri(self::BASE_URL)
+                ->withApiKey($config->apiKey)
+                ->withBaseUri($config->url)
                 ->withHttpClient($this->createMistralClient())
                 ->make();
         }
-
-        $config->model ??= MistralAIChatModel::large->value;
         parent::__construct($config, $logger);
     }
 
@@ -46,6 +39,7 @@ class MistralAIChat extends OpenAIChat
     {
         $stack = HandlerStack::create();
         $stack->push(MistralJsonResponseModifier::createResponseModifier());
+        $stack->push(OpenAIResponseErrorsProcessor::createResponseModifier());
 
         return new GuzzleClient([
             'handler' => $stack,

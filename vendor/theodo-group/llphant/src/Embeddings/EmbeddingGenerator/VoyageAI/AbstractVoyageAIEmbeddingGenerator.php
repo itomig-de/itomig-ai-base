@@ -5,23 +5,25 @@ declare(strict_types=1);
 namespace LLPhant\Embeddings\EmbeddingGenerator\VoyageAI;
 
 use Exception;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\RequestOptions;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Utility;
 use LLPhant\VoyageAIConfig;
-use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
-use function getenv;
 use function str_replace;
 
 abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
-    public ClientContract $client;
+    public ClientInterface $client;
 
     public int $batch_size_limit = 128;
 
@@ -41,27 +43,33 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
     protected string $uri = 'https://api.voyageai.com/v1/embeddings';
 
+    private readonly RequestFactoryInterface
+        &StreamFactoryInterface $factory;
+
     /**
      * @throws Exception
      */
-    public function __construct(?VoyageAIConfig $config = null)
-    {
+    public function __construct(
+        ?VoyageAIConfig $config = null,
+        ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
         if ($config instanceof VoyageAIConfig && $config->client instanceof ClientContract) {
-            $this->client = $config->client;
-        } else {
-            $apiKey = $config->apiKey ?? getenv('VOYAGE_AI_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a VOYAGE_API_KEY env var to request VoyageAI.');
-            }
-            $url = $config->url ?? (getenv('VOYAGE_AI_BASE_URL') ?: 'https://api.voyageai.com/v1');
-
-            $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withBaseUri($url)
-                ->make();
-            $this->uri = $url.'/embeddings';
-            $this->apiKey = $apiKey;
+            throw new \RuntimeException('Passing a client to a VoyageAIConfig is no more admitted.');
         }
+        $apiKey = Utility::readEnvironment('VOYAGE_AI_API_KEY');
+        if (! $apiKey) {
+            throw new Exception('You have to provide a VOYAGE_API_KEY env var to request VoyageAI.');
+        }
+        $url = $config->url ?? Utility::readEnvironment('VOYAGE_AI_BASE_URL', 'https://api.voyageai.com/v1');
+        $this->uri = $url.'/embeddings';
+        $this->apiKey = $apiKey;
+        $this->client = $client ?? Psr18ClientDiscovery::find();
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
     }
 
     /**
@@ -73,12 +81,28 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
     {
         $text = str_replace("\n", ' ', DocumentUtils::toUtf8($text));
 
-        $response = $this->client->embeddings()->create([
+        $body = [
             'model' => $this->getModelName(),
             'input' => $text,
-        ]);
+            'truncation' => $this->truncate,
+        ];
 
-        return $response->embeddings[0]->embedding;
+        if ($this->retrievalOption !== null) {
+            $body['input_type'] = $this->retrievalOption;
+        }
+
+        $response = $this->client->sendRequest($this->createPostRequest($body));
+        $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
+        $result = [];
+
+        if (\array_key_exists('data', $jsonResponse)) {
+            foreach ($jsonResponse['data'] as $oneEmbeddingObject) {
+                $result = $oneEmbeddingObject['embedding'];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -123,8 +147,6 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
      */
     public function embedDocuments(array $documents): array
     {
-        $clientForBatch = $this->createClientForBatch();
-
         $texts = array_map('LLPhant\Embeddings\DocumentUtils::getUtf8Data', $documents);
 
         // We create batches of 50 texts to avoid hitting the limit
@@ -138,18 +160,14 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
             $body = [
                 'model' => $this->getModelName(),
                 'input' => $chunk,
-                'truncate' => $this->truncate,
+                'truncation' => $this->truncate,
             ];
 
             if ($this->retrievalOption !== null) {
                 $body['input_type'] = $this->retrievalOption;
             }
 
-            $options = [
-                RequestOptions::JSON => $body,
-            ];
-
-            $response = $clientForBatch->request('POST', $this->uri, $options);
+            $response = $this->client->sendRequest($this->createPostRequest($body));
             $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
             if (\array_key_exists('data', $jsonResponse)) {
@@ -162,22 +180,26 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         return $documents;
     }
 
+    /**
+     * @param  array<array-key, mixed>  $body
+     * @param  array<array-key, string>  $headers
+     */
+    private function createPostRequest(array $body, array $headers = []): RequestInterface
+    {
+        $request = $this->factory->createRequest('POST', $this->uri)
+            ->withHeader('Authorization', 'Bearer '.$this->apiKey)
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Accept', 'application/json');
+
+        foreach ($headers as $name => $value) {
+            // Headers could be overridden
+            $request = $request->withHeader($name, $value);
+        }
+
+        return $request->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
+    }
+
     abstract public function getEmbeddingLength(): int;
 
     abstract public function getModelName(): string;
-
-    protected function createClientForBatch(): ClientInterface
-    {
-        if ($this->apiKey === '' || $this->apiKey === '0') {
-            throw new Exception('You have to provide an $apiKey to batch embeddings.');
-        }
-
-        return new GuzzleClient([
-            'headers' => [
-                'Authorization' => 'Bearer '.$this->apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-        ]);
-    }
 }
