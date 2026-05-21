@@ -12,7 +12,7 @@ class MilvusVectorStore extends VectorStoreBase implements DocumentStore
 {
     final public const MILVUS_COLLECTION_NAME = 'llphant';
 
-    final public const OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding'];
+    public const OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding'];
 
     public bool $collectionExists = false;
 
@@ -121,7 +121,7 @@ class MilvusVectorStore extends VectorStoreBase implements DocumentStore
     /**
      * @param  array<string, array<array<string, array<float>|int|string>>|int>  $response
      */
-    private function checkResponseCode(array $response): void
+    protected function checkResponseCode(array $response): void
     {
         /** @var int $responseCode */
         $responseCode = $response['code'];
