@@ -35,30 +35,33 @@ class OllamaChat implements ChatInterface
 
     public Client $client;
 
-    private readonly LoggerInterface $logger;
-
     /** @var FunctionInfo[] */
     private array $tools = [];
 
     /** @var CalledFunction[] */
     public array $functionsCalled = [];
 
-    public function __construct(protected OllamaConfig $config, ?LoggerInterface $logger = null)
+    public function __construct(protected OllamaConfig $config, private readonly LoggerInterface $logger = new NullLogger())
     {
         if (! isset($config->model)) {
             throw new MissingParameterException('You need to specify a model for Ollama');
         }
 
-        $this->client = new Client([
+        $options = [
             'base_uri' => $config->url,
             'timeout' => $config->timeout,
             'connect_timeout' => $config->timeout,
             'read_timeout' => $config->timeout,
-        ]);
+        ];
+
+        if (! empty($config->apiKey)) {
+            $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
+        }
+
+        $this->client = new Client($options);
 
         $this->formatJson = $config->formatJson;
         $this->modelOptions = $config->modelOptions;
-        $this->logger = $logger ?: new NullLogger();
     }
 
     /**
@@ -172,6 +175,7 @@ class OllamaChat implements ChatInterface
         );
 
         $contents = $response->getBody()->getContents();
+        $this->logger->debug($contents);
         $json = Utility::decodeJson($contents);
 
         $message = $json['message'];
@@ -196,7 +200,7 @@ class OllamaChat implements ChatInterface
         return $message['content'];
     }
 
-    /** @param  Message[]  $messages */
+    /** @param Message[] $messages */
     public function generateChatStream(array $messages): StreamInterface
     {
         $params = [
@@ -416,5 +420,14 @@ class OllamaChat implements ChatInterface
         }
 
         throw new \Exception("AI tried to call $functionName which doesn't exist");
+    }
+
+    public function lastFunctionCalled(): ?CalledFunction
+    {
+        if ($this->functionsCalled === []) {
+            return null;
+        }
+
+        return $this->functionsCalled[count($this->functionsCalled) - 1];
     }
 }
