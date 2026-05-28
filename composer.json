@@ -13,8 +13,9 @@
   "name": "itomig-de/itomig-ai-base",
   "description": "AI Base Extension",
   "require": {
+    "php": "^8.2",
     "composer-runtime-api": "^2.0",
-    "theodo-group/llphant": "^0.10.1"
+    "theodo-group/llphant": "^0.11.21"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.0"

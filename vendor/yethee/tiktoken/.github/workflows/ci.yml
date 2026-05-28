@@ -1,0 +1,164 @@
+name: "Continuous Integration"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lib-build:
+    name: "Build rust lib"
+
+    runs-on: "ubuntu-latest"
+
+    env:
+      RUST_BACKTRACE: 1
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Cache"
+        uses: "Swatinem/rust-cache@v2"
+
+      - name: "Build binaries"
+        run: "cargo build --release"
+
+      - name: "Run tests"
+        run: "cargo test"
+
+      - name: "Upload lib binary"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "${{ runner.os }}-tiktoken-lib"
+          path: "target/release/libtiktoken_php.so"
+
+  coding-standards:
+    name: "Check Coding Standards"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: "none"
+          php-version: "8.1"
+          tools: "composer:v2"
+
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v3"
+        with:
+          dependency-versions: "highest"
+
+      - name: "Run phpcs"
+        run: "vendor/bin/phpcs -n"
+
+  static-analysis:
+    name: "Static Analysis"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: "none"
+          php-version: "8.1"
+          tools: "composer:v2"
+
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v3"
+        with:
+          dependency-versions: "highest"
+
+      - name: "Run psalm"
+        run: "vendor/bin/psalm"
+
+  code-coverage:
+    name: "Code coverage"
+
+    needs: [ "lib-build", "coding-standards", "static-analysis" ]
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Download lib binary"
+        uses: "actions/download-artifact@v4"
+        with:
+          name: "${{ runner.os }}-tiktoken-lib"
+          path: "target/release/"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: "pcov"
+          php-version: "8.3"
+          extensions: "ffi"
+          tools: "composer:v2"
+
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v3"
+        with:
+          dependency-versions: "highest"
+
+      - name: "Run tests"
+        run: "vendor/bin/phpunit --coverage-clover=coverage.xml"
+
+      - name: "Upload coverage reports to Codacy"
+        uses: "codacy/codacy-coverage-reporter-action@v1.3.0"
+        with:
+          project-token: "${{ secrets.CODACY_PROJECT_TOKEN }}"
+          coverage-reports: "coverage.xml"
+
+  tests:
+    name: "PHPUnit tests"
+
+    needs: [ "lib-build", "code-coverage" ]
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      matrix:
+        dependencies:
+          - "highest"
+        php-version:
+          - "8.1"
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        include:
+          - php-version: "8.1"
+            dependencies: "lowest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Download lib binary"
+        uses: "actions/download-artifact@v4"
+        with:
+          name: "${{ runner.os }}-tiktoken-lib"
+          path: "target/release/"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: "ffi"
+          tools: "composer:v2"
+
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v3"
+        with:
+          dependency-versions: "${{ matrix.dependencies }}"
+
+      - name: "Run tests"
+        run: "vendor/bin/phpunit --no-coverage"

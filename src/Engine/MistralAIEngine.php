@@ -24,7 +24,7 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use LLPhant\Chat\ChatInterface;
-use LLPhant\OpenAIConfig;
+use LLPhant\MistralAIConfig;
 use LLPhant\Chat\MistralAIChat;
 
 class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
@@ -77,7 +77,7 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	protected function createChatInstance(): ChatInterface
 	{
-		$oConfig = new OpenAIConfig();
+		$oConfig = new MistralAIConfig();
 		$oConfig->apiKey = $this->apiKey;
 		$oConfig->url = $this->url;
 		$oConfig->model = $this->model;

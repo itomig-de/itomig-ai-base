@@ -3,13 +3,15 @@
 namespace LLPhant\Chat;
 
 use Exception;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\HandlerStack as GuzzleHandlerStack;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\ToolCall;
 use LLPhant\Chat\FunctionInfo\ToolFormatter;
+use LLPhant\Exception\MissingParameterException;
 use LLPhant\OpenAIConfig;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
@@ -21,13 +23,11 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-use function getenv;
-
-class OpenAIChat implements ChatInterface
+/**
+ * @phpstan-import-type ModelOptions from OpenAIConfig
+ */ class OpenAIChat implements ChatInterface
 {
     private readonly ClientContract $client;
-
-    private readonly LoggerInterface $logger;
 
     public string $model;
 
@@ -53,25 +53,40 @@ class OpenAIChat implements ChatInterface
 
     public ?FunctionInfo $requiredFunction = null;
 
-    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
+    public function __construct(OpenAIConfig $config = new OpenAIConfig(), private readonly LoggerInterface $logger = new NullLogger())
     {
-        if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
+        if ($config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
+            if (! $config->apiKey) {
+                throw new MissingParameterException('You have to provide a OPENAI_API_KEY env var to request OpenAI.');
+            }
+            if (! $config->url) {
+                throw new MissingParameterException('You have to provide an url o to set OPENAI_BASE_URL env var to request OpenAI.');
             }
 
-            $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
-                ->make();
+            $factory = OpenAI::factory()
+                ->withApiKey($config->apiKey)
+                ->withBaseUri($config->url);
+
+            $httpClientOptions = [];
+
+            if ($config->timeout !== null) {
+                $httpClientOptions = [
+                    'timeout' => $config->timeout,
+                    'connect_timeout' => $config->timeout,
+                    'read_timeout' => $config->timeout,
+                ];
+            }
+
+            $guzzleStack = GuzzleHandlerStack::create();
+            $guzzleStack->push(OpenAIResponseErrorsProcessor::createResponseModifier());
+            $httpClientOptions['handler'] = $guzzleStack;
+            $factory->withHttpClient(new GuzzleClient($httpClientOptions));
+            $this->client = $factory->make();
         }
-        $this->model = $config->model ?? OpenAIChatModel::Gpt4Turbo->value;
-        $this->modelOptions = $config->modelOptions ?? [];
-        $this->logger = $logger ?: new NullLogger();
+        $this->model = $config->model ?? throw new MissingParameterException('You have to provide a model');
+        $this->modelOptions = $config->modelOptions;
     }
 
     public function generateText(string $prompt): string
@@ -128,8 +143,9 @@ class OpenAIChat implements ChatInterface
 
         if ($this->functionsCalled) {
             $newMessages = $this->getNewMessagesFromTools($messages);
-
-            $answer = $this->generateResponseFromMessages($newMessages);
+            if ($newMessages !== []) {
+                $answer = $this->generateResponseFromMessages($newMessages);
+            }
         }
 
         return $this->responseToString($answer);
@@ -245,6 +261,10 @@ class OpenAIChat implements ChatInterface
         $generator = function (StreamResponse $stream) use ($messages) {
             $toolsToCall = [];
             foreach ($stream as $partialResponse) {
+                if ((is_countable($partialResponse->choices) ? count($partialResponse->choices) : 0) === 0) {
+                    continue;
+                }
+
                 $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
                 /** @var CreateStreamedResponseToolCall $toolCall */
                 foreach ($toolCalls as $toolCall) {
@@ -265,7 +285,10 @@ class OpenAIChat implements ChatInterface
                         }
                     }
                     $newMessages = $this->getNewMessagesFromTools($messages);
-                    // We move to a non streamed answer here. Maybe it could be improved
+                    if ($newMessages === []) {
+                        break;
+                    }
+                    // We move to a non-streamed answer here. Maybe it could be improved
                     yield $this->generateChat($newMessages);
                 }
 
@@ -425,10 +448,16 @@ class OpenAIChat implements ChatInterface
         $toolsOutput = [];
         /** @var CalledFunction $functionCalled */
         foreach ($this->functionsCalled as $functionCalled) {
-            $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            if ($functionCalled->return) {
+                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
             }
+        }
+
+        if ($toolsOutput === []) {
+            return [];
         }
 
         $messages[] = Message::assistantAskingTools($toolsCalls);
