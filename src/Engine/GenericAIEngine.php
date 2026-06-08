@@ -24,6 +24,10 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Exception\AIAuthException;
+use Itomig\iTop\Extension\AIBase\Exception\AIContextWindowException;
+use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
+use Itomig\iTop\Extension\AIBase\Exception\AIRateLimitException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Enums\ChatRole;
@@ -63,6 +67,40 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 * @return ChatInterface
 	 */
 	abstract protected function createChatInstance(): ChatInterface;
+
+	/**
+	 * Maps an LLPhant HttpException to a typed AI engine exception
+	 * based on the HTTP status code and message content.
+	 *
+	 * @param \LLPhant\Exception\HttpException $e
+	 * @return \Itomig\iTop\Extension\AIBase\Exception\AIEngineException
+	 */
+	protected function classifyHttpException(\LLPhant\Exception\HttpException $e): \Itomig\iTop\Extension\AIBase\Exception\AIEngineException
+	{
+		$iCode = $e->getCode();
+		$sMsg  = $e->getMessage();
+
+		if ($iCode === 429) {
+			return new AIRateLimitException($sMsg, $iCode, $e);
+		}
+		if ($iCode === 401 || $iCode === 403) {
+			return new AIAuthException($sMsg, $iCode, $e);
+		}
+		if ($iCode === 413) {
+			return new AIContextWindowException($sMsg, $iCode, $e);
+		}
+		// HTTP 400 with token/context length keywords indicates context overflow
+		if ($iCode === 400) {
+			$sMsgLower = strtolower($sMsg);
+			if (str_contains($sMsgLower, 'context') || str_contains($sMsgLower, 'token') ||
+				str_contains($sMsgLower, 'maximum') || str_contains($sMsgLower, 'too long') ||
+				str_contains($sMsgLower, 'length')) {
+				return new AIContextWindowException($sMsg, $iCode, $e);
+			}
+		}
+
+		return new AINetworkException($sMsg, $iCode, $e);
+	}
 
 	/**
 	 * Generic implementation for handling a conversational turn.
@@ -125,7 +163,15 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		}
 
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
-		$result = $oChat->generateChatOrReturnFunctionCalled($aMessageHistory);
+		try {
+			$result = $oChat->generateChatOrReturnFunctionCalled($aMessageHistory);
+		} catch (\LLPhant\Exception\HttpException $e) {
+			throw $this->classifyHttpException($e);
+		} catch (\GuzzleHttp\Exception\ConnectException $e) {
+			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
+		} catch (\Throwable $e) {
+			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+		}
 
 		if (is_string($result)) {
 			$sResponsePreview = strlen($result) > 500 ? substr($result, 0, 500) . '...[truncated]' : $result;
