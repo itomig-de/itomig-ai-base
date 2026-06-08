@@ -3,7 +3,7 @@
 namespace LLPhant\Embeddings\VectorStores\Qdrant;
 
 use Exception;
-use GuzzleHttp\Client;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;
@@ -33,7 +33,7 @@ class QdrantVectorStore extends VectorStoreBase
         private ?string $vectorName = self::QDRANT_OPENAI_VECTOR_NAME,
         private string $distance = VectorParams::DISTANCE_COSINE,
     ) {
-        $this->client = new Qdrant(new Transport(new Client(), $config));
+        $this->client = new Qdrant(new Transport(Psr18ClientDiscovery::find(), $config));
     }
 
     public function setClient(Qdrant $client): void
@@ -113,10 +113,12 @@ class QdrantVectorStore extends VectorStoreBase
 
     /**
      * @param  float[]  $embedding
+     * @param  int  $k  Limit the number of results to be returned
      * @param  array<string, ConditionInterface[]>  $additionalArguments
+     * @param  float  $scoreThreshold  Will only return results with a score greater than the value provided
      * @return array<int, Document>
      */
-    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
+    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = [], float $scoreThreshold = 0.00): array
     {
         $vectorStruct = new VectorStruct($embedding, $this->vectorName);
         $filter = new Filter();
@@ -146,6 +148,7 @@ class QdrantVectorStore extends VectorStoreBase
                 'hnsw_ef' => 128,
                 'exact' => true,
             ])
+            ->setScoreThreshold($scoreThreshold)
             ->setWithPayload(true);
 
         $response = $this->client->collections($this->collectionName)->points()->search($searchRequest);
@@ -193,5 +196,15 @@ class QdrantVectorStore extends VectorStoreBase
                 ]
             )
         );
+    }
+
+    public function deleteCollection(?string $collectionName = null): void
+    {
+        $collectionName = $collectionName ?? $this->collectionName;
+        try {
+            $this->client->collections($collectionName)->delete();
+        } catch (\Exception $e) {
+            // Collection may not exist, which is fine for deletion
+        }
     }
 }

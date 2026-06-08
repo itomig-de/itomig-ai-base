@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace LLPhant;
 
+/**
+ * @phpstan-type VoyageModelOptions array<string,mixed>|array{
+ *  input_type: string,
+ *  output_dtype: string,
+ *  output_dimension: int|null,
+ *  truncation: boolean,
+ *  encoding_format: string|null
+ * }
+ */
 class VoyageAIConfig extends OpenAIConfig
 {
-    public string $url = 'https://api.voyageai.com/v1';
-
     /**
-     * model options, example:
-     * - input_type
-     * - output_dtype
-     * - output_dimension
-     * - truncation
-     * - encoding_format
-     *
      * @see https://docs.voyageai.com/reference/embeddings-api
      *
-     * @var array<string, mixed>
+     * @param  VoyageModelOptions  $modelOptions
      */
-    public array $modelOptions = [];
+    public function __construct(?string $apiKey = null, string $url = 'https://api.voyageai.com/v1', array $modelOptions = [])
+    {
+        $apiKey ??= Utility::readEnvironment('VOYAGE_AI_API_KEY');
+
+        parent::__construct($apiKey, $url, modelOptions: $modelOptions);
+    }
 }
