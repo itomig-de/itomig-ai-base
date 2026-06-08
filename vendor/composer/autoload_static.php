@@ -275,6 +275,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => __DIR__ . '/../..' . '/src/Helper/AIBaseHelper.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIObjectTools' => __DIR__ . '/../..' . '/src/Helper/AIObjectTools.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AISystemTools' => __DIR__ . '/../..' . '/src/Helper/AISystemTools.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Result\\AIResult' => __DIR__ . '/../..' . '/src/Result/AIResult.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
         'LLPhant\\AIConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AIConfig.php',
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
