@@ -30,6 +30,7 @@ use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIResponseException;
 use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
+use Itomig\iTop\Extension\AIBase\Result\AIResult;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Message;
 use MetaModel;
@@ -182,7 +183,7 @@ class AIService
 	 *                                           Example: ['Context: Technical support', 'Context: Sales inquiry']
 	 * @return array{response: string, history: array} The AI's response and the updated history array (including the new response).
 	 */
-	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null): array
+	public function ContinueConversation(array $aHistory, ?DBObject $oObject = null, ?string $sCustomSystemMessage = null, ?array $aAllowedSystemMessages = null): AIResult
 	{
 		IssueLog::Debug("Continuing conversation.", AIBaseHelper::MODULE_CODE, ['has_object' => !is_null($oObject)]);
 
@@ -250,10 +251,10 @@ class AIService
 		IssueLog::Debug("Conversation turn completed.", AIBaseHelper::MODULE_CODE);
 
 		// 5. Return the response and the clean history (without system messages) for the caller to store
-		return [
-			'response' => AIBaseHelper::removeThinkTag($sResponseString),
-			'history'  => $aCleanHistory,
-		];
+		return new AIResult(
+			AIBaseHelper::removeThinkTag($sResponseString),
+			$aCleanHistory,
+		);
 	}
 
 	/**
