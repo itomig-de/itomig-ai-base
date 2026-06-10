@@ -26,6 +26,7 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Exception\AIAuthException;
 use Itomig\iTop\Extension\AIBase\Exception\AIContextWindowException;
+use Itomig\iTop\Extension\AIBase\Exception\AIEngineException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use Itomig\iTop\Extension\AIBase\Exception\AIRateLimitException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
@@ -33,6 +34,7 @@ use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
+use LLPhant\Exception\HttpException;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
 
@@ -72,10 +74,10 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 * Maps an LLPhant HttpException to a typed AI engine exception
 	 * based on the HTTP status code and message content.
 	 *
-	 * @param \LLPhant\Exception\HttpException $e
-	 * @return \Itomig\iTop\Extension\AIBase\Exception\AIEngineException
+	 * @param HttpException $e
+	 * @return AIEngineException
 	 */
-	protected function classifyHttpException(\LLPhant\Exception\HttpException $e): \Itomig\iTop\Extension\AIBase\Exception\AIEngineException
+	protected function classifyHttpException(HttpException $e): AIEngineException
 	{
 		$iCode = $e->getCode();
 		$sMsg  = $e->getMessage();

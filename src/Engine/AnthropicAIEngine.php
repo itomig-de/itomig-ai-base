@@ -23,6 +23,8 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\ChatInterface;
@@ -63,10 +65,10 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 			$response = $oChat->generateText($message);
 		} catch (\LLPhant\Exception\HttpException $e) {
 			throw $this->classifyHttpException($e);
-		} catch (\GuzzleHttp\Exception\ConnectException $e) {
-			throw new \Itomig\iTop\Extension\AIBase\Exception\AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
+		} catch (ConnectException $e) {
+			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
 		} catch (\Throwable $e) {
-			throw new \Itomig\iTop\Extension\AIBase\Exception\AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
 		}
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
