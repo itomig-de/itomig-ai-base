@@ -23,6 +23,8 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\MistralAIConfig;
 use LLPhant\Chat\MistralAIChat;
@@ -61,12 +63,17 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 	{
 		$oChat = $this->createChatInstance();
 		$oChat->setSystemMessage($systemInstruction);
-		$response = $oChat->generateText($message);
-
+		try {
+			$response = $oChat->generateText($message);
+		} catch (\LLPhant\Exception\HttpException $e) {
+			throw $this->classifyHttpException($e);
+		} catch (ConnectException $e) {
+			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
+		} catch (\Throwable $e) {
+			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+		}
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
-
-		// TODO error handling in LLPhant (#2 )
 		return $response;
 	}
 
