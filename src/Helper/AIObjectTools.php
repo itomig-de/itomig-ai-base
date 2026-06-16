@@ -43,10 +43,6 @@ use MetaModel;
  * Context-free tools (get_current_date_time, get_current_user, get_current_user_profiles)
  * have been moved to AISystemTools.
  *
- * Lifecycle-specific tools (getState, getStateLabel, getAvailableTransitions) are
- * available as methods but not registered as default AI tools, since not all
- * iTop objects have a lifecycle. Extensions can register them selectively.
- *
  * SECURITY NOTE: Only read-only methods are exposed. Write operations
  * (Set, ApplyStimulus, DBWrite) are intentionally not included.
  */
@@ -164,64 +160,6 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	}
 
 	/**
-	 * Get the current lifecycle state of the object.
-	 *
-	 * @return string The current state code, or error message.
-	 */
-	public function getState(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$sState = $this->oContext->GetState();
-		if (empty($sState)) {
-			return 'Object has no lifecycle state';
-		}
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $sState, AIBaseHelper::MODULE_CODE);
-		return $sState;
-	}
-
-	/**
-	 * Get the human-readable label of the current state.
-	 *
-	 * @return string The state label, or error message.
-	 */
-	public function getStateLabel(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$sLabel = $this->oContext->GetStateLabel();
-		if (empty($sLabel)) {
-			return 'Object has no lifecycle state';
-		}
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $sLabel, AIBaseHelper::MODULE_CODE);
-		return $sLabel;
-	}
-
-	/**
-	 * List all available transitions from the current state.
-	 *
-	 * @return string Comma-separated list of transition codes, or message if none available.
-	 */
-	public function getAvailableTransitions(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$aTransitions = $this->oContext->EnumTransitions();
-		if (empty($aTransitions)) {
-			return 'No transitions available';
-		}
-		$result = implode(', ', array_keys($aTransitions));
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
-		return $result;
-	}
-
-	/**
 	 * Get a JSON schema describing the current object's class and all its attributes.
 	 *
 	 * Returns attribute codes, labels, types, and descriptions so the LLM can
@@ -310,10 +248,6 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 
 	/**
 	 * Returns an array of FunctionInfo objects for the default AI tools.
-	 *
-	 * Note: Lifecycle tools (getState, getStateLabel, getAvailableTransitions) are not
-	 * included here as they only work on objects with a lifecycle. The methods remain
-	 * available on this class for use by lifecycle-aware extensions.
 	 *
 	 * @return FunctionInfo[] Array of FunctionInfo objects ready for use with LLPhant.
 	 */

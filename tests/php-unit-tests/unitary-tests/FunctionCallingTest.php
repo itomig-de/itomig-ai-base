@@ -41,19 +41,6 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test AIObjectTools lifecycle methods without context (not registered as default tools)
-	 */
-	public function testAIObjectToolsLifecycleMethodsWithoutContext(): void
-	{
-		$oTools = new AIObjectTools();
-
-		// These methods still exist but are not registered as default AI tools
-		static::assertEquals('No object in context', $oTools->getState());
-		static::assertEquals('No object in context', $oTools->getStateLabel());
-		static::assertEquals('No object in context', $oTools->getAvailableTransitions());
-	}
-
-	/**
 	 * Test get_current_date_time returns valid date format
 	 */
 	public function testGetCurrentDateTime(): void
@@ -95,11 +82,6 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertNotContains('get_current_date_time', $aToolNames);
 		static::assertNotContains('get_current_user', $aToolNames);
 		static::assertNotContains('get_current_user_profiles', $aToolNames);
-
-		// Lifecycle tools should NOT be in default AI tools
-		static::assertNotContains('getState', $aToolNames);
-		static::assertNotContains('getStateLabel', $aToolNames);
-		static::assertNotContains('getAvailableTransitions', $aToolNames);
 	}
 
 	/**
