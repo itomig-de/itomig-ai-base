@@ -34,32 +34,19 @@ class FunctionCallingTest extends ItopDataTestCase
 	{
 		$oTools = new AIObjectTools();
 
-		static::assertEquals('No object in context', $oTools->getObjectName());
-		static::assertEquals('0', $oTools->getObjectId());
-		static::assertEquals('No object in context', $oTools->getObjectClass());
-		static::assertEquals('No object in context', $oTools->getAttribute('title'));
+		static::assertEquals('No object in context', $oTools->get_object_name());
+		static::assertEquals('0', $oTools->get_object_id());
+		static::assertEquals('No object in context', $oTools->get_object_class());
+		static::assertEquals('No object in context', $oTools->get_attribute('title'));
 	}
 
 	/**
-	 * Test AIObjectTools lifecycle methods without context (not registered as default tools)
-	 */
-	public function testAIObjectToolsLifecycleMethodsWithoutContext(): void
-	{
-		$oTools = new AIObjectTools();
-
-		// These methods still exist but are not registered as default AI tools
-		static::assertEquals('No object in context', $oTools->getState());
-		static::assertEquals('No object in context', $oTools->getStateLabel());
-		static::assertEquals('No object in context', $oTools->getAvailableTransitions());
-	}
-
-	/**
-	 * Test getCurrentDateTime returns valid date format
+	 * Test get_current_date_time returns valid date format
 	 */
 	public function testGetCurrentDateTime(): void
 	{
 		$oTools = new AISystemTools();
-		$sDateTime = $oTools->getCurrentDateTime();
+		$sDateTime = $oTools->get_current_date_time();
 
 		// Should match Y-m-d H:i:s format
 		static::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $sDateTime);
@@ -84,22 +71,17 @@ class FunctionCallingTest extends ItopDataTestCase
 
 		// Check that expected context-dependent tools exist
 		$aToolNames = array_map(fn($t) => $t->name, $aToolDefs);
-		static::assertContains('getObjectName', $aToolNames);
-		static::assertContains('getObjectId', $aToolNames);
-		static::assertContains('getObjectClass', $aToolNames);
-		static::assertContains('getAttribute', $aToolNames);
-		static::assertContains('getAttributeLabel', $aToolNames);
-		static::assertContains('describeObject', $aToolNames);
+		static::assertContains('get_object_name', $aToolNames);
+		static::assertContains('get_object_id', $aToolNames);
+		static::assertContains('get_object_class', $aToolNames);
+		static::assertContains('get_attribute', $aToolNames);
+		static::assertContains('get_attribute_label', $aToolNames);
+		static::assertContains('describe_object', $aToolNames);
 
 		// Context-free tools should NOT be in AIObjectTools (moved to AISystemTools)
-		static::assertNotContains('getCurrentDateTime', $aToolNames);
-		static::assertNotContains('getCurrentUser', $aToolNames);
-		static::assertNotContains('getCurrentUserProfiles', $aToolNames);
-
-		// Lifecycle tools should NOT be in default AI tools
-		static::assertNotContains('getState', $aToolNames);
-		static::assertNotContains('getStateLabel', $aToolNames);
-		static::assertNotContains('getAvailableTransitions', $aToolNames);
+		static::assertNotContains('get_current_date_time', $aToolNames);
+		static::assertNotContains('get_current_user', $aToolNames);
+		static::assertNotContains('get_current_user_profiles', $aToolNames);
 	}
 
 	/**
@@ -185,12 +167,12 @@ class FunctionCallingTest extends ItopDataTestCase
 				static::assertIsArray($aTools);
 				static::assertNotEmpty($aTools);
 				$aToolNames = array_map(fn($t) => $t->name, $aTools);
-				static::assertContains('getCurrentDateTime', $aToolNames);
-				static::assertContains('getCurrentUser', $aToolNames);
-				static::assertContains('getCurrentUserProfiles', $aToolNames);
+				static::assertContains('get_current_date_time', $aToolNames);
+				static::assertContains('get_current_user', $aToolNames);
+				static::assertContains('get_current_user_profiles', $aToolNames);
 				// Without an object we should not see context-dependent tools.
-				static::assertNotContains('getObjectName', $aToolNames);
-				static::assertNotContains('getAttribute', $aToolNames);
+				static::assertNotContains('get_object_name', $aToolNames);
+				static::assertNotContains('get_attribute', $aToolNames);
 				return 'AI Response with default tools';
 			});
 
@@ -326,17 +308,17 @@ class FunctionCallingTest extends ItopDataTestCase
 		$aToolNames = array_map(fn($t) => $t->name, $aAllTools);
 
 		// All 6 AIObjectTools must be present (discovered via InterfaceDiscovery)
-		static::assertContains('getObjectName', $aToolNames);
-		static::assertContains('getObjectId', $aToolNames);
-		static::assertContains('getObjectClass', $aToolNames);
-		static::assertContains('getAttribute', $aToolNames);
-		static::assertContains('getAttributeLabel', $aToolNames);
-		static::assertContains('describeObject', $aToolNames);
+		static::assertContains('get_object_name', $aToolNames);
+		static::assertContains('get_object_id', $aToolNames);
+		static::assertContains('get_object_class', $aToolNames);
+		static::assertContains('get_attribute', $aToolNames);
+		static::assertContains('get_attribute_label', $aToolNames);
+		static::assertContains('describe_object', $aToolNames);
 
 		// All 3 AISystemTools must be present (discovered via InterfaceDiscovery)
-		static::assertContains('getCurrentDateTime', $aToolNames);
-		static::assertContains('getCurrentUser', $aToolNames);
-		static::assertContains('getCurrentUserProfiles', $aToolNames);
+		static::assertContains('get_current_date_time', $aToolNames);
+		static::assertContains('get_current_user', $aToolNames);
+		static::assertContains('get_current_user_profiles', $aToolNames);
 	}
 
 	/**
@@ -371,10 +353,10 @@ class FunctionCallingTest extends ItopDataTestCase
 		$oTools = new AIObjectTools();
 		$aToolDefs = $oTools->getAITools();
 
-		// Find the getAttribute tool
+		// Find the get_attribute tool
 		$oGetAttributeTool = null;
 		foreach ($aToolDefs as $oTool) {
-			if ($oTool->name === 'getAttribute') {
+			if ($oTool->name === 'get_attribute') {
 				$oGetAttributeTool = $oTool;
 				break;
 			}
@@ -383,7 +365,7 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertNotNull($oGetAttributeTool);
 
 		// Call the tool (without context, should return error message)
-		$sResult = $oGetAttributeTool->callWithArguments(['attributeCode' => 'title']);
+		$sResult = $oGetAttributeTool->callWithArguments(['attribute_code' => 'title']);
 		static::assertEquals('No object in context', $sResult);
 	}
 
@@ -395,25 +377,25 @@ class FunctionCallingTest extends ItopDataTestCase
 		$oTools = new AIObjectTools();
 		$oTools->setContext(null);
 
-		static::assertEquals('No object in context', $oTools->getObjectName());
+		static::assertEquals('No object in context', $oTools->get_object_name());
 	}
 
 	/**
-	 * Test describeObject without context returns error JSON
+	 * Test describe_object without context returns error JSON
 	 */
 	public function testDescribeObjectWithoutContext(): void
 	{
 		$oTools = new AIObjectTools();
-		$sResult = $oTools->describeObject();
+		$sResult = $oTools->describe_object();
 
 		$aDecoded = json_decode($sResult, true);
-		static::assertNotNull($aDecoded, 'describeObject() should return valid JSON');
+		static::assertNotNull($aDecoded, 'describe_object() should return valid JSON');
 		static::assertArrayHasKey('error', $aDecoded);
 		static::assertEquals('No object in context', $aDecoded['error']);
 	}
 
 	/**
-	 * Test describeObject returns valid JSON schema with expected structure
+	 * Test describe_object returns valid JSON schema with expected structure
 	 */
 	public function testDescribeObjectReturnsValidSchema(): void
 	{
@@ -427,10 +409,10 @@ class FunctionCallingTest extends ItopDataTestCase
 		]);
 
 		$oTools->setContext($oPerson);
-		$sResult = $oTools->describeObject();
+		$sResult = $oTools->describe_object();
 
 		$aDecoded = json_decode($sResult, true);
-		static::assertNotNull($aDecoded, 'describeObject() should return valid JSON');
+		static::assertNotNull($aDecoded, 'describe_object() should return valid JSON');
 
 		// Check top-level keys
 		static::assertArrayHasKey('class', $aDecoded);
@@ -718,15 +700,15 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test getCurrentUser returns valid JSON with expected structure
+	 * Test get_current_user returns valid JSON with expected structure
 	 */
 	public function testGetCurrentUserReturnsJson(): void
 	{
 		$oTools = new AISystemTools();
-		$sResult = $oTools->getCurrentUser();
+		$sResult = $oTools->get_current_user();
 
 		$aDecoded = json_decode($sResult, true);
-		static::assertNotNull($aDecoded, 'getCurrentUser() should return valid JSON');
+		static::assertNotNull($aDecoded, 'get_current_user() should return valid JSON');
 
 		// In ItopDataTestCase a user is logged in
 		static::assertArrayHasKey('user', $aDecoded);
@@ -750,15 +732,15 @@ class FunctionCallingTest extends ItopDataTestCase
 	}
 
 	/**
-	 * Test getCurrentUserProfiles returns valid JSON with expected structure
+	 * Test get_current_user_profiles returns valid JSON with expected structure
 	 */
 	public function testGetCurrentUserProfilesReturnsJson(): void
 	{
 		$oTools = new AISystemTools();
-		$sResult = $oTools->getCurrentUserProfiles();
+		$sResult = $oTools->get_current_user_profiles();
 
 		$aDecoded = json_decode($sResult, true);
-		static::assertNotNull($aDecoded, 'getCurrentUserProfiles() should return valid JSON');
+		static::assertNotNull($aDecoded, 'get_current_user_profiles() should return valid JSON');
 
 		// In ItopDataTestCase a user is logged in
 		static::assertArrayHasKey('user_id', $aDecoded);
@@ -798,9 +780,9 @@ class FunctionCallingTest extends ItopDataTestCase
 		static::assertCount(3, $aToolDefs);
 
 		$aToolNames = array_map(fn($t) => $t->name, $aToolDefs);
-		static::assertContains('getCurrentDateTime', $aToolNames);
-		static::assertContains('getCurrentUser', $aToolNames);
-		static::assertContains('getCurrentUserProfiles', $aToolNames);
+		static::assertContains('get_current_date_time', $aToolNames);
+		static::assertContains('get_current_user', $aToolNames);
+		static::assertContains('get_current_user_profiles', $aToolNames);
 	}
 
 	/**
@@ -818,16 +800,16 @@ class FunctionCallingTest extends ItopDataTestCase
 		$aToolNames = array_map(fn($t) => $t->name, $aDefaultTools);
 
 		// System tools should be present
-		static::assertContains('getCurrentDateTime', $aToolNames);
-		static::assertContains('getCurrentUser', $aToolNames);
-		static::assertContains('getCurrentUserProfiles', $aToolNames);
+		static::assertContains('get_current_date_time', $aToolNames);
+		static::assertContains('get_current_user', $aToolNames);
+		static::assertContains('get_current_user_profiles', $aToolNames);
 
 		// Object tools should NOT be present without context
-		static::assertNotContains('getObjectName', $aToolNames);
-		static::assertNotContains('getObjectId', $aToolNames);
-		static::assertNotContains('getObjectClass', $aToolNames);
-		static::assertNotContains('getAttribute', $aToolNames);
-		static::assertNotContains('describeObject', $aToolNames);
+		static::assertNotContains('get_object_name', $aToolNames);
+		static::assertNotContains('get_object_id', $aToolNames);
+		static::assertNotContains('get_object_class', $aToolNames);
+		static::assertNotContains('get_attribute', $aToolNames);
+		static::assertNotContains('describe_object', $aToolNames);
 	}
 
 	/**
@@ -845,9 +827,9 @@ class FunctionCallingTest extends ItopDataTestCase
 		$aToolNames = array_map(fn($t) => $t->name, $aDefaultTools);
 
 		// Both sets must be present
-		static::assertContains('getCurrentDateTime', $aToolNames);
-		static::assertContains('getObjectName', $aToolNames);
-		static::assertContains('getAttribute', $aToolNames);
-		static::assertContains('describeObject', $aToolNames);
+		static::assertContains('get_current_date_time', $aToolNames);
+		static::assertContains('get_object_name', $aToolNames);
+		static::assertContains('get_attribute', $aToolNames);
+		static::assertContains('describe_object', $aToolNames);
 	}
 }

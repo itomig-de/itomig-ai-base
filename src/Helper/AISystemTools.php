@@ -41,7 +41,7 @@ class AISystemTools implements iAIToolProvider
 	 *
 	 * @return string Current date and time in ISO 8601 format.
 	 */
-	public function getCurrentDateTime(): string
+	public function get_current_date_time(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
 		$result = date('Y-m-d H:i:s');
@@ -54,7 +54,7 @@ class AISystemTools implements iAIToolProvider
 	 *
 	 * @return string JSON with user info (id, login, language, contact details).
 	 */
-	public function getCurrentUser(): string
+	public function get_current_user(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
 		$oUser = UserRights::GetUserObject();
@@ -103,7 +103,7 @@ class AISystemTools implements iAIToolProvider
 	 *
 	 * @return string JSON with user_id, login, and array of profiles with name and description.
 	 */
-	public function getCurrentUserProfiles(): string
+	public function get_current_user_profiles(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called (no context needed)", AIBaseHelper::MODULE_CODE);
 		$oUser = UserRights::GetUserObject();
@@ -145,21 +145,21 @@ class AISystemTools implements iAIToolProvider
 	{
 		return [
 			new FunctionInfo(
-				'getCurrentDateTime',
+				'get_current_date_time',
 				$this,
 				'Get current server date and time. No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
-				'getCurrentUser',
+				'get_current_user',
 				$this,
 				'Get information about the currently logged-in user: user ID, login, language, and linked contact/person details (name, email, organization). No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
-				'getCurrentUserProfiles',
+				'get_current_user_profiles',
 				$this,
 				'Get the permission profiles (roles) assigned to the currently logged-in user. Each profile has a name and description explaining what permissions it grants. No parameters required.',
 				[],

@@ -40,12 +40,8 @@ use MetaModel;
  * These tools are read-only and safe for AI use. They provide access to
  * object properties and attribute information. All tools require an object context.
  *
- * Context-free tools (getCurrentDateTime, getCurrentUser, getCurrentUserProfiles)
+ * Context-free tools (get_current_date_time, get_current_user, get_current_user_profiles)
  * have been moved to AISystemTools.
- *
- * Lifecycle-specific tools (getState, getStateLabel, getAvailableTransitions) are
- * available as methods but not registered as default AI tools, since not all
- * iTop objects have a lifecycle. Extensions can register them selectively.
  *
  * SECURITY NOTE: Only read-only methods are exposed. Write operations
  * (Set, ApplyStimulus, DBWrite) are intentionally not included.
@@ -69,7 +65,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 *
 	 * @return string The object's friendly name, or error message if no context.
 	 */
-	public function getObjectName(): string
+	public function get_object_name(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
@@ -85,7 +81,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 *
 	 * @return string The object's ID, or '0' if no context.
 	 */
-	public function getObjectId(): string
+	public function get_object_id(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
@@ -101,7 +97,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 *
 	 * @return string The object's class name, or error message if no context.
 	 */
-	public function getObjectClass(): string
+	public function get_object_class(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
@@ -115,17 +111,17 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	/**
 	 * Get an attribute value from the current object.
 	 *
-	 * @param string $attributeCode The attribute code (e.g., 'title', 'description', 'org_id').
+	 * @param string $attribute_code The attribute code (e.g., 'title', 'description', 'org_id').
 	 * @return string The attribute value, or error message.
 	 */
-	public function getAttribute(string $attributeCode): string
+	public function get_attribute(string $attribute_code): string
 	{
-		IssueLog::Debug(__METHOD__ . ": Called with '$attributeCode', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
+		IssueLog::Debug(__METHOD__ . ": Called with '$attribute_code', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
 		try {
-			$value = $this->oContext->Get($attributeCode);
+			$value = $this->oContext->Get($attribute_code);
 			if (is_object($value)) {
 				$result = (string) $value;
 			} else {
@@ -134,7 +130,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			IssueLog::Debug(__METHOD__ . ": Returning: " . substr($result, 0, 100), AIBaseHelper::MODULE_CODE);
 			return $result;
 		} catch (\Exception $e) {
-			$error = "Attribute '$attributeCode' not found or not accessible";
+			$error = "Attribute '$attribute_code' not found or not accessible";
 			IssueLog::Debug(__METHOD__ . ": Error: " . $error, AIBaseHelper::MODULE_CODE);
 			return $error;
 		}
@@ -143,93 +139,35 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	/**
 	 * Get the label (display name) of an attribute definition.
 	 *
-	 * @param string $attributeCode The attribute code.
+	 * @param string $attribute_code The attribute code.
 	 * @return string The attribute's label, or error message.
 	 */
-	public function getAttributeLabel(string $attributeCode): string
+	public function get_attribute_label(string $attribute_code): string
 	{
-		IssueLog::Debug(__METHOD__ . ": Called with '$attributeCode', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
+		IssueLog::Debug(__METHOD__ . ": Called with '$attribute_code', context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
 			return 'No object in context';
 		}
 		try {
-			$result = $this->oContext->GetLabel($attributeCode);
+			$result = $this->oContext->GetLabel($attribute_code);
 			IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
 			return $result;
 		} catch (\Exception $e) {
-			$error = "Attribute '$attributeCode' not found";
+			$error = "Attribute '$attribute_code' not found";
 			IssueLog::Debug(__METHOD__ . ": Error: " . $error, AIBaseHelper::MODULE_CODE);
 			return $error;
 		}
 	}
 
 	/**
-	 * Get the current lifecycle state of the object.
-	 *
-	 * @return string The current state code, or error message.
-	 */
-	public function getState(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$sState = $this->oContext->GetState();
-		if (empty($sState)) {
-			return 'Object has no lifecycle state';
-		}
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $sState, AIBaseHelper::MODULE_CODE);
-		return $sState;
-	}
-
-	/**
-	 * Get the human-readable label of the current state.
-	 *
-	 * @return string The state label, or error message.
-	 */
-	public function getStateLabel(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$sLabel = $this->oContext->GetStateLabel();
-		if (empty($sLabel)) {
-			return 'Object has no lifecycle state';
-		}
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $sLabel, AIBaseHelper::MODULE_CODE);
-		return $sLabel;
-	}
-
-	/**
-	 * List all available transitions from the current state.
-	 *
-	 * @return string Comma-separated list of transition codes, or message if none available.
-	 */
-	public function getAvailableTransitions(): string
-	{
-		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
-		if ($this->oContext === null) {
-			return 'No object in context';
-		}
-		$aTransitions = $this->oContext->EnumTransitions();
-		if (empty($aTransitions)) {
-			return 'No transitions available';
-		}
-		$result = implode(', ', array_keys($aTransitions));
-		IssueLog::Debug(__METHOD__ . ": Returning: " . $result, AIBaseHelper::MODULE_CODE);
-		return $result;
-	}
-
-	/**
 	 * Get a JSON schema describing the current object's class and all its attributes.
 	 *
 	 * Returns attribute codes, labels, types, and descriptions so the LLM can
-	 * discover which attributes are available for getAttribute().
+	 * discover which attributes are available for get_attribute().
 	 *
 	 * @return string JSON-encoded schema, or JSON error if no context.
 	 */
-	public function describeObject(): string
+	public function describe_object(): string
 	{
 		IssueLog::Debug(__METHOD__ . ": Called, context=" . ($this->oContext ? 'SET' : 'NULL'), AIBaseHelper::MODULE_CODE);
 		if ($this->oContext === null) {
@@ -311,54 +249,50 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	/**
 	 * Returns an array of FunctionInfo objects for the default AI tools.
 	 *
-	 * Note: Lifecycle tools (getState, getStateLabel, getAvailableTransitions) are not
-	 * included here as they only work on objects with a lifecycle. The methods remain
-	 * available on this class for use by lifecycle-aware extensions.
-	 *
 	 * @return FunctionInfo[] Array of FunctionInfo objects ready for use with LLPhant.
 	 */
 	public function getAITools(): array
 	{
 		return [
 			new FunctionInfo(
-				'getObjectName',
+				'get_object_name',
 				$this,
 				'Get the friendly name. No parameters required - context is provided automatically.',
 				[],
 				[]
 			),
 			new FunctionInfo(
-				'getObjectId',
+				'get_object_id',
 				$this,
 				'Get the unique ID. No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
-				'getObjectClass',
+				'get_object_class',
 				$this,
 				'Get the class name (type). No parameters required.',
 				[],
 				[]
 			),
 			new FunctionInfo(
-				'getAttribute',
+				'get_attribute',
 				$this,
-				'Get the value of a specific attribute. Requires: attributeCode (string). Common attributes: title, description, status, org_id, caller_id, team_id, agent_id, start_date, end_date.',
-				[new Parameter('attributeCode', 'string', 'The attribute code to retrieve (e.g., "title", "description", "status")')],
-				[new Parameter('attributeCode', 'string', 'The attribute code to retrieve')]
+				'Get the value of a specific attribute. Requires: attribute_code (string). Common attributes: title, description, status, org_id, caller_id, team_id, agent_id, start_date, end_date.',
+				[new Parameter('attribute_code', 'string', 'The attribute code to retrieve (e.g., "title", "description", "status")')],
+				[new Parameter('attribute_code', 'string', 'The attribute code to retrieve')]
 			),
 			new FunctionInfo(
-				'getAttributeLabel',
+				'get_attribute_label',
 				$this,
-				'Get the label of an attribute. Requires: attributeCode (string).',
-				[new Parameter('attributeCode', 'string', 'The attribute code to get the label for')],
-				[new Parameter('attributeCode', 'string', 'The attribute code')]
+				'Get the label of an attribute. Requires: attribute_code (string).',
+				[new Parameter('attribute_code', 'string', 'The attribute code to get the label for')],
+				[new Parameter('attribute_code', 'string', 'The attribute code')]
 			),
 			new FunctionInfo(
-				'describeObject',
+				'describe_object',
 				$this,
-				'Get a JSON schema describing the current object\'s class, all attributes with their codes, labels, types, and descriptions. Call this to discover which attribute codes are available for getAttribute(). No parameters required.',
+				'Get a JSON schema describing the current object\'s class, all attributes with their codes, labels, types, and descriptions. Call this to discover which attribute codes are available for get_attribute(). No parameters required.',
 				[],
 				[]
 			),
