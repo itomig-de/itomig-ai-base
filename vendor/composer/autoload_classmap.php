@@ -139,6 +139,7 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => $baseDir . '/src/Helper/AIBaseHelper.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIObjectTools' => $baseDir . '/src/Helper/AIObjectTools.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AISystemTools' => $baseDir . '/src/Helper/AISystemTools.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Result\\AIResult' => $baseDir . '/src/Result/AIResult.php',
     'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => $baseDir . '/src/Service/AIService.php',
     'LLPhant\\AIConfig' => $vendorDir . '/theodo-group/llphant/src/AIConfig.php',
     'LLPhant\\AnthropicConfig' => $vendorDir . '/theodo-group/llphant/src/AnthropicConfig.php',
