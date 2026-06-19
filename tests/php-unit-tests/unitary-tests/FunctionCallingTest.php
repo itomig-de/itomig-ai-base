@@ -704,13 +704,15 @@ class FunctionCallingTest extends ItopDataTestCase
 	 */
 	public function testGetCurrentUserReturnsJson(): void
 	{
+        $sUserLogin = $this->GivenUserInDB('9ép<éçrérDUN91D0', ['Configuration Manager']);
+        \UserRights::Login($sUserLogin); // login as user, logoff is done in tearDown
+
 		$oTools = new AISystemTools();
 		$sResult = $oTools->get_current_user();
 
 		$aDecoded = json_decode($sResult, true);
 		static::assertNotNull($aDecoded, 'get_current_user() should return valid JSON');
 
-		// In ItopDataTestCase a user is logged in
 		static::assertArrayHasKey('user', $aDecoded);
 		$aUser = $aDecoded['user'];
 		static::assertArrayHasKey('id', $aUser);
@@ -736,13 +738,14 @@ class FunctionCallingTest extends ItopDataTestCase
 	 */
 	public function testGetCurrentUserProfilesReturnsJson(): void
 	{
+        $sUserLogin = $this->GivenUserInDB('9ép<éçrérDUN91D0', ['Configuration Manager']);
+        \UserRights::Login($sUserLogin); // login as user, logoff is done in tearDown
 		$oTools = new AISystemTools();
 		$sResult = $oTools->get_current_user_profiles();
 
 		$aDecoded = json_decode($sResult, true);
 		static::assertNotNull($aDecoded, 'get_current_user_profiles() should return valid JSON');
 
-		// In ItopDataTestCase a user is logged in
 		static::assertArrayHasKey('user_id', $aDecoded);
 		static::assertArrayHasKey('login', $aDecoded);
 		static::assertArrayHasKey('profiles', $aDecoded);
