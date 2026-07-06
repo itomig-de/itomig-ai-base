@@ -166,7 +166,7 @@ abstract class GenericAIEngine implements iAIEngineInterface
 
 		IssueLog::Debug(__METHOD__ . ": Calling AI Engine with a conversation history of " . count($aMessageHistory) . " turns.", AIBaseHelper::MODULE_CODE);
 		try {
-			$result = $oChat->generateChatOrReturnFunctionCalled($aMessageHistory);
+			$result = $oChat->generateChatOrReturnFunctionToCall($aMessageHistory);
 		} catch (\LLPhant\Exception\HttpException $e) {
 			throw $this->classifyHttpException($e);
 		} catch (\GuzzleHttp\Exception\ConnectException $e) {
