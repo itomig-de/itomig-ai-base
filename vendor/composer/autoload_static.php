@@ -15,16 +15,16 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
     );
 
     public static $prefixLengthsPsr4 = array (
-        'Y' =>
+        'Y' => 
         array (
             'Yethee\\Tiktoken\\' => 16,
         ),
-        'S' =>
+        'S' => 
         array (
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Contracts\\Service\\' => 26,
         ),
-        'P' =>
+        'P' => 
         array (
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
@@ -33,24 +33,24 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
             'PhpOffice\\PhpWord\\' => 18,
             'PhpOffice\\Math\\' => 15,
         ),
-        'O' =>
+        'O' => 
         array (
             'OpenAI\\' => 7,
         ),
-        'L' =>
+        'L' => 
         array (
             'LLPhant\\' => 8,
         ),
-        'I' =>
+        'I' => 
         array (
             'Itomig\\iTop\\Extension\\AIBase\\' => 29,
         ),
-        'H' =>
+        'H' => 
         array (
             'Http\\Message\\MultipartStream\\' => 29,
             'Http\\Discovery\\' => 15,
         ),
-        'G' =>
+        'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
@@ -59,81 +59,81 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
     );
 
     public static $prefixDirsPsr4 = array (
-        'Yethee\\Tiktoken\\' =>
+        'Yethee\\Tiktoken\\' => 
         array (
             0 => __DIR__ . '/..' . '/yethee/tiktoken/src',
         ),
-        'Symfony\\Polyfill\\Mbstring\\' =>
+        'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
         ),
-        'Symfony\\Contracts\\Service\\' =>
+        'Symfony\\Contracts\\Service\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/service-contracts',
         ),
-        'Psr\\Log\\' =>
+        'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
         ),
-        'Psr\\Http\\Message\\' =>
+        'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',
             1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
-        'Psr\\Http\\Client\\' =>
+        'Psr\\Http\\Client\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-client/src',
         ),
-        'Psr\\Container\\' =>
+        'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
-        'PhpOffice\\PhpWord\\' =>
+        'PhpOffice\\PhpWord\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpoffice/phpword/src/PhpWord',
         ),
-        'PhpOffice\\Math\\' =>
+        'PhpOffice\\Math\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpoffice/math/src/Math',
         ),
-        'OpenAI\\' =>
+        'OpenAI\\' => 
         array (
             0 => __DIR__ . '/..' . '/openai-php/client/src',
         ),
-        'LLPhant\\' =>
+        'LLPhant\\' => 
         array (
             0 => __DIR__ . '/..' . '/theodo-group/llphant/src',
         ),
-        'Itomig\\iTop\\Extension\\AIBase\\' =>
+        'Itomig\\iTop\\Extension\\AIBase\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
-        'Http\\Message\\MultipartStream\\' =>
+        'Http\\Message\\MultipartStream\\' => 
         array (
             0 => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src',
         ),
-        'Http\\Discovery\\' =>
+        'Http\\Discovery\\' => 
         array (
             0 => __DIR__ . '/..' . '/php-http/discovery/src',
         ),
-        'GuzzleHttp\\Psr7\\' =>
+        'GuzzleHttp\\Psr7\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
         ),
-        'GuzzleHttp\\Promise\\' =>
+        'GuzzleHttp\\Promise\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
         ),
-        'GuzzleHttp\\' =>
+        'GuzzleHttp\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
         ),
     );
 
     public static $prefixesPsr0 = array (
-        'S' =>
+        'S' => 
         array (
-            'Smalot\\PdfParser\\' =>
+            'Smalot\\PdfParser\\' => 
             array (
                 0 => __DIR__ . '/..' . '/smalot/pdfparser/src',
             ),
@@ -259,6 +259,10 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIContextAwareToolProvider' => __DIR__ . '/../..' . '/src/Contracts/iAIContextAwareToolProvider.php',
         'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider' => __DIR__ . '/../..' . '/src/Contracts/iAIToolProvider.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\GenericEmbeddingEngine' => __DIR__ . '/../..' . '/src/Engine/Embedding/GenericEmbeddingEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAICompatibleGenerator' => __DIR__ . '/../..' . '/src/Engine/Embedding/OpenAICompatibleGenerator.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAIEmbeddingEngine' => __DIR__ . '/../..' . '/src/Engine/Embedding/OpenAIEmbeddingEngine.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\iEmbeddingEngineInterface' => __DIR__ . '/../..' . '/src/Engine/Embedding/iEmbeddingEngineInterface.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\GenericAIEngine' => __DIR__ . '/../..' . '/src/Engine/GenericAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\MistralAIEngine' => __DIR__ . '/../..' . '/src/Engine/MistralAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\OllamaAIEngine' => __DIR__ . '/../..' . '/src/Engine/OllamaAIEngine.php',
@@ -276,6 +280,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AISystemTools' => __DIR__ . '/../..' . '/src/Helper/AISystemTools.php',
         'Itomig\\iTop\\Extension\\AIBase\\Result\\AIResult' => __DIR__ . '/../..' . '/src/Result/AIResult.php',
         'Itomig\\iTop\\Extension\\AIBase\\Service\\AIService' => __DIR__ . '/../..' . '/src/Service/AIService.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Service\\EmbeddingService' => __DIR__ . '/../..' . '/src/Service/EmbeddingService.php',
         'LLPhant\\AIConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AIConfig.php',
         'LLPhant\\AnthropicConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AnthropicConfig.php',
         'LLPhant\\AtlasCloudConfig' => __DIR__ . '/..' . '/theodo-group/llphant/src/AtlasCloudConfig.php',
