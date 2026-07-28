@@ -1322,16 +1322,16 @@
         },
         {
             "name": "theodo-group/llphant",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LLPhant/LLPhant.git",
-                "reference": "4fc721b1c94ff869fcce1f70dcfa8a01b96d0461"
+                "reference": "0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/4fc721b1c94ff869fcce1f70dcfa8a01b96d0461",
-                "reference": "4fc721b1c94ff869fcce1f70dcfa8a01b96d0461",
+                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74",
+                "reference": "0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74",
                 "shasum": ""
             },
             "require": {
@@ -1412,9 +1412,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LLPhant/LLPhant/issues",
-                "source": "https://github.com/LLPhant/LLPhant/tree/1.0.0"
+                "source": "https://github.com/LLPhant/LLPhant/tree/1.0.1"
             },
-            "time": "2026-07-05T19:08:23+00:00"
+            "time": "2026-07-26T08:26:01+00:00"
         },
         {
             "name": "yethee/tiktoken",
