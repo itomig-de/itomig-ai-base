@@ -123,6 +123,7 @@ return array(
     'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => $vendorDir . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
     'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIContextAwareToolProvider' => $baseDir . '/src/Contracts/iAIContextAwareToolProvider.php',
     'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider' => $baseDir . '/src/Contracts/iAIToolProvider.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIVisionEngine' => $baseDir . '/src/Contracts/iAIVisionEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => $baseDir . '/src/Engine/AnthropicAIEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\GenericEmbeddingEngine' => $baseDir . '/src/Engine/Embedding/GenericEmbeddingEngine.php',
     'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAICompatibleGenerator' => $baseDir . '/src/Engine/Embedding/OpenAICompatibleGenerator.php',

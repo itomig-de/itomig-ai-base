@@ -96,6 +96,93 @@ You can use the OpenAI engine with compatible endpoints (e.g., Open-WebUI, Local
 ),
 ```
 
+### Image Input Support
+
+Multi-turn conversations can include image payloads on user messages by adding an `images` array to a user history entry.
+
+Each image entry must contain raw base64 data and a MIME media type:
+
+```php
+array(
+    'role' => 'user',
+    'content' => 'Describe this screenshot.',
+    'images' => array(
+        array(
+            'data' => $sBase64ImageData,
+            'media_type' => 'image/png',
+        ),
+    ),
+)
+```
+
+Do not include the `data:image/png;base64,` prefix in `data` when calling ai-base directly. If you receive a browser data URL, strip the prefix first:
+
+```php
+$sImageData = preg_replace('/^data:[^;]+;base64,/i', '', $sBrowserDataUrl);
+$sImageData = preg_replace('/\s+/', '', $sImageData);
+```
+
+The recommended media types are:
+
+```php
+array('image/png', 'image/jpeg', 'image/gif', 'image/webp')
+```
+
+`image/jpg` should be normalized to `image/jpeg`. Invalid base64, unsupported media types, and oversized uploads should be rejected by the caller before invoking ai-base. An 8 MB decoded-image limit is a reasonable default for upload validation.
+
+Minimal direct usage with `AIService`:
+
+```php
+$aHistory = array(
+    array(
+        'role' => 'user',
+        'content' => 'What problem is visible in this screenshot?',
+        'images' => array(
+            array(
+                'data' => $sBase64ImageData,
+                'media_type' => 'image/png',
+            ),
+        ),
+    ),
+);
+
+$oService = new AIService();
+$aResult = $oService->ContinueConversation($aHistory);
+$sAnswer = $aResult['response'];
+```
+
+Typical application-level usage is to build the user entry only when images are present:
+
+```php
+$aUserEntry = array(
+    'role' => 'user',
+    'content' => $sUserMessage,
+);
+
+if (!empty($aImages)) {
+    $aUserEntry['images'] = $aImages;
+}
+
+$oConversationStatus->appendHistoryEntries(array($aUserEntry));
+```
+
+When images are extracted from HTML or another source, convert each image into the same payload shape and attach the deduplicated list to the user turn:
+
+```php
+$aImages[] = array(
+    'data' => $sBase64ImageData,
+    'media_type' => 'image/jpeg',
+);
+```
+
+Image input is available only for engines implementing `iAIVisionEngine`. The current vision-capable engines are `OpenAI` and `AnthropicAI`. Engines that do not implement that interface, such as `MistralAI` and `OllamaAI`, fail locally before any provider request with this configuration error:
+
+```text
+The configured AI engine does not support image input.
+```
+
+For OpenAI-compatible endpoints, ai-base can only verify that the selected engine adapter supports vision messages. It cannot know whether the configured backend model actually accepts images. If an OpenAI-compatible model is text-only, the request is sent and the provider response is surfaced as an AI engine error, usually an HTTP 400-style error from the backend. Configure a vision-capable model when using image input.
+
 ### Custom System Prompts Configuration
 
 The extension comes with default system prompts for common tasks. You can override these with custom instructions to influence the behavior of your chosen AI engine and LLM:

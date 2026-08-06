@@ -25,12 +25,17 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
 use IssueLog;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\Vision\ImageQuality;
+use LLPhant\Chat\Vision\ImageSource;
+use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
 
-class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
+class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 
 	/**
@@ -98,5 +103,32 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		}
 		$oChat = new OpenAIChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aImageSources = [];
+
+		foreach ($aImages as $aImage) {
+			$sData = trim((string) ($aImage['data'] ?? ''));
+
+			if ($sData === '') {
+				continue;
+			}
+
+			$aImageSources[] = new ImageSource(
+				$sData,
+				ImageQuality::High
+			);
+		}
+
+		if (count($aImageSources) === 0) {
+			return Message::user($sContent);
+		}
+
+		return VisionMessage::fromImages(
+			$aImageSources,
+			$sContent
+		);
 	}
 }

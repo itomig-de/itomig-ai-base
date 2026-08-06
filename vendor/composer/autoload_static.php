@@ -258,6 +258,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Http\\Message\\MultipartStream\\MultipartStreamBuilder' => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src/MultipartStreamBuilder.php',
         'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIContextAwareToolProvider' => __DIR__ . '/../..' . '/src/Contracts/iAIContextAwareToolProvider.php',
         'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIToolProvider' => __DIR__ . '/../..' . '/src/Contracts/iAIToolProvider.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Contracts\\iAIVisionEngine' => __DIR__ . '/../..' . '/src/Contracts/iAIVisionEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\AnthropicAIEngine' => __DIR__ . '/../..' . '/src/Engine/AnthropicAIEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\GenericEmbeddingEngine' => __DIR__ . '/../..' . '/src/Engine/Embedding/GenericEmbeddingEngine.php',
         'Itomig\\iTop\\Extension\\AIBase\\Engine\\Embedding\\OpenAICompatibleGenerator' => __DIR__ . '/../..' . '/src/Engine/Embedding/OpenAICompatibleGenerator.php',

@@ -24,12 +24,17 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\AnthropicConfig;
+use LLPhant\Chat\Anthropic\AnthropicImage;
+use LLPhant\Chat\Anthropic\AnthropicImageType;
+use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
 
-class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
+class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 	/**
 	 * @inheritDoc
@@ -86,5 +91,41 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$oConfig = new AnthropicConfig($this->model, 4096, array(), $this->apiKey);
 		$oChat = new AnthropicChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aAnthropicImages = [];
+
+		foreach ($aImages as $aImage) {
+			if (!is_array($aImage)) {
+				continue;
+			}
+
+			$sData = trim((string) ($aImage['data'] ?? ''));
+			$sMediaType = trim((string) ($aImage['media_type'] ?? ''));
+
+			if ($sData === '' || $sMediaType === '') {
+				continue;
+			}
+
+			try {
+				$aAnthropicImages[] = new AnthropicImage(
+					AnthropicImageType::from($sMediaType),
+					$sData
+				);
+			} catch (\ValueError|\InvalidArgumentException $e) {
+				continue;
+			}
+		}
+
+		if ($aAnthropicImages === []) {
+			return Message::user($sContent);
+		}
+
+		return new AnthropicVisionMessage(
+			$aAnthropicImages,
+			$sContent
+		);
 	}
 }
