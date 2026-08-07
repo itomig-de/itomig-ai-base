@@ -141,6 +141,7 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AINetworkException' => $baseDir . '/src/Exception/AINetworkException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIRateLimitException' => $baseDir . '/src/Exception/AIRateLimitException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => $baseDir . '/src/Exception/AIResponseException.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIVisionUnsupportedException' => $baseDir . '/src/Exception/AIVisionUnsupportedException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => $baseDir . '/src/Helper/AIBaseHelper.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIObjectTools' => $baseDir . '/src/Helper/AIObjectTools.php',
     'Itomig\\iTop\\Extension\\AIBase\\Helper\\AISystemTools' => $baseDir . '/src/Helper/AISystemTools.php',

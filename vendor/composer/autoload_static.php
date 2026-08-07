@@ -276,6 +276,7 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AINetworkException' => __DIR__ . '/../..' . '/src/Exception/AINetworkException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIRateLimitException' => __DIR__ . '/../..' . '/src/Exception/AIRateLimitException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => __DIR__ . '/../..' . '/src/Exception/AIResponseException.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIVisionUnsupportedException' => __DIR__ . '/../..' . '/src/Exception/AIVisionUnsupportedException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIBaseHelper' => __DIR__ . '/../..' . '/src/Helper/AIBaseHelper.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AIObjectTools' => __DIR__ . '/../..' . '/src/Helper/AIObjectTools.php',
         'Itomig\\iTop\\Extension\\AIBase\\Helper\\AISystemTools' => __DIR__ . '/../..' . '/src/Helper/AISystemTools.php',

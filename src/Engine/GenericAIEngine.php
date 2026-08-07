@@ -29,6 +29,7 @@ use Itomig\iTop\Extension\AIBase\Exception\AIContextWindowException;
 use Itomig\iTop\Extension\AIBase\Exception\AIEngineException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use Itomig\iTop\Extension\AIBase\Exception\AIRateLimitException;
+use Itomig\iTop\Extension\AIBase\Exception\AIVisionUnsupportedException;
 use Itomig\iTop\Extension\AIBase\Helper\AIBaseHelper;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Enums\ChatRole;
@@ -88,6 +89,13 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		if ($iCode === 401 || $iCode === 403) {
 			return new AIAuthException($sMsg, $iCode, $e);
 		}
+		if ($this->isVisionUnsupportedMessage($sMsg)) {
+			return new AIVisionUnsupportedException(
+				'The configured AI model or endpoint does not support image input. Select a vision-capable model. Provider response: '.$sMsg,
+				$iCode,
+				$e
+			);
+		}
 		if ($iCode === 413) {
 			return new AIContextWindowException($sMsg, $iCode, $e);
 		}
@@ -102,6 +110,30 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		}
 
 		return new AINetworkException($sMsg, $iCode, $e);
+	}
+
+	private function isVisionUnsupportedMessage(string $sMessage): bool
+	{
+		$sMessageLower = strtolower($sMessage);
+		$aUnsupportedVisionPatterns = [
+			'/\bno\s+(?:(?:available|compatible|matching)\s+)?endpoints?\b.{0,100}\b(?:image(?:s)?(?:[\s_-]+url|\s+inputs?)|visual(?:\s+inputs?)?|vision(?:\s+inputs?)?|multimodal(?:\s+inputs?)?)\b/',
+			'/\b(?:image(?:s)?(?:[\s_-]+url|\s+inputs?)|visual|vision|multimodal)(?:\s+\w+){0,5}\s+only\s+(?:supported|available|allowed|accepted)\s+(?:by|for|with)\b/',
+			'/\b(?:does\s+not|doesn\'t|cannot|can\'t|will\s+not|won\'t)\s+(?:support|accept|process|handle|allow|permit)\s+(?:the\s+)?(?:image(?:s)?(?:[\s_-]+url)?|visual|vision|multimodal)(?:\s+(?:inputs?|content(?:\s+blocks?)?|parts?|data))?\b/',
+			'/\b(?:image(?:s)?(?:[\s_-]+url)?|visual|vision|multimodal)(?:\s+(?:inputs?|content(?:\s+blocks?)?|parts?|data|modality|capabilit(?:y|ies)|models?)){0,2}\s+(?:is|are)?\s*(?:not\s+supported|unsupported|not\s+available|unavailable|not\s+allowed|not\s+accepted|not\s+permitted|not\s+compatible(?:\s+with)?|disabled|cannot\s+be\s+processed|can\'t\s+be\s+processed)\b/',
+			'/\b(?:model|endpoint|provider|engine|deployment)\b.{0,80}\b(?:not\s+multimodal|not\s+vision(?:[-\s]capable)?|not\s+(?:a\s+)?(?:vision|multimodal)\s+model|not\s+capable\s+of\s+(?:processing\s+)?(?:images?|visual\s+input|vision)|text[-\s]+only)\b/',
+			'/\b(?:model|endpoint|provider|engine|deployment)\b.{0,80}\b(?:only\s+(?:supports?|accepts?|handles?)\s+text|(?:supports?|accepts?|handles?)\s+text\s+only)\b/',
+			'/\bunsupported\s+(?:input\s+type|content\s+type)\s*:?\s*(?:image(?:s)?(?:[\s_-]+url)?|visual|vision|multimodal)\b/',
+			'/\bunsupported\s+(?:image(?:s)?(?:[\s_-]+url)?|visual|vision|multimodal)\s+inputs?\b/',
+			'/\b(?:does\s+not|doesn\'t)\s+have(?:\s+the)?\s+(?:image(?:s)?(?:[\s_-]+url)?|visual|vision|multimodal)(?:\s+(?:inputs?|content(?:\s+blocks?)?|parts?|data|modality|capabilit(?:y|ies)|support)){0,2}\b/',
+		];
+
+		foreach ($aUnsupportedVisionPatterns as $sPattern) {
+			if (preg_match($sPattern, $sMessageLower) === 1) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

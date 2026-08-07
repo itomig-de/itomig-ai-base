@@ -181,7 +181,7 @@ Image input is available only for engines implementing `iAIVisionEngine`. The cu
 The configured AI engine does not support image input.
 ```
 
-For OpenAI-compatible endpoints, ai-base can only verify that the selected engine adapter supports vision messages. It cannot know whether the configured backend model actually accepts images. If an OpenAI-compatible model is text-only, the request is sent and the provider response is surfaced as an AI engine error, usually an HTTP 400-style error from the backend. Configure a vision-capable model when using image input.
+For OpenAI-compatible endpoints, ai-base can only verify that the selected engine adapter supports vision messages. It cannot know whether the configured backend model actually accepts images until the request is sent. If a text-only model rejects image input, responses such as `No endpoints found that support image input` are classified as `AIVisionUnsupportedException` with guidance to select a vision-capable model. Configure a vision-capable model when using image input.
 
 ### Custom System Prompts Configuration
 
