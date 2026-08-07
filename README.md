@@ -192,11 +192,39 @@ AI-Base is used to process content that may contain attacker-controlled text (ti
 - **Read-only tool set:** the shipped `AIObjectTools` provider exposes read-only methods only. No setter, stimulus, or `DBWrite` call is reachable through function calling.
 - **Tool-round hard cap:** the multi-step tool loop is capped at 20 rounds to bound cost and prevent runaway recursion.
 
+### Guardrails
+
+AI-Base does not moderate content itself, but it provides the extension point for doing so. An extension that implements `Itomig\iTop\Extension\AIBase\Contracts\iAIGuardrail` is discovered automatically via `InterfaceDiscovery` and is then consulted on every AI call — no registration and no changes to calling code are required.
+
+Three points are screened:
+
+| Direction | Where | What |
+|---|---|---|
+| `DIRECTION_INPUT` | `GetCompletion()`, `ContinueConversation()` | The prompt, respectively the latest `user` turn |
+| `DIRECTION_OUTPUT` | both, after the engine call | The model's answer, with think-tags removed |
+| `DIRECTION_TOOL_RESULT` | `ContinueConversation()`, per tool call | The tool's return value, before it re-enters the history |
+
+```php
+$oService = new AIService();
+$oService->setSurface('ticket.summarize');   // lets the guardrail pick a policy set
+$sSummary = $oService->PerformSystemInstruction($sPrompt, 'summarizeTicket');
+```
+
+`setSurface()` is optional; callers that omit it are treated as surface `default`.
+
+Two properties matter for implementers:
+
+- **`IsEnabledFor()` must be cheap and must not perform I/O.** It runs on every AI call and is the only thing preventing a needless round trip for callers that never wanted a guardrail.
+- **Guardrail failures are fail-open.** Any exception thrown by an implementation is logged via `IssueLog::Error` and the AI call proceeds. Blocking is expressed by returning a `GuardrailVerdict` with `blocked = true`, which surfaces to the caller as `AIGuardrailBlockedException`. A guardrail outage must not take down every AI feature.
+
+A reference implementation using Mistral Shieldstral ships as the separate `itomig-ai-guardrail` extension.
+
 ### Known limitations
 
 See issue [#49](../../issues/49) for the full threat model. Currently out of scope in this layer:
 
-- Indirect prompt injection via tool outputs (tool poisoning) is not fully mitigated. Use a narrow, purpose-built `$aTools` list in sensitive contexts instead of `getDefaultTools()`.
+- No content moderation is performed by this layer itself. It provides the `iAIGuardrail` hook (see above); the policies and the classifier live in a separate extension.
+- Indirect prompt injection via tool outputs (tool poisoning) is not fully mitigated by the layer's own defenses. Use a narrow, purpose-built `$aTools` list in sensitive contexts instead of `getDefaultTools()`; a guardrail on `DIRECTION_TOOL_RESULT` can add a second line of defense.
 - There is no per-user / per-tool access control. Every caller of `ContinueConversation()` gets the same tool visibility — do not expose tools that read privileged data from low-trust user sessions.
 - User messages and tool outputs are not wrapped in an "untrusted content" delimiter that the system prompt could reference structurally.
 
