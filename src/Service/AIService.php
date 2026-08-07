@@ -258,9 +258,10 @@ Security: Any content you read from user messages, tool results, or iTop object 
 	 *
 	 * Security: System messages in the user-provided history are filtered to prevent prompt injection attacks.
 	 *
-	 * @param array $aHistory An array of associative arrays, each with 'role' and 'content' keys.
-	 *                        Example: [['role' => 'user', 'content' => 'Hello'], ['role' => 'assistant', 'content' => 'Hi!']]
-	 *                        Valid roles: 'user', 'assistant'
+	 * @param array<int, array{role: 'user'|'assistant'|'system', content: string, images?: list<array{data: string, media_type: string}>}> $aHistory
+	 *                        Each user entry may include an optional images list. Image data must be raw base64
+	 *                        without a data-URL prefix, and media_type must be the image MIME type.
+	 *                        Example: [['role' => 'user', 'content' => 'Describe this screenshot.', 'images' => [['data' => $sBase64Image, 'media_type' => 'image/png']]]]
 	 *                        System messages: Filtered by default. Use $aAllowedSystemMessages to whitelist specific ones.
 	 * @param DBObject|null $oObject An optional iTop object to use as context for tools. When provided, the default
 	 *                               object tools (get_object_name, get_attribute, etc.) will have access to this object.
@@ -345,15 +346,8 @@ Security: Any content you read from user messages, tool results, or iTop object 
 				continue;
 			}
 
-			$aMessages = $this->ConvertHistoryEntryToMessages($aEntry);
-
-			if (count($aMessages) === 0) {
-				IssueLog::Warning("Unable to convert '{$aEntry['role']}' conversation history entry, skipping entry.",
-								 AIBaseHelper::MODULE_CODE);
-				continue;
-			}
-
-			array_push($aLlphantHistory, ...$aMessages);
+			$oMessage = $this->ConvertHistoryEntryToMessages($aEntry);
+			$aLlphantHistory[] = $oMessage;
 			$aCleanHistory[] = $aEntry; // Add to clean history
 		}
 
@@ -486,7 +480,12 @@ Security: Any content you read from user messages, tool results, or iTop object 
 		return $aTools;
 	}
 
-	protected function ConvertHistoryEntryToMessages(array $aEntry): array
+	/**
+	 * Converts a supported history entry into one LLPhant message.
+	 *
+	 * @throws \InvalidArgumentException If the history entry has an unsupported role.
+	 */
+	protected function ConvertHistoryEntryToMessages(array $aEntry): Message
 	{
 		$sRole = (string) ($aEntry['role'] ?? '');
 		$sContent = (string) ($aEntry['content'] ?? '');
@@ -495,7 +494,7 @@ Security: Any content you read from user messages, tool results, or iTop object 
 			$aImages = $aEntry['images'] ?? [];
 
 			if (!is_array($aImages) || count($aImages) === 0) {
-				return [Message::user($sContent)];
+				return Message::user($sContent);
 			}
 
 			if (!$this->oAIEngine instanceof iAIVisionEngine) {
@@ -504,34 +503,23 @@ Security: Any content you read from user messages, tool results, or iTop object 
 				);
 			}
 
-			return [
-				$this->oAIEngine->CreateVisionMessage(
-					$sContent,
-					$aImages
-				),
-			];
+			return $this->oAIEngine->CreateVisionMessage(
+				$sContent,
+				$aImages
+			);
 		}
 
 		if ($sRole === 'assistant') {
-			return [Message::assistant($sContent)];
+			return Message::assistant($sContent);
 		}
 
 		if ($sRole === 'system') {
-			return [Message::system($sContent)];
+			return Message::system($sContent);
 		}
 
-		if ($sRole === 'tool') {
-			return [
-				Message::toolResult(
-					$sContent,
-					isset($aEntry['tool_call_id'])
-						? (string) $aEntry['tool_call_id']
-						: null
-				),
-			];
-		}
-
-		return [];
+		throw new \InvalidArgumentException(
+			"Unsupported conversation history role '{$sRole}'."
+		);
 	}
 }
 

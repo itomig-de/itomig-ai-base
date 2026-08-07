@@ -346,7 +346,7 @@ public function ContinueConversation(
 Continues a multi-turn conversation by maintaining context across multiple exchanges with the AI, with optional function/tool calling.
 
 **Parameters:**
-- `$aHistory`: Array of conversation history. Each entry has `role` (user/assistant) and `content`
+- `$aHistory`: Array of conversation history. Each entry has `role` and `content`; user entries may also include an optional `images` list. Each image must contain raw base64 data in `data` and its MIME type in `media_type`.
 - `$oObject`: (Optional) iTop object context. When set, context-aware tool providers receive it via `setContext()`. Passing `$oObject` does **not** by itself attach any tools — see `$aTools`.
 - `$sCustomSystemMessage`: (Optional) Custom system message for this turn
 - `$aAllowedSystemMessages`: (Optional) Whitelist of allowed system messages from history
