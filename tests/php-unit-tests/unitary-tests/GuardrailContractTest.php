@@ -22,6 +22,9 @@ class RecordingGuardrail implements iAIGuardrail
 	/** @var array<int, array{content: string, surface: string, direction: string}> */
 	public array $aCalls = [];
 
+	/** @var array<int, array{direction: string, context: array}> Records IsEnabledFor() calls */
+	public array $aEnabledForCalls = [];
+
 	/** @var string[] Directions this guardrail claims */
 	private array $aEnabledDirections;
 
@@ -42,8 +45,10 @@ class RecordingGuardrail implements iAIGuardrail
 		$this->bThrow             = $bThrow;
 	}
 
-	public function IsEnabledFor(string $sSurface, string $sDirection): bool
+	public function IsEnabledFor(string $sSurface, string $sDirection, array $aContext = []): bool
 	{
+		$this->aEnabledForCalls[] = ['direction' => $sDirection, 'context' => $aContext];
+
 		return in_array($sDirection, $this->aEnabledDirections, true);
 	}
 
@@ -186,7 +191,7 @@ class GuardrailContractTest extends ItopDataTestCase
 		$oAuditOnly = new class implements iAIGuardrail {
 			public bool $bChecked = false;
 
-			public function IsEnabledFor(string $sSurface, string $sDirection): bool
+			public function IsEnabledFor(string $sSurface, string $sDirection, array $aContext = []): bool
 			{
 				return true;
 			}
@@ -257,6 +262,118 @@ class GuardrailContractTest extends ItopDataTestCase
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine('')))->GetCompletion('');
+
+		static::assertCount(0, $oGuardrail->aCalls);
+	}
+
+	/**
+	 * The system prompt is screened, and before the input it governs.
+	 */
+	public function testSystemPromptIsScreenedBeforeInput(): void
+	{
+		$oGuardrail = new RecordingGuardrail([
+			iAIGuardrail::DIRECTION_SYSTEM_PROMPT,
+			iAIGuardrail::DIRECTION_INPUT,
+		]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		$oAIService = new AIService($this->MakeEngine('The answer'));
+		$oAIService->GetCompletion('The question', 'You are a helpful assistant.');
+
+		static::assertCount(2, $oGuardrail->aCalls);
+		static::assertSame(iAIGuardrail::DIRECTION_SYSTEM_PROMPT, $oGuardrail->aCalls[0]['direction']);
+		static::assertSame('You are a helpful assistant.', $oGuardrail->aCalls[0]['content']);
+		static::assertSame(iAIGuardrail::DIRECTION_INPUT, $oGuardrail->aCalls[1]['direction']);
+	}
+
+	/**
+	 * PerformSystemInstruction() substitutes placeholders before delegating, so the
+	 * guardrail must see the assembled prompt rather than the template.
+	 */
+	public function testSystemPromptIsScreenedAfterPlaceholderSubstitution(): void
+	{
+		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		$oAIService = new AIService($this->MakeEngine(), ['probe' => 'Template with %1$s inside.']);
+		// GetCompletion() is what PerformSystemInstruction() delegates to; feed it the
+		// substituted form to assert that whatever arrives here is what gets screened.
+		$oAIService->GetCompletion('anything', sprintf('Template with %1$s inside.', 'SUBSTITUTED'));
+
+		static::assertCount(1, $oGuardrail->aCalls);
+		static::assertStringContainsString('SUBSTITUTED', $oGuardrail->aCalls[0]['content']);
+		static::assertStringNotContainsString('%1$s', $oGuardrail->aCalls[0]['content']);
+	}
+
+	/**
+	 * In a conversation the prompt is screened once, not per turn or per tool round.
+	 */
+	public function testSystemPromptIsScreenedOncePerConversationCall(): void
+	{
+		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		(new AIService($this->MakeEngine('Final')))->ContinueConversation(
+			[
+				['role' => 'user', 'content' => 'First'],
+				['role' => 'assistant', 'content' => 'A1'],
+				['role' => 'user', 'content' => 'Latest'],
+			],
+			null,
+			'Custom system prompt'
+		);
+
+		static::assertCount(1, $oGuardrail->aCalls);
+		static::assertSame('Custom system prompt', $oGuardrail->aCalls[0]['content']);
+	}
+
+	/**
+	 * A blocking verdict on the prompt is distinguishable from one on user input,
+	 * so a caller can tell a configuration problem from a content problem.
+	 */
+	public function testBlockedSystemPromptIsDistinguishableByDirection(): void
+	{
+		AIService::SetGuardrailsForTest([
+			new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT], ['forbidden']),
+		]);
+
+		try {
+			(new AIService($this->MakeEngine()))->GetCompletion('harmless question', 'a forbidden prompt');
+			static::fail('Expected AIGuardrailBlockedException');
+		} catch (AIGuardrailBlockedException $e) {
+			static::assertSame(iAIGuardrail::DIRECTION_SYSTEM_PROMPT, $e->GetDirection());
+		}
+	}
+
+	/**
+	 * The iTop context tags are passed to both interface methods, so a guardrail can
+	 * let the channel decide whether to screen at all.
+	 */
+	public function testItopContextIsPassedToGuardrail(): void
+	{
+		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		(new AIService($this->MakeEngine()))->GetCompletion('question');
+
+		static::assertNotSame([], $oGuardrail->aEnabledForCalls, 'IsEnabledFor() was not called');
+		foreach ($oGuardrail->aEnabledForCalls as $aCall) {
+			static::assertArrayHasKey('itop_context', $aCall['context']);
+			static::assertIsArray($aCall['context']['itop_context']);
+		}
+		static::assertArrayHasKey('itop_context', $oGuardrail->aCalls[0]['context']);
+	}
+
+	/**
+	 * An empty system prompt is not worth a round trip, and is the common case for
+	 * callers that pass none.
+	 */
+	public function testEmptySystemPromptIsNotScreened(): void
+	{
+		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		(new AIService($this->MakeEngine()))->GetCompletion('question');
 
 		static::assertCount(0, $oGuardrail->aCalls);
 	}
