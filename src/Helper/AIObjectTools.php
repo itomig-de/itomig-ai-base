@@ -142,6 +142,15 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			// Before Get(), so the value is never even read into memory. An unknown
 			// attribute code throws here just as Get() would, keeping that path unchanged.
 			$oAttDef = MetaModel::GetAttributeDef(get_class($this->oContext), $attribute_code);
+
+			// An external field carries the value of an attribute on another class, and
+			// its own type says nothing about it: MailInboxOAuth::client_secret is an
+			// AttributeExternalField whose target on OAuthClient is an AttributePassword.
+			// Without resolving, the filter would wave the secret straight through.
+			if ($oAttDef instanceof AttributeExternalField) {
+				$oAttDef = $oAttDef->GetFinalAttDef();
+			}
+
 			if (self::IsSensitiveAttribute($oAttDef)) {
 				// Info rather than Debug: an operator should see a blocked credential
 				// access without having to switch on debug logging first. The value is

@@ -333,7 +333,12 @@ public function getDefaultTools(?DBObject $oObject = null): array
 
 Convenience helper that returns the broad default tool set: all always-available tools (`AISystemTools`), plus all context-dependent tools (`AIObjectTools`) when an object is passed. Use together with `ContinueConversation()` when the full discovered tool set is actually desired; prefer a narrower hand-picked list otherwise.
 
-**Credential-bearing attributes are withheld.** The `get_attribute` tool returns an empty string for `AttributePassword`, `AttributeEncryptedString` and `AttributeOneWayPassword`, and logs the fact at `Info` level without logging the value. This is enforced in `AIObjectTools`, not left to the calling extension, because the tools are generic over any `DBObject` — classes such as `OAuthClient`, `MailInboxBase` and `RemoteiTopConnection` do carry password attributes. Note that this is a filter on attribute *type*, not an authorisation check: the tools otherwise read whatever the context object exposes, so do not pass an object the current user should not be able to read.
+**Credential-bearing attributes are withheld.** The `get_attribute` tool returns an empty string for `AttributePassword`, `AttributeEncryptedString` and `AttributeOneWayPassword`, and logs the fact at `Info` level without logging the value. External fields are resolved to their target first, so an `AttributeExternalField` pointing at a password — `MailInboxOAuth::client_secret` targets `OAuthClient::client_secret` — is caught too. This is enforced in `AIObjectTools` rather than left to the calling extension, because the tools are generic over any `DBObject`, and classes such as `OAuthClient`, `MailInboxBase` and `RemoteiTopConnection` do carry password attributes.
+
+**Two limits you must plan around:**
+
+- **It filters by attribute *type*, so a secret stored in a plain text attribute is not caught.** `OAuthClient::token` and `::refresh_token` are `AttributeText` and hold live OAuth tokens — those still reach the model. There is no way for a type-based filter to know better; if a context class keeps secrets in string or text attributes, do not pass that class as context.
+- **It is not an authorisation check.** No `UserRights` verification takes place, so the tools read whatever the context object exposes regardless of the current user's attribute permissions. Do not pass an object the user should not be able to read.
 
 ## Code Examples
 
