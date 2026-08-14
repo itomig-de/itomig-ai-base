@@ -18,7 +18,17 @@ The **itomig-ai-base** extension provides fundamental functionality for integrat
 ## Prerequisites
 
 - iTop version 3.2.1 or higher
-- PHP 8.1 or higher
+- **PHP 8.2 or 8.3** — 8.2 is a hard minimum, and 8.4 is not supported by iTop 3.2
+
+> **Breaking change as of 26.3.0: PHP 8.1 is no longer supported.**
+>
+> Earlier versions ran on PHP 8.1. The bundled `openai-php/client` now uses `readonly class`,
+> which is PHP 8.2 syntax, in code on the path of every API call — on PHP 8.1 the extension
+> does not degrade, it fails to load with a parse error. Check your PHP version before
+> updating. PHP 8.1 reached end of life in December 2025 and receives no security fixes.
+>
+> The upper bound comes from iTop, not from this extension: iTop 3.2 supports PHP 8.1 to 8.3,
+> so the usable range here is 8.2 or 8.3.
 
 ## Installation
 
@@ -314,6 +324,8 @@ public function getDefaultTools(?DBObject $oObject = null): array
 ```
 
 Convenience helper that returns the broad default tool set: all always-available tools (`AISystemTools`), plus all context-dependent tools (`AIObjectTools`) when an object is passed. Use together with `ContinueConversation()` when the full discovered tool set is actually desired; prefer a narrower hand-picked list otherwise.
+
+**Credential-bearing attributes are withheld.** The `get_attribute` tool returns an empty string for `AttributePassword`, `AttributeEncryptedString` and `AttributeOneWayPassword`, and logs the fact at `Info` level without logging the value. This is enforced in `AIObjectTools`, not left to the calling extension, because the tools are generic over any `DBObject` — classes such as `OAuthClient`, `MailInboxBase` and `RemoteiTopConnection` do carry password attributes. Note that this is a filter on attribute *type*, not an authorisation check: the tools otherwise read whatever the context object exposes, so do not pass an object the current user should not be able to read.
 
 ## Code Examples
 

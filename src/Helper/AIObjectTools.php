@@ -109,10 +109,28 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	}
 
 	/**
+	 * Attribute types whose value is never handed to the model.
+	 *
+	 * Matched with instanceof, so subclasses are covered too. AttributeOneWayPassword
+	 * is included even though it only ever yields a hash: a hash is still a credential
+	 * artefact and has no business in a prompt.
+	 */
+	private const SENSITIVE_ATTRIBUTE_TYPES = [
+		'AttributePassword',
+		'AttributeEncryptedString',
+		'AttributeOneWayPassword',
+	];
+
+	/**
 	 * Get an attribute value from the current object.
 	 *
+	 * Credential-bearing attributes return an empty string rather than their value —
+	 * see SENSITIVE_ATTRIBUTE_TYPES. Deliberately not an error: the model should carry
+	 * on answering instead of being nudged into working around a refusal.
+	 *
 	 * @param string $attribute_code The attribute code (e.g., 'title', 'description', 'org_id').
-	 * @return string The attribute value, or error message.
+	 * @return string The attribute value, an empty string if the attribute is
+	 *                credential-bearing, or an error message.
 	 */
 	public function get_attribute(string $attribute_code): string
 	{
@@ -121,6 +139,22 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			return 'No object in context';
 		}
 		try {
+			// Before Get(), so the value is never even read into memory. An unknown
+			// attribute code throws here just as Get() would, keeping that path unchanged.
+			$oAttDef = MetaModel::GetAttributeDef(get_class($this->oContext), $attribute_code);
+			if (self::IsSensitiveAttribute($oAttDef)) {
+				// Info rather than Debug: an operator should see a blocked credential
+				// access without having to switch on debug logging first. The value is
+				// deliberately not logged, and neither is anything else identifying.
+				IssueLog::Info(
+					__METHOD__ . ": Withheld credential-bearing attribute '$attribute_code' ("
+						. get_class($oAttDef) . ') from the model.',
+					AIBaseHelper::MODULE_CODE
+				);
+
+				return '';
+			}
+
 			$value = $this->oContext->Get($attribute_code);
 			if (is_object($value)) {
 				$result = (string) $value;
@@ -216,6 +250,23 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 
 		IssueLog::Debug(__METHOD__ . ": Returning schema for class $sClass with " . count($aSchema['attributes']) . " attributes", AIBaseHelper::MODULE_CODE);
 		return json_encode($aSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	}
+
+	/**
+	 * Whether an attribute's value must be withheld from the model.
+	 *
+	 * @param \AttributeDefinition $oAttDef The attribute definition to check.
+	 * @return bool True if the attribute is credential-bearing.
+	 */
+	private static function IsSensitiveAttribute(\AttributeDefinition $oAttDef): bool
+	{
+		foreach (self::SENSITIVE_ATTRIBUTE_TYPES as $sClass) {
+			if ($oAttDef instanceof $sClass) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
