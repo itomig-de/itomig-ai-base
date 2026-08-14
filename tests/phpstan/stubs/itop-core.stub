@@ -46,6 +46,15 @@ class IssueLog
      * @param string|null $sChannel
      * @param array<string, mixed> $aContext
      */
+    public static function Info(string $sMessage, ?string $sChannel = null, array $aContext = []): void
+    {
+    }
+
+    /**
+     * @param string $sMessage
+     * @param string|null $sChannel
+     * @param array<string, mixed> $aContext
+     */
     public static function Error(string $sMessage, ?string $sChannel = null, array $aContext = []): void
     {
     }
@@ -87,6 +96,12 @@ class Dict
 
 class DBObject
 {
+    /**
+     * @return int|string|null
+     */
+    public function GetKey()
+    {
+    }
 }
 
 class SetupWebPage
