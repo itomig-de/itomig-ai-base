@@ -14,70 +14,76 @@ use Itomig\iTop\Extension\AIBase\Exception\AIGuardrailBlockedException;
 use Itomig\iTop\Extension\AIBase\Result\GuardrailVerdict;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
 
-/**
- * Records every Check() call so tests can assert on what was screened.
- */
-class RecordingGuardrail implements iAIGuardrail
-{
-	/** @var array<int, array{content: string, surface: string, direction: string}> */
-	public array $aCalls = [];
-
-	/** @var array<int, array{direction: string, context: array}> Records IsEnabledFor() calls */
-	public array $aEnabledForCalls = [];
-
-	/** @var string[] Directions this guardrail claims */
-	private array $aEnabledDirections;
-
-	/** @var string[] Contents that should produce a blocking verdict */
-	private array $aBlockOn;
-
-	/** @var bool Whether Check() should throw instead of returning a verdict */
-	private bool $bThrow;
-
-	/**
-	 * @param string[] $aEnabledDirections
-	 * @param string[] $aBlockOn Substrings that trigger a blocking verdict
-	 */
-	public function __construct(array $aEnabledDirections, array $aBlockOn = [], bool $bThrow = false)
-	{
-		$this->aEnabledDirections = $aEnabledDirections;
-		$this->aBlockOn           = $aBlockOn;
-		$this->bThrow             = $bThrow;
-	}
-
-	public function IsEnabledFor(string $sSurface, string $sDirection, array $aContext = []): bool
-	{
-		$this->aEnabledForCalls[] = ['direction' => $sDirection, 'context' => $aContext];
-
-		return in_array($sDirection, $this->aEnabledDirections, true);
-	}
-
-	public function Check(string $sContent, string $sSurface, string $sDirection, array $aContext = []): GuardrailVerdict
-	{
-		$this->aCalls[] = ['content' => $sContent, 'surface' => $sSurface, 'direction' => $sDirection];
-
-		if ($this->bThrow) {
-			throw new \RuntimeException('Guardrail backend unreachable');
-		}
-
-		foreach ($this->aBlockOn as $sNeedle) {
-			if (str_contains($sContent, $sNeedle)) {
-				return new GuardrailVerdict(true, [[
-					'policy_code' => 'test_policy',
-					'matched'     => true,
-					'score'       => null,
-					'mode'        => 'block',
-					'message'     => 'matched test_policy',
-				]]);
-			}
-		}
-
-		return GuardrailVerdict::Pass();
-	}
-}
-
 class GuardrailContractTest extends ItopDataTestCase
 {
+	/**
+	 * Builds a guardrail fake that records every Check() call so tests can assert
+	 * on what was screened. Deliberately an anonymous class created at runtime: a
+	 * named top-level class implementing iAIGuardrail would need the interface at
+	 * file-load time, before the extension autoloader is registered, and PHPUnit
+	 * loads every test file while assembling the suite.
+	 *
+	 * @param string[] $aEnabledDirections Directions this guardrail claims
+	 * @param string[] $aBlockOn           Substrings that trigger a blocking verdict
+	 * @param bool     $bThrow             Whether Check() should throw instead of returning a verdict
+	 */
+	private function MakeRecordingGuardrail(array $aEnabledDirections, array $aBlockOn = [], bool $bThrow = false): iAIGuardrail
+	{
+		return new class($aEnabledDirections, $aBlockOn, $bThrow) implements iAIGuardrail {
+			/** @var array<int, array{content: string, surface: string, direction: string, context: array}> */
+			public array $aCalls = [];
+
+			/** @var array<int, array{direction: string, context: array}> Records IsEnabledFor() calls */
+			public array $aEnabledForCalls = [];
+
+			/** @var string[] Directions this guardrail claims */
+			private array $aEnabledDirections;
+
+			/** @var string[] Contents that should produce a blocking verdict */
+			private array $aBlockOn;
+
+			/** @var bool Whether Check() should throw instead of returning a verdict */
+			private bool $bThrow;
+
+			public function __construct(array $aEnabledDirections, array $aBlockOn, bool $bThrow)
+			{
+				$this->aEnabledDirections = $aEnabledDirections;
+				$this->aBlockOn           = $aBlockOn;
+				$this->bThrow             = $bThrow;
+			}
+
+			public function IsEnabledFor(string $sSurface, string $sDirection, array $aContext = []): bool
+			{
+				$this->aEnabledForCalls[] = ['direction' => $sDirection, 'context' => $aContext];
+
+				return in_array($sDirection, $this->aEnabledDirections, true);
+			}
+
+			public function Check(string $sContent, string $sSurface, string $sDirection, array $aContext = []): GuardrailVerdict
+			{
+				$this->aCalls[] = ['content' => $sContent, 'surface' => $sSurface, 'direction' => $sDirection, 'context' => $aContext];
+
+				if ($this->bThrow) {
+					throw new \RuntimeException('Guardrail backend unreachable');
+				}
+
+				foreach ($this->aBlockOn as $sNeedle) {
+					if (str_contains($sContent, $sNeedle)) {
+						return new GuardrailVerdict(true, [[
+							'policy_code' => 'test_policy',
+							'matched'     => true,
+							'score'       => null,
+							'mode'        => 'block',
+							'message'     => 'matched test_policy',
+						]]);
+					}
+				}
+
+				return GuardrailVerdict::Pass();
+			}
+		};
+	}
+
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -119,7 +125,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testGetCompletionScreensInputAndOutput(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		$oAIService = new AIService($this->MakeEngine('The answer'));
@@ -139,7 +145,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testDisabledDirectionIsNotChecked(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_OUTPUT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_OUTPUT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine()))->GetCompletion('The question');
@@ -154,7 +160,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	public function testBlockingVerdictOnInputThrows(): void
 	{
 		AIService::SetGuardrailsForTest([
-			new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT], ['forbidden']),
+			$this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT], ['forbidden']),
 		]);
 
 		$oMockEngine = $this->createMock(iAIEngineInterface::class);
@@ -170,7 +176,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	public function testBlockedExceptionCarriesVerdict(): void
 	{
 		AIService::SetGuardrailsForTest([
-			new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT], ['forbidden']),
+			$this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT], ['forbidden']),
 		]);
 
 		try {
@@ -223,7 +229,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	public function testGuardrailFailureIsFailOpen(): void
 	{
 		AIService::SetGuardrailsForTest([
-			new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT], [], true),
+			$this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT], [], true),
 		]);
 
 		$sResult = (new AIService($this->MakeEngine('Answer despite broken guardrail')))->GetCompletion('question');
@@ -236,7 +242,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testContinueConversationScreensLatestTurnAndAnswer(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		$oAIService = new AIService($this->MakeEngine('Final answer'));
@@ -258,7 +264,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testEmptyContentIsNotScreened(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT, iAIGuardrail::DIRECTION_OUTPUT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine('')))->GetCompletion('');
@@ -271,7 +277,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testSystemPromptIsScreenedBeforeInput(): void
 	{
-		$oGuardrail = new RecordingGuardrail([
+		$oGuardrail = $this->MakeRecordingGuardrail([
 			iAIGuardrail::DIRECTION_SYSTEM_PROMPT,
 			iAIGuardrail::DIRECTION_INPUT,
 		]);
@@ -292,7 +298,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testSystemPromptIsScreenedAfterPlaceholderSubstitution(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		$oAIService = new AIService($this->MakeEngine(), ['probe' => 'Template with %1$s inside.']);
@@ -310,7 +316,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testSystemPromptIsScreenedOncePerConversationCall(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine('Final')))->ContinueConversation(
@@ -334,7 +340,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	public function testBlockedSystemPromptIsDistinguishableByDirection(): void
 	{
 		AIService::SetGuardrailsForTest([
-			new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT], ['forbidden']),
+			$this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT], ['forbidden']),
 		]);
 
 		try {
@@ -351,7 +357,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testItopContextIsPassedToGuardrail(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_INPUT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine()))->GetCompletion('question');
@@ -370,7 +376,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testEmptySystemPromptIsNotScreened(): void
 	{
-		$oGuardrail = new RecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_SYSTEM_PROMPT]);
 		AIService::SetGuardrailsForTest([$oGuardrail]);
 
 		(new AIService($this->MakeEngine()))->GetCompletion('question');
