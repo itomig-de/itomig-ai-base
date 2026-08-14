@@ -18,7 +18,13 @@ The **itomig-ai-base** extension provides fundamental functionality for integrat
 ## Prerequisites
 
 - iTop version 3.2.1 or higher
-- **PHP 8.2 or 8.3** — 8.2 is a hard minimum, and 8.4 is not supported by iTop 3.2
+- **PHP 8.2 minimum.** The upper bound is iTop's rather than this extension's, so it depends
+  on your iTop version:
+
+| iTop version | Usable PHP versions |
+|---|---|
+| 3.2.1 – 3.2.2 | 8.2 or 8.3 (iTop does not support 8.4 there) |
+| 3.2.3-1 and higher | 8.2 to 8.4 |
 
 > **Breaking change as of 26.3.0: PHP 8.1 is no longer supported.**
 >
@@ -27,8 +33,10 @@ The **itomig-ai-base** extension provides fundamental functionality for integrat
 > does not degrade, it fails to load with a parse error. Check your PHP version before
 > updating. PHP 8.1 reached end of life in December 2025 and receives no security fixes.
 >
-> The upper bound comes from iTop, not from this extension: iTop 3.2 supports PHP 8.1 to 8.3,
-> so the usable range here is 8.2 or 8.3.
+> There is no upper bound on this extension's side: this code and its bundled dependencies
+> parse cleanly on 8.4. Whether you may use 8.4 is decided by iTop — 8.4 support arrived in
+> iTop 3.2.3-1; on 3.2.x before that, iTop reports known issues with it. See the
+> [iTop requirements](https://www.itophub.io/wiki/page?id=latest:install:requirements).
 
 ## Installation
 
