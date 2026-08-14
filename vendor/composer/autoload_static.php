@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
+class ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -77,8 +77,8 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -656,7 +656,6 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
         'OpenAI\\Responses\\Realtime\\TranscriptionSessionResponse' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Realtime/TranscriptionSessionResponse.php',
         'OpenAI\\Responses\\Realtime\\TranscriptionSession\\InputAudioTranscription' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Realtime/TranscriptionSession/InputAudioTranscription.php',
         'OpenAI\\Responses\\Responses\\CreateResponse' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Responses/CreateResponse.php',
-        'OpenAI\\Responses\\Responses\\CreateResponseError' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Responses/CreateResponseError.php',
         'OpenAI\\Responses\\Responses\\CreateResponseFormat' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Responses/CreateResponseFormat.php',
         'OpenAI\\Responses\\Responses\\CreateResponseIncompleteDetails' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Responses/CreateResponseIncompleteDetails.php',
         'OpenAI\\Responses\\Responses\\CreateResponseReasoning' => __DIR__ . '/..' . '/openai-php/client/src/Responses/Responses/CreateResponseReasoning.php',
@@ -1393,10 +1392,10 @@ class ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInitd8be68bed68b2e666ec5f78f725945c1::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634::$classMap;
 
         }, null, ClassLoader::class);
     }

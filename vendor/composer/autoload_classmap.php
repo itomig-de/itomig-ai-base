@@ -521,7 +521,6 @@ return array(
     'OpenAI\\Responses\\Realtime\\TranscriptionSessionResponse' => $vendorDir . '/openai-php/client/src/Responses/Realtime/TranscriptionSessionResponse.php',
     'OpenAI\\Responses\\Realtime\\TranscriptionSession\\InputAudioTranscription' => $vendorDir . '/openai-php/client/src/Responses/Realtime/TranscriptionSession/InputAudioTranscription.php',
     'OpenAI\\Responses\\Responses\\CreateResponse' => $vendorDir . '/openai-php/client/src/Responses/Responses/CreateResponse.php',
-    'OpenAI\\Responses\\Responses\\CreateResponseError' => $vendorDir . '/openai-php/client/src/Responses/Responses/CreateResponseError.php',
     'OpenAI\\Responses\\Responses\\CreateResponseFormat' => $vendorDir . '/openai-php/client/src/Responses/Responses/CreateResponseFormat.php',
     'OpenAI\\Responses\\Responses\\CreateResponseIncompleteDetails' => $vendorDir . '/openai-php/client/src/Responses/Responses/CreateResponseIncompleteDetails.php',
     'OpenAI\\Responses\\Responses\\CreateResponseReasoning' => $vendorDir . '/openai-php/client/src/Responses/Responses/CreateResponseReasoning.php',

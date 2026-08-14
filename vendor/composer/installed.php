@@ -3,11 +3,11 @@
         'name' => 'itomig-de/itomig-ai-base',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '34a5f27970b616ebe72243bf7f8199d9905c6d83',
+        'reference' => 'e7ecf7be92daeba56322210a0a417074c8b59de6',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'guzzlehttp/guzzle' => array(
@@ -40,7 +40,7 @@
         'itomig-de/itomig-ai-base' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '34a5f27970b616ebe72243bf7f8199d9905c6d83',
+            'reference' => 'e7ecf7be92daeba56322210a0a417074c8b59de6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -103,15 +103,6 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'phpstan/phpstan' => array(
-            'pretty_version' => '2.1.40',
-            'version' => '2.1.40.0',
-            'reference' => '9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../phpstan/phpstan',
-            'aliases' => array(),
-            'dev_requirement' => true,
-        ),
         'psr/container' => array(
             'pretty_version' => '2.0.2',
             'version' => '2.0.2.0',
@@ -133,8 +124,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/http-factory' => array(
@@ -149,8 +140,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/http-message' => array(
@@ -165,8 +156,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/log' => array(

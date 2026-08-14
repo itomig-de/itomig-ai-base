@@ -65,10 +65,6 @@ final class StreamResponse implements ResponseHasMetaInformationContract, Respon
                 continue;
             }
 
-            if (isset($response['type']) && $response['type'] === 'ping') {
-                continue;
-            }
-
             if ($event !== null) {
                 $response['__event'] = $event;
             }
