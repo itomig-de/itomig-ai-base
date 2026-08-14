@@ -583,15 +583,25 @@ Test organization:
 
 All dependencies are committed to the repository and included in the extension package. End users do not need to run composer.
 
-**For developers only:** If you need to update dependencies during development:
+**For developers only.** Because `vendor/` is committed, how you invoke composer ends up in the release. Always use:
 
 ```bash
-composer update
+php8.2 composer update --no-dev --prefer-dist   # or: install
+composer audit --no-dev                          # must report no advisories
 ```
+
+Each flag prevents a defect that has actually occurred in this repository:
+
+- **`--no-dev`** — without it, composer writes dev entries into the generated autoload files, and `phpstan` ends up referenced from a production release.
+- **`--prefer-dist`** — `--prefer-source` clones package repositories, which bypasses their `export-ignore` rules and drags their test suites in. This is where 6.1 MB of tiktoken fixtures came from (see #69).
+- **`php8.2`** — resolution follows the PHP version running composer, so a newer interpreter can pick packages that need more than our documented 8.2 minimum. `config.platform.php` in `composer.json` pins this as a backstop; running 8.2 makes it true by construction.
+- **`composer audit`** — a targeted update must include transitive constraints. Updating only `guzzle` and `psr7` silently stopped at an unpatched version because the fix also required `promises`; the audit is what catches that.
+
+After adding a class under `src/`, run `composer dump-autoload -o` and commit the regenerated classmap with it. `classmap-authoritative` is enabled, so there is no PSR-4 fallback and a missing entry is a fatal error at runtime, not a slow path (see #55).
 
 **Included Dependencies:**
 - `composer-runtime-api: ^2.0`
-- `theodo-group/llphant: ^0.10.1`
+- `theodo-group/llphant: ^1.0`
 
 ### Adding a New AI Provider
 
