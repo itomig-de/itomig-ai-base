@@ -6,7 +6,7 @@
 
 SetupWebPage::AddModule(
 	__FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-	'fork-of-itomig-ai-base/26.1.2',
+	'itomig-ai-base/26.1.2',
 	[
 		// Identification
 		//
