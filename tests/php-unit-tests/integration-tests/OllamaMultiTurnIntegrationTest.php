@@ -10,11 +10,17 @@
 
 namespace Itomig\iTop\AiBase\Test;
 
-use Combodo\iTop\Test\UnitTest\ItopTestCase;
+use Combodo\iTop\Test\UnitTest\ItopDataTestCase;
 use Itomig\iTop\Extension\AIBase\Engine\OllamaAIEngine;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
+use MetaModel;
 
-class OllamaMultiTurnIntegrationTest extends ItopTestCase
+// Extends ItopDataTestCase, not ItopTestCase: AIService::__construct() reads the
+// module configuration via MetaModel::GetModuleSetting(), and only
+// ItopDataTestCase starts the MetaModel. With ItopTestCase these tests failed
+// with "Call to a member function GetModuleSetting() on null" -- invisible for as
+// long as they skipped for want of a reachable Ollama.
+class OllamaMultiTurnIntegrationTest extends ItopDataTestCase
 {
 	/** @var string Default Ollama URL */
 	private const DEFAULT_OLLAMA_URL = 'http://localhost:11434/api/generate';
@@ -29,12 +35,43 @@ class OllamaMultiTurnIntegrationTest extends ItopTestCase
 	}
 
 	/**
+	 * Endpoint URL of the engine under test.
+	 *
+	 * Read from the module configuration, so the test works wherever the
+	 * instance actually points its engine (e.g. a container reaching Ollama by
+	 * service name). Falls back to the historical constant.
+	 */
+	private function getOllamaUrl(): string
+	{
+		$aConfig = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
+
+		return (is_array($aConfig) && !empty($aConfig['url'])) ? $aConfig['url'] : self::DEFAULT_OLLAMA_URL;
+	}
+
+	/**
+	 * Model of the engine under test.
+	 *
+	 * Read from the module configuration: a hard-coded model name is only ever
+	 * correct by accident, since it has to be pulled locally beforehand.
+	 */
+	private function getOllamaModel(): string
+	{
+		$aConfig = MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
+
+		return (is_array($aConfig) && !empty($aConfig['model'])) ? $aConfig['model'] : self::DEFAULT_OLLAMA_MODEL;
+	}
+
+	/**
 	 * Check if Ollama is available at the given URL
 	 */
 	private function isOllamaAvailable(): bool
 	{
-		// Try to connect to Ollama health endpoint
-		$sHealthUrl = str_replace('/api/generate', '/api/tags', self::DEFAULT_OLLAMA_URL);
+		// Derive the health endpoint from whatever form the configured URL has:
+		// '<host>/api/' (configuration) as well as '<host>/api/generate'
+		// (the constant) both become '<host>/api/tags'. A plain str_replace on
+		// '/api/generate' would silently leave the former unchanged, so the
+		// health check would query the wrong path and always report "unavailable".
+		$sHealthUrl = preg_replace('#/api/.*$#', '/api/tags', $this->getOllamaUrl());
 
 		$ch = curl_init($sHealthUrl);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -58,14 +95,14 @@ class OllamaMultiTurnIntegrationTest extends ItopTestCase
 	{
 		// Skip if Ollama is not available
 		if (!$this->isOllamaAvailable()) {
-			static::markTestSkipped('Ollama is not available at ' . self::DEFAULT_OLLAMA_URL);
+			static::markTestSkipped('Ollama is not available at ' . $this->getOllamaUrl());
 		}
 
 		// Create real Ollama engine
 		$oEngine = new OllamaAIEngine(
-			self::DEFAULT_OLLAMA_URL,
+			$this->getOllamaUrl(),
 			'', // No API key needed for local Ollama
-			self::DEFAULT_OLLAMA_MODEL
+			$this->getOllamaModel()
 		);
 
 		$oAIService = new AIService($oEngine);
@@ -122,13 +159,13 @@ class OllamaMultiTurnIntegrationTest extends ItopTestCase
 	public function testSystemMessageInjectionBlockedWithRealOllama(): void
 	{
 		if (!$this->isOllamaAvailable()) {
-			static::markTestSkipped('Ollama is not available at ' . self::DEFAULT_OLLAMA_URL);
+			static::markTestSkipped('Ollama is not available at ' . $this->getOllamaUrl());
 		}
 
 		$oEngine = new OllamaAIEngine(
-			self::DEFAULT_OLLAMA_URL,
+			$this->getOllamaUrl(),
 			'',
-			self::DEFAULT_OLLAMA_MODEL
+			$this->getOllamaModel()
 		);
 
 		$oAIService = new AIService($oEngine);
@@ -177,13 +214,13 @@ class OllamaMultiTurnIntegrationTest extends ItopTestCase
 	public function testGetCompletionBackwardCompatibilityWithRealOllama(): void
 	{
 		if (!$this->isOllamaAvailable()) {
-			static::markTestSkipped('Ollama is not available at ' . self::DEFAULT_OLLAMA_URL);
+			static::markTestSkipped('Ollama is not available at ' . $this->getOllamaUrl());
 		}
 
 		$oEngine = new OllamaAIEngine(
-			self::DEFAULT_OLLAMA_URL,
+			$this->getOllamaUrl(),
 			'',
-			self::DEFAULT_OLLAMA_MODEL
+			$this->getOllamaModel()
 		);
 
 		$oAIService = new AIService($oEngine);
