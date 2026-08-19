@@ -32,13 +32,23 @@ use MetaModel;
 class AIObjectToolsTest extends ItopDataTestCase
 {
 	/**
-	 * Fully qualified, because that is what class_implements() and instanceof
-	 * resolve against. Comparing the bare interface name silently never matches.
+	 * UNQUALIFIED, exactly as AIObjectTools::SENSITIVE_ATTRIBUTE_TYPES has them.
+	 *
+	 * Not a style choice. The attribute classes moved namespace between iTop
+	 * versions: in 3.2.x they are global (AttributePassword), in 3.3 they live in
+	 * Combodo\iTop\Core\AttributeDefinition. iTop keeps the global names working
+	 * through sources/alias.php, so the unqualified form resolves on both, while
+	 * the fully qualified 3.3 form matches NOTHING on 3.2.
+	 *
+	 * That mistake is worth spelling out because of how it fails: the discovery
+	 * helpers below find no candidate, every test skips, and the suite reports
+	 * "OK, skipped" -- green while verifying nothing. Measured on iTop 3.2.3:
+	 * eight of nine tests skipped silently.
 	 */
 	private const SENSITIVE_TYPES = [
-		'Combodo\iTop\Core\AttributeDefinition\AttributePassword',
-		'Combodo\iTop\Core\AttributeDefinition\AttributeEncryptedString',
-		'Combodo\iTop\Core\AttributeDefinition\AttributeOneWayPassword',
+		'AttributePassword',
+		'AttributeEncryptedString',
+		'AttributeOneWayPassword',
 	];
 
 	/**
@@ -57,7 +67,7 @@ class AIObjectToolsTest extends ItopDataTestCase
 	{
 		$aCases = [];
 		foreach (self::SENSITIVE_TYPES as $sType) {
-			$aCases[substr($sType, strrpos($sType, '\\') + 1)] = [$sType];
+			$aCases[$sType] = [$sType];
 		}
 
 		return $aCases;
