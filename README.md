@@ -355,6 +355,16 @@ Convenience helper that returns the broad default tool set: all always-available
 - **It filters by attribute *type*, so a secret stored in a plain text attribute is not caught.** `OAuthClient::token` and `::refresh_token` are `AttributeText` and hold live OAuth tokens — those still reach the model. There is no way for a type-based filter to know better; if a context class keeps secrets in string or text attributes, do not pass that class as context.
 - **It is not an authorisation check.** No `UserRights` verification takes place, so the tools read whatever the context object exposes regardless of the current user's attribute permissions. Do not pass an object the user should not be able to read.
 
+**Reading several attributes outside of tool-calling?** Use `AIObjectTools::GetFilteredAttributeValues(DBObject $oObject, ?array $aAttCodes = null): array` rather than `MetaModel::ListAttributeDefs()` + `Get()` in a loop. It applies the exact same credential filter as `get_attribute()` — sharing the check means a consumer collecting multiple attributes for a display panel or a hand-built prompt cannot reintroduce the leak by forgetting to filter. Deliberately **not** a public `IsSensitiveAttribute()` — that would still leave every caller responsible for remembering to call it. `GetFilteredAttributeValues()` is a `public static` method, so it can be called without an `AIObjectTools` instance or object context:
+
+```php
+use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
+
+$aValues = AIObjectTools::GetFilteredAttributeValues($oTicket, ['title', 'description', 'caller_id']);
+// $aValues === ['title' => '...', 'description' => '...', 'caller_id' => '...']
+// A credential-bearing attribute in the list would map to '', not its value.
+```
+
 ## Code Examples
 
 ### Basic Usage
@@ -694,6 +704,7 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 - **`iAIGuardrail` extension point** (`Itomig\iTop\Extension\AIBase\Contracts\iAIGuardrail`): a content-moderation contract that screens all four AI touch points — `DIRECTION_SYSTEM_PROMPT`, `DIRECTION_INPUT`, `DIRECTION_OUTPUT`, `DIRECTION_TOOL_RESULT` — discovered automatically via `InterfaceDiscovery`, fail-open on implementer error. This did not exist in `v26.1.1`, so it breaks no already-released consumer; see [Guardrails](#guardrails) for the full contract and `itomig-ai-guardrail` for a reference implementation (Mistral Shieldstral). Consumer extensions that declare a guardrail (`itomig-ai-guardrail`, `itomig-ai-response`, `itomig-ai-ticketing-base`) need their `itomig-ai-base` dependency raised to `26.3.0` to get this contract.
 - Embedding engine and service layer (`OpenAIEmbeddingEngine`, `EmbeddingService`) for extensions building retrieval/similarity features. See [Architecture](#embedding-engine-layer-srcengineembedding) and [Using Embeddings](#using-embeddings).
 - Credential-bearing attributes (`AttributePassword`, `AttributeEncryptedString`, `AttributeOneWayPassword`, including through resolved external fields) are withheld from the model by `get_attribute`.
+- `AIObjectTools::GetFilteredAttributeValues()`: a `public static` bulk attribute reader sharing `get_attribute()`'s credential filter, for any consumer reading several attributes off a `DBObject` outside of tool-calling (e.g. a diagnostics or admin display panel). See [`AIService::getDefaultTools()`](#aiservicegetdefaulttools).
 
 **Security:**
 - Updated `guzzlehttp/guzzle`, `guzzlehttp/psr7` and `guzzlehttp/promises`, clearing 11 security advisories (1 high: CVE-2026-69246) in the committed `vendor/` tree.

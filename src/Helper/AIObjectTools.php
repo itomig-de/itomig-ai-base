@@ -139,37 +139,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			return 'No object in context';
 		}
 		try {
-			// Before Get(), so the value is never even read into memory. An unknown
-			// attribute code throws here just as Get() would, keeping that path unchanged.
-			$oAttDef = MetaModel::GetAttributeDef(get_class($this->oContext), $attribute_code);
-
-			// An external field carries the value of an attribute on another class, and
-			// its own type says nothing about it: MailInboxOAuth::client_secret is an
-			// AttributeExternalField whose target on OAuthClient is an AttributePassword.
-			// Without resolving, the filter would wave the secret straight through.
-			if ($oAttDef instanceof AttributeExternalField) {
-				$oAttDef = $oAttDef->GetFinalAttDef();
-			}
-
-			if (self::IsSensitiveAttribute($oAttDef)) {
-				// Info rather than Debug: an operator should see a blocked credential
-				// access without having to switch on debug logging first. The value is
-				// deliberately not logged, and neither is anything else identifying.
-				IssueLog::Info(
-					__METHOD__ . ": Withheld credential-bearing attribute '$attribute_code' ("
-						. get_class($oAttDef) . ') from the model.',
-					AIBaseHelper::MODULE_CODE
-				);
-
-				return '';
-			}
-
-			$value = $this->oContext->Get($attribute_code);
-			if (is_object($value)) {
-				$result = (string) $value;
-			} else {
-				$result = (string) $value;
-			}
+			$result = self::ResolveFilteredAttributeValue($this->oContext, $attribute_code);
 			IssueLog::Debug(__METHOD__ . ": Returning: " . substr($result, 0, 100), AIBaseHelper::MODULE_CODE);
 			return $result;
 		} catch (\Exception $e) {
@@ -177,6 +147,82 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			IssueLog::Debug(__METHOD__ . ": Error: " . $error, AIBaseHelper::MODULE_CODE);
 			return $error;
 		}
+	}
+
+	/**
+	 * Resolves a single attribute's string value, withholding it if it is credential-bearing.
+	 *
+	 * The one place that decides what "sensitive" means for both get_attribute() and
+	 * GetFilteredAttributeValues() — neither call site re-implements the check, so a
+	 * caller reading attributes through either path cannot forget to apply it.
+	 *
+	 * @param DBObject $oObject The object to read the attribute from.
+	 * @param string $sAttCode The attribute code. Must be valid for $oObject's class.
+	 * @return string The attribute value, or an empty string if it is credential-bearing.
+	 * @throws \Exception if $sAttCode is not a valid attribute of $oObject's class.
+	 */
+	private static function ResolveFilteredAttributeValue(DBObject $oObject, string $sAttCode): string
+	{
+		// Before Get(), so the value is never even read into memory. An unknown
+		// attribute code throws here just as Get() would, keeping that path unchanged.
+		$oAttDef = MetaModel::GetAttributeDef(get_class($oObject), $sAttCode);
+
+		// An external field carries the value of an attribute on another class, and
+		// its own type says nothing about it: MailInboxOAuth::client_secret is an
+		// AttributeExternalField whose target on OAuthClient is an AttributePassword.
+		// Without resolving, the filter would wave the secret straight through.
+		if ($oAttDef instanceof AttributeExternalField) {
+			$oAttDef = $oAttDef->GetFinalAttDef();
+		}
+
+		if (self::IsSensitiveAttribute($oAttDef)) {
+			// Info rather than Debug: an operator should see a blocked credential
+			// access without having to switch on debug logging first. The value is
+			// deliberately not logged, and neither is anything else identifying.
+			IssueLog::Info(
+				__METHOD__ . ": Withheld credential-bearing attribute '$sAttCode' ("
+					. get_class($oAttDef) . ') from the caller.',
+				AIBaseHelper::MODULE_CODE
+			);
+
+			return '';
+		}
+
+		return (string) $oObject->Get($sAttCode);
+	}
+
+	/**
+	 * Returns string values for several attributes of an object, withholding
+	 * credential-bearing ones.
+	 *
+	 * For any consumer — inside or outside this extension — that needs to read more
+	 * than one attribute off a DBObject for display or for an AI prompt. Built because
+	 * a consumer collecting attributes through MetaModel::ListAttributeDefs() + Get()
+	 * directly, instead of through this method, has no way to know which attribute
+	 * types are credential-bearing and reliably reintroduces the leak get_attribute()
+	 * exists to prevent.
+	 *
+	 * @param DBObject $oObject The object to read.
+	 * @param string[]|null $aAttCodes Attribute codes to read, or null for every
+	 *                                 attribute of $oObject's class.
+	 * @return array<string, string> Attribute code => value. Credential-bearing
+	 *                                attributes (see SENSITIVE_ATTRIBUTE_TYPES) map to
+	 *                                an empty string; invalid attribute codes are skipped.
+	 */
+	public static function GetFilteredAttributeValues(DBObject $oObject, ?array $aAttCodes = null): array
+	{
+		$sClass = get_class($oObject);
+		$aAttCodes ??= array_keys(MetaModel::ListAttributeDefs($sClass));
+
+		$aResult = [];
+		foreach ($aAttCodes as $sAttCode) {
+			if (!MetaModel::IsValidAttCode($sClass, $sAttCode)) {
+				continue;
+			}
+			$aResult[$sAttCode] = self::ResolveFilteredAttributeValue($oObject, $sAttCode);
+		}
+
+		return $aResult;
 	}
 
 	/**
