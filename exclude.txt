@@ -1,3 +1,10 @@
 tests
 README.md
 .github
+exclude.txt
+vendor/theodo-group/llphant/docs
+vendor/phpoffice/math/tests
+vendor/phpoffice/math/docs
+vendor/phpoffice/math/.github
+vendor/psr/http-message/docs
+vendor/symfony/service-contracts/Test

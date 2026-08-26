@@ -18,7 +18,25 @@ The **itomig-ai-base** extension provides fundamental functionality for integrat
 ## Prerequisites
 
 - iTop version 3.2.1 or higher
-- PHP 8.1 or higher
+- **PHP 8.2 minimum.** The upper bound is iTop's rather than this extension's, so it depends
+  on your iTop version:
+
+| iTop version | Usable PHP versions |
+|---|---|
+| 3.2.1 – 3.2.2 | 8.2 or 8.3 (iTop does not support 8.4 there) |
+| 3.2.3-1 and higher | 8.2 to 8.4 |
+
+> **Breaking change as of 26.3.0: PHP 8.1 is no longer supported.**
+>
+> Earlier versions ran on PHP 8.1. The bundled `openai-php/client` now uses `readonly class`,
+> which is PHP 8.2 syntax, in code on the path of every API call — on PHP 8.1 the extension
+> does not degrade, it fails to load with a parse error. Check your PHP version before
+> updating. PHP 8.1 reached end of life in December 2025 and receives no security fixes.
+>
+> There is no upper bound on this extension's side: this code and its bundled dependencies
+> parse cleanly on 8.4. Whether you may use 8.4 is decided by iTop — 8.4 support arrived in
+> iTop 3.2.3-1; on 3.2.x before that, iTop reports known issues with it. See the
+> [iTop requirements](https://www.itophub.io/wiki/page?id=latest:install:requirements).
 
 ## Installation
 
@@ -162,6 +180,16 @@ Output the improved text as the answer.',
 
 The engine layer uses iTop's InterfaceDiscovery system to locate available engines at runtime.
 
+### Embedding Engine Layer (`src/Engine/Embedding/`)
+
+**New in 26.3.0.** A separate engine hierarchy for generating vector embeddings, independent of the chat engine layer above — a consumer needing both wires up one of each.
+
+- **iEmbeddingEngineInterface**: Contract for embedding engines (`GetEngineName()`, `GetEngine($configuration)`, `GetEmbeddingGenerator()`)
+- **GenericEmbeddingEngine**: Abstract base class holding url, API key, model and vector dimensions
+- **OpenAIEmbeddingEngine**: The only concrete implementation so far. Selects the matching LLPhant generator for the well-known OpenAI embedding models (`text-embedding-ada-002`, `text-embedding-3-small`, `text-embedding-3-large`) and falls back to a generic OpenAI-compatible generator (`OpenAICompatibleGenerator`) for any other model name, so self-hosted OpenAI-compatible endpoints work as well
+
+Unlike the chat engines, embedding engines are **not** discovered via `InterfaceDiscovery` and are not wired to any `module.itomig-ai-base.php` configuration block — a consumer extension instantiates one directly with its own configuration array (`url`, `api_key`, `model`, `dimensions`) and passes it to `EmbeddingService`.
+
 ### Service Layer (`src/Service/`)
 
 - **AIService**: Main service class that other iTop extensions should use. Responsibilities:
@@ -170,8 +198,11 @@ The engine layer uses iTop's InterfaceDiscovery system to locate available engin
   - Response cleaning (removes `<think>` tags from reasoning models)
   - JSON markdown block cleanup
   - Multi-turn conversation support with context retention
+  - Function/tool calling, opt-in per call (see [`ContinueConversation()`](#aiservicecontinueconversation))
   - Security protection against system message injection
   - Provides both high-level and low-level API methods
+
+- **EmbeddingService** (`src/Service/EmbeddingService.php`): **New in 26.3.0.** Thin wrapper around an `iEmbeddingEngineInterface` engine's LLPhant generator. Provides `GetEmbedding(string $sMessage): array` for a single text, `GetEmbeddingsForTexts(array $aTexts): array` for a batch keyed by the caller's own array keys, and `GetEmbeddingsForChunkedTexts(array $aChunkedTexts): array` for pre-chunked documents (nested by chunk number). `GetEmbeddingGeneratorMaxBatchSize()` and `GetEmbeddingLength()` expose the engine's batching limit and vector dimensionality. Intended for consumer extensions building retrieval/similarity features (e.g. semantic search over tickets or FAQ entries); this extension does not persist or index embeddings itself.
 
 ### Helper Classes
 
@@ -301,9 +332,11 @@ Continues a multi-turn conversation by maintaining context across multiple excha
   - `array`: Only system messages with content in this array are allowed
 - `$aTools`: (Optional) Array of `FunctionInfo` objects for function calling. **Opt-in by default (empty array):** no tools are attached unless the caller passes them explicitly. This reduces the prompt-injection surface for use cases that only need text processing (e.g. summarization). Callers that want the full discovered tool set can pass `$oAIService->getDefaultTools($oObject)`.
 
-**Returns:** Array with two keys:
+**Returns:** an `AIResult` value object (`Itomig\iTop\Extension\AIBase\Result\AIResult`) with two readonly properties:
 - `response`: The AI's response (cleaned, without internal reasoning tags)
 - `history`: Updated conversation history (including the new response)
+
+`AIResult` implements `ArrayAccess`, so existing code written against the pre-26.3.0 plain-array return (`$aResult['response']`, `$aResult['history']`) keeps working unchanged — all examples in this README use that form. New code can use the typed properties directly (`$aResult->response`, `$aResult->history`). **Breaking for type-hinted callers:** a caller that declared `array $aResult = $oAIService->ContinueConversation(...)` or otherwise relied on `is_array($aResult)` being `true` needs to update the type, since `AIResult` is an object, not an array.
 
 **Security:** System messages from user-provided history are filtered by default to prevent prompt injection. Tools are opt-in to avoid silently exposing them to injected instructions in user-controlled content. See the [Security Model](#security-model) section and issue #49 for the full threat model.
 
@@ -314,6 +347,23 @@ public function getDefaultTools(?DBObject $oObject = null): array
 ```
 
 Convenience helper that returns the broad default tool set: all always-available tools (`AISystemTools`), plus all context-dependent tools (`AIObjectTools`) when an object is passed. Use together with `ContinueConversation()` when the full discovered tool set is actually desired; prefer a narrower hand-picked list otherwise.
+
+**Credential-bearing attributes are withheld.** The `get_attribute` tool returns an empty string for `AttributePassword`, `AttributeEncryptedString` and `AttributeOneWayPassword`, and logs the fact at `Info` level without logging the value. External fields are resolved to their target first, so an `AttributeExternalField` pointing at a password — `MailInboxOAuth::client_secret` targets `OAuthClient::client_secret` — is caught too. This is enforced in `AIObjectTools` rather than left to the calling extension, because the tools are generic over any `DBObject`, and classes such as `OAuthClient`, `MailInboxBase` and `RemoteiTopConnection` do carry password attributes.
+
+**Two limits you must plan around:**
+
+- **It filters by attribute *type*, so a secret stored in a plain text attribute is not caught.** `OAuthClient::token` and `::refresh_token` are `AttributeText` and hold live OAuth tokens — those still reach the model. There is no way for a type-based filter to know better; if a context class keeps secrets in string or text attributes, do not pass that class as context.
+- **It is not an authorisation check.** No `UserRights` verification takes place, so the tools read whatever the context object exposes regardless of the current user's attribute permissions. Do not pass an object the user should not be able to read.
+
+**Reading several attributes outside of tool-calling?** Use `AIObjectTools::GetFilteredAttributeValues(DBObject $oObject, ?array $aAttCodes = null): array` rather than `MetaModel::ListAttributeDefs()` + `Get()` in a loop. It applies the exact same credential filter as `get_attribute()` — sharing the check means a consumer collecting multiple attributes for a display panel or a hand-built prompt cannot reintroduce the leak by forgetting to filter. Deliberately **not** a public `IsSensitiveAttribute()` — that would still leave every caller responsible for remembering to call it. `GetFilteredAttributeValues()` is a `public static` method, so it can be called without an `AIObjectTools` instance or object context:
+
+```php
+use Itomig\iTop\Extension\AIBase\Helper\AIObjectTools;
+
+$aValues = AIObjectTools::GetFilteredAttributeValues($oTicket, ['title', 'description', 'caller_id']);
+// $aValues === ['title' => '...', 'description' => '...', 'caller_id' => '...']
+// A credential-bearing attribute in the list would map to '', not its value.
+```
 
 ## Code Examples
 
@@ -451,6 +501,33 @@ $oAIService = new AIService($oEngine);
 $sResponse = $oAIService->GetCompletion("Your question here");
 ```
 
+### Using Embeddings
+
+**New in 26.3.0.** Embeddings are a separate feature from chat completion: instantiate an embedding engine and wrap it in `EmbeddingService`.
+
+```php
+use Itomig\iTop\Extension\AIBase\Engine\Embedding\OpenAIEmbeddingEngine;
+use Itomig\iTop\Extension\AIBase\Service\EmbeddingService;
+
+$oEngine = OpenAIEmbeddingEngine::GetEngine([
+    'api_key'    => 'your-api-key',
+    'model'      => 'text-embedding-3-small',
+    // 'url'        => 'https://your-openai-compatible-endpoint.com',  // optional
+    // 'dimensions' => 1536,                                          // only used for non-well-known models
+]);
+
+$oEmbeddingService = new EmbeddingService($oEngine);
+
+// A single text
+$aVector = $oEmbeddingService->GetEmbedding('Server does not respond to ping.');
+
+// A batch, keyed by the caller's own array keys
+$aVectors = $oEmbeddingService->GetEmbeddingsForTexts([
+    42 => 'First ticket description',
+    77 => 'Second ticket description',
+]);
+```
+
 ### Adding Custom System Prompts
 
 ```php
@@ -558,15 +635,25 @@ Test organization:
 
 All dependencies are committed to the repository and included in the extension package. End users do not need to run composer.
 
-**For developers only:** If you need to update dependencies during development:
+**For developers only.** Because `vendor/` is committed, how you invoke composer ends up in the release. Always use:
 
 ```bash
-composer update
+php8.2 composer update --no-dev --prefer-dist   # or: install
+composer audit --no-dev                          # must report no advisories
 ```
+
+Each flag prevents a defect that has actually occurred in this repository:
+
+- **`--no-dev`** — without it, composer writes dev entries into the generated autoload files, and `phpstan` ends up referenced from a production release.
+- **`--prefer-dist`** — `--prefer-source` clones package repositories, which bypasses their `export-ignore` rules and drags their test suites in. This is where 6.1 MB of tiktoken fixtures came from (see #69).
+- **`php8.2`** — resolution follows the PHP version running composer, so a newer interpreter can pick packages that need more than our documented 8.2 minimum. `config.platform.php` in `composer.json` pins this as a backstop; running 8.2 makes it true by construction.
+- **`composer audit`** — a targeted update must include transitive constraints. Updating only `guzzle` and `psr7` silently stopped at an unpatched version because the fix also required `promises`; the audit is what catches that.
+
+After adding a class under `src/`, run `composer dump-autoload -o` and commit the regenerated classmap with it. `classmap-authoritative` is enabled, so there is no PSR-4 fallback and a missing entry is a fatal error at runtime, not a slow path (see #55).
 
 **Included Dependencies:**
 - `composer-runtime-api: ^2.0`
-- `theodo-group/llphant: ^0.10.1`
+- `theodo-group/llphant: ^1.0` (locked at `1.0.1`) — **major upgrade as of 26.3.0**, up from `^0.10.1`. This library provides the chat, tool-calling and embedding abstractions this extension builds on (`EmbeddingGeneratorInterface`, `Document`, `FunctionInfo`, the provider-specific chat classes). If your own extension calls LLPhant classes directly rather than only going through `AIService`/`EmbeddingService`, check LLPhant's own changelog for breaking changes between 0.10 and 1.0 before updating.
 
 ### Adding a New AI Provider
 
@@ -576,10 +663,11 @@ To add support for a new AI provider:
    - Extends `GenericAIEngine`
    - Implements `iAIEngineInterface`
 
-2. Implement the three required methods:
+2. Implement the four required methods of `iAIEngineInterface`:
    - `GetEngineName()`: Return a unique string identifier
    - `GetEngine($configuration)`: Static factory returning an instance with the provided configuration
-   - `GetCompletion($message, $systemInstruction)`: Perform the actual LLM API call
+   - `GetCompletion($message, $systemInstruction)`: Perform a single-turn LLM API call, returning a string
+   - `GetNextTurn($aHistory, $aTools = [])`: **New as of 26.3.0.** Generates the next turn given the full message history (as LLPhant `Message[]`) and, optionally, `FunctionInfo[]` tools for function calling. Returns a `string` for a plain text reply or `FunctionInfo[]` when the model chose to call one or more tools. This is what `ContinueConversation()` calls internally; an engine that only implements `GetCompletion()` cannot support multi-turn conversations or tool calling. **A custom engine written before 26.3.0 must add this method** — `iAIEngineInterface` gained it as a required member, so an existing implementation now fails to instantiate with a fatal "class must implement abstract method" error.
 
 3. Use LLPhant's configuration and chat classes for provider integration
 
@@ -602,6 +690,27 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 - **Vendor Dependencies**: `vendor/` (committed to repository, standard for iTop extensions)
 
 ## Version History
+
+### 26.3.0 (TBD)
+
+**Breaking changes:**
+- **PHP 8.1 is no longer supported; PHP 8.2 is now the minimum.** The bundled `openai-php/client` uses PHP 8.2 `readonly class` syntax on the path of every API call — on 8.1 the extension fails to load with a parse error rather than degrading. See [Prerequisites](#prerequisites) for the PHP/iTop compatibility table.
+- **`ContinueConversation()` now returns an `AIResult` object instead of a plain array.** Backward compatible for callers using `$result['response']` / `$result['history']` (via `ArrayAccess`); breaking for callers that type-hinted or `is_array()`-checked the return value.
+- **Tools are opt-in only.** Passing `$oObject` for context no longer auto-attaches `AIObjectTools`. Callers that relied on the previous implicit tool set must now pass `$oAIService->getDefaultTools($oObject)` explicitly to `ContinueConversation()`.
+- **Custom AI engines must implement the new `GetNextTurn()` method** on `iAIEngineInterface`. An engine written before 26.3.0 that implements only `GetCompletion()` fails to instantiate.
+
+**New:**
+- Function calling / tool use with multi-turn support (opt-in, see [`ContinueConversation()`](#aiservicecontinueconversation)). Shipped tools (`AIObjectTools`, `AISystemTools`) are read-only.
+- **`iAIGuardrail` extension point** (`Itomig\iTop\Extension\AIBase\Contracts\iAIGuardrail`): a content-moderation contract that screens all four AI touch points — `DIRECTION_SYSTEM_PROMPT`, `DIRECTION_INPUT`, `DIRECTION_OUTPUT`, `DIRECTION_TOOL_RESULT` — discovered automatically via `InterfaceDiscovery`, fail-open on implementer error. This did not exist in `v26.1.1`, so it breaks no already-released consumer; see [Guardrails](#guardrails) for the full contract and `itomig-ai-guardrail` for a reference implementation (Mistral Shieldstral). Consumer extensions that declare a guardrail (`itomig-ai-guardrail`, `itomig-ai-response`, `itomig-ai-ticketing-base`) need their `itomig-ai-base` dependency raised to `26.3.0` to get this contract.
+- Embedding engine and service layer (`OpenAIEmbeddingEngine`, `EmbeddingService`) for extensions building retrieval/similarity features. See [Architecture](#embedding-engine-layer-srcengineembedding) and [Using Embeddings](#using-embeddings).
+- Credential-bearing attributes (`AttributePassword`, `AttributeEncryptedString`, `AttributeOneWayPassword`, including through resolved external fields) are withheld from the model by `get_attribute`.
+- `AIObjectTools::GetFilteredAttributeValues()`: a `public static` bulk attribute reader sharing `get_attribute()`'s credential filter, for any consumer reading several attributes off a `DBObject` outside of tool-calling (e.g. a diagnostics or admin display panel). See [`AIService::getDefaultTools()`](#aiservicegetdefaulttools).
+
+**Security:**
+- Updated `guzzlehttp/guzzle`, `guzzlehttp/psr7` and `guzzlehttp/promises`, clearing 11 security advisories (1 high: CVE-2026-69246) in the committed `vendor/` tree.
+
+**Updated:**
+- `theodo-group/llphant` from `^0.10.1` to `^1.0` (locked `1.0.1`).
 
 ### 26.1.1 (2026-02-20)
 - Add multi-turn conversation support with security protection against prompt injection

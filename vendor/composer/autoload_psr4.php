@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Yethee\\Tiktoken\\' => array($vendorDir . '/yethee/tiktoken/src'),
+    'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
     'Symfony\\Contracts\\Service\\' => array($vendorDir . '/symfony/service-contracts'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
