@@ -14,20 +14,27 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: ${{ github.repository }}
+      # Development-only files are deleted from the checkout instead of being
+      # excluded via zip patterns: zip -x matches the full archive path
+      # (<repo>/README.md) and its wildcards also match '/', which made plain
+      # filename patterns silently ineffective. Deleting first keeps the rule
+      # simple - whatever is left in the checkout is what ships.
+      - name: Remove development-only files
+        working-directory: ${{ github.repository }}
+        run: |
+          rm -rf docs tests README.md rename_extension.sh
+          find . -type f -name 'CLAUDE.md' -delete
+          find . -type f -name 'AGENTS.md' -delete
+          find . -type f -name '.DS_Store' -delete
       - name: Create package
         uses: thedoctor0/zip-release@0.7.6
         with:
           filename: ../${{ github.repository }}-${{ github.ref_name }}.zip
           path: '*'
           directory: ${{ github.repository_owner }}
-          exclusions: >-
-            *.git*
-            ${{ github.event.repository.name }}/README.md
-            ${{ github.event.repository.name }}/rename_extension.sh
-            ${{ github.event.repository.name }}/docs/*
-            ${{ github.event.repository.name }}/docs/
-            ${{ github.event.repository.name }}/tests/*
-            ${{ github.event.repository.name }}/tests/
+          # Covers .git/, .github/ and the .gitkeep directory placeholders;
+          # zip wildcards match '/', so this pattern does work.
+          exclusions: '*.git*'
       - name: Create draft release
         uses: ncipollo/release-action@v1
         with:
