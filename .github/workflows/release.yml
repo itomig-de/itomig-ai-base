@@ -1,0 +1,22 @@
+name: Validate Release an Update iTop
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  validate-and-push-release:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.release.prerelease }}
+
+    steps:
+      - name: Validate and send release
+        uses: itomig-de/helper.itomig-sync-release-to-cmdb@develop
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_owner: ${{ github.repository_owner }}
+          github_repo: ${{ github.event.repository.name }}
+          release_id: ${{ github.event.release.id }}
+        env:
+          ITOP_URL: "https://service.itomig.de"
+          ITOP_TOKEN: ${{ secrets.SERVICE_ITOP_TOKEN }}
