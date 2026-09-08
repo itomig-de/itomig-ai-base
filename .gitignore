@@ -1,3 +1,11 @@
 # Claude Code configuration and documentation
 CLAUDE.md
 .claude/
+
+# Local release-prep and PR-review scratch artefacts (not for the repo)
+.release/
+.pr-*
+.pr[0-9]*
+.release-*-scope.md
+.guardrail-*.md
+test/

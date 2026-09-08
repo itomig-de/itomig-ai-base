@@ -1,5 +1,0 @@
-.cache/*
-!.cache/.gitkeep
-target/
-vendor/
-composer.lock

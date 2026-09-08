@@ -1,13 +1,12 @@
 <?php
-
 //
 // iTop module definition file
 //
 
 SetupWebPage::AddModule(
 	__FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-	'itomig-ai-base/26.1.4',
-	[
+	'itomig-ai-base/26.3.0',
+	array(
 		// Identification
 		//
 		'label' => 'AI Base (ITOMIG GmbH)',
@@ -15,29 +14,29 @@ SetupWebPage::AddModule(
 
 		// Setup
 		//
-		'dependencies' => [
+		'dependencies' => array(
 			'itop-structure/3.2.1',
 
-		],
+		),
 		'mandatory' => false,
 		'visible' => true,
 
 		// Components
 		//
-		'datamodel' => [
-			'model.itomig-ai-base.php',
-			'main.itomig-ai-base.php',
+		'datamodel' => array(
+            'model.itomig-ai-base.php',
+            'main.itomig-ai-base.php',
 			'vendor/autoload.php',
-		],
-		'webservice' => [
+		),
+		'webservice' => array(
 
-		],
-		'data.struct' => [
+		),
+		'data.struct' => array(
 			// add your 'structure' definition XML files here,
-		],
-		'data.sample' => [
+		),
+		'data.sample' => array(
 			// add your sample data XML files here,
-		],
+		),
 
 		// Documentation
 		//
@@ -46,13 +45,16 @@ SetupWebPage::AddModule(
 
 		// Default settings
 		//
-		'settings' => [
-			'ai_engine.configuration' =>  [
+		'settings' => array(
+			'ai_engine.configuration' => array (
 				'url' => 'http://127.0.0.1:11434/api/',
 				'api_key' => 'your-api-key',
 				'model' => 'qwen2.5:14b',
-			],
+			),
 			'ai_engine.name' => 'OllamaAI',
-		],
-	]
+		),
+	)
 );
+
+
+?>

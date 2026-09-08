@@ -1,4 +1,4 @@
-name: Extension packaging
+name: Extension packaging and create draft release
 on:
   push:
     tags:
@@ -7,23 +7,39 @@ jobs:
   release:
     name: Prepare release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout current repository
-        uses: actions/checkout@v4
+      - name: Checkout current extension
+        uses: actions/checkout@v6
         with:
           path: ${{ github.repository }}
+      # Development-only files are deleted from the checkout instead of being
+      # excluded via zip patterns: zip -x matches the full archive path
+      # (<repo>/README.md) and its wildcards also match '/', which made plain
+      # filename patterns silently ineffective. Deleting first keeps the rule
+      # simple - whatever is left in the checkout is what ships.
+      - name: Remove development-only files
+        working-directory: ${{ github.repository }}
+        run: |
+          rm -rf docs tests README.md rename_extension.sh
+          find . -type f -name 'CLAUDE.md' -delete
+          find . -type f -name 'AGENTS.md' -delete
+          find . -type f -name '.DS_Store' -delete
       - name: Create package
         uses: thedoctor0/zip-release@0.7.6
         with:
-          filename: ../${{ github.repository }}_${{ github.ref_name }}.zip
+          filename: ../${{ github.repository }}-${{ github.ref_name }}.zip
           path: '*'
           directory: ${{ github.repository_owner }}
-          exclusions: '*.git* README.md'
+          # Covers .git/, .github/ and the .gitkeep directory placeholders;
+          # zip wildcards match '/', so this pattern does work.
+          exclusions: '*.git*'
       - name: Create draft release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: ${{ github.repository }}_${{ github.ref_name }}.zip
+          artifacts: ${{ github.repository }}-${{ github.ref_name }}.zip
           artifactErrorsFailBuild: true
           draft: true
           generateReleaseNotes: true
@@ -31,3 +47,10 @@ jobs:
           omitBodyDuringUpdate: true
           omitPrereleaseDuringUpdate: true
           updateOnlyUnreleased: true
+          body: |
+            ## Documentation
+
+            <!--TODO: Check the following URL and replace TBD maybe with ${{ github.ref_name }} -->
+            **DokuWiki**: https://wiki.itomig.de/itomig-code:${{ github.repository }}:TBD
+
+            ## Release Notes
