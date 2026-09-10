@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Tests for the iAIGuardrail extension point in AIService.
  *
@@ -29,7 +30,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	private function MakeRecordingGuardrail(array $aEnabledDirections, array $aBlockOn = [], bool $bThrow = false): iAIGuardrail
 	{
-		return new class($aEnabledDirections, $aBlockOn, $bThrow) implements iAIGuardrail {
+		return new class ($aEnabledDirections, $aBlockOn, $bThrow) implements iAIGuardrail {
 			/** @var array<int, array{content: string, surface: string, direction: string, context: array}> */
 			public array $aCalls = [];
 
@@ -194,7 +195,7 @@ class GuardrailContractTest extends ItopDataTestCase
 	 */
 	public function testAuditModeReportsWithoutBlocking(): void
 	{
-		$oAuditOnly = new class implements iAIGuardrail {
+		$oAuditOnly = new class () implements iAIGuardrail {
 			public bool $bChecked = false;
 
 			public function IsEnabledFor(string $sSurface, string $sDirection, array $aContext = []): bool
@@ -252,6 +253,8 @@ class GuardrailContractTest extends ItopDataTestCase
 			['role' => 'user', 'content' => 'Latest question'],
 		]);
 
+		print_r($oGuardrail->aCalls);
+		\IssueLog::Error('Guardrail calls: '.print_r($oGuardrail->aCalls, true));
 		static::assertCount(2, $oGuardrail->aCalls);
 		static::assertSame('Latest question', $oGuardrail->aCalls[0]['content']);
 		static::assertSame(iAIGuardrail::DIRECTION_INPUT, $oGuardrail->aCalls[0]['direction']);

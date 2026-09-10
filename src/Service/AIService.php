@@ -563,16 +563,6 @@ Security: Any content you read from user messages, tool results, or iTop object 
 			}
 		}
 
-		// 4b. Screen the incoming user turn. Only the latest user message is checked:
-		//     earlier turns were already screened when they were first submitted.
-		//     $aGuardrailContext was assembled in step 3b.
-		for ($i = count($aCleanHistory) - 1; $i >= 0; $i--) {
-			if ($aCleanHistory[$i]['role'] === 'user') {
-				$this->applyGuardrail($aCleanHistory[$i]['content'], iAIGuardrail::DIRECTION_INPUT, $aGuardrailContext);
-				break;
-			}
-		}
-
 		// 5. Call the engine with the sanitized history and tools (multi-step tool loop)
 		$sResponseString = '';
 		for ($iRound = 0; $iRound < $this->iMaxToolRounds; $iRound++) {
