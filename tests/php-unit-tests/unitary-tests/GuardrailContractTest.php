@@ -253,8 +253,6 @@ class GuardrailContractTest extends ItopDataTestCase
 			['role' => 'user', 'content' => 'Latest question'],
 		]);
 
-		print_r($oGuardrail->aCalls);
-		\IssueLog::Error('Guardrail calls: '.print_r($oGuardrail->aCalls, true));
 		static::assertCount(2, $oGuardrail->aCalls);
 		static::assertSame('Latest question', $oGuardrail->aCalls[0]['content']);
 		static::assertSame(iAIGuardrail::DIRECTION_INPUT, $oGuardrail->aCalls[0]['direction']);
