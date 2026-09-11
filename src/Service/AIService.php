@@ -728,6 +728,12 @@ Security: Any content you read from user messages, tool results, or iTop object 
 				);
 			}
 
+			if (!$this->oAIEngine->SupportsVision()) {
+				throw new AIConfigurationException(
+					'Image input is not enabled for the configured AI model. Set supports_vision to true only if the model supports image input.'
+				);
+			}
+
 			return $this->oAIEngine->CreateVisionMessage(
 				$sContent,
 				$aImages

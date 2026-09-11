@@ -57,6 +57,7 @@ Configuration is done in the iTop configuration file (`config-itop.php`). The co
         'api_key' => '***',
         'url' => 'https://api.mistral.ai/v1/',
         'model' => 'open-mistral-nemo',
+        'supports_vision' => false,
     ),
 ),
 ```
@@ -70,6 +71,7 @@ Configuration is done in the iTop configuration file (`config-itop.php`). The co
         'api_key' => '***',
         'url' => 'https://api.openai.com/v1/',
         'model' => 'gpt-4o-mini',  // or any other OpenAI model
+        'supports_vision' => true,
     ),
 ),
 ```
@@ -83,6 +85,7 @@ Configuration is done in the iTop configuration file (`config-itop.php`). The co
         'api_key' => '***',
         'url' => 'https://api.anthropic.com/v1/messages',
         'model' => 'claude-3-5-sonnet-latest',
+        'supports_vision' => true,
     ),
 ),
 ```
@@ -95,6 +98,7 @@ Configuration is done in the iTop configuration file (`config-itop.php`). The co
     'ai_engine.configuration' => array(
         'url' => 'http://127.0.0.1:11434/api/',  // or your Ollama server URL
         'model' => 'qwen2.5:14b',  // see ollama.com/library for available models
+        'supports_vision' => false,
     ),
 ),
 ```
@@ -110,6 +114,7 @@ You can use the OpenAI engine with compatible endpoints (e.g., Open-WebUI, Local
         'api_key' => '***',
         'url' => 'https://your.ollama-or-openwebui-server.com',
         'model' => 'your-model-name',  // e.g., llama3.1:latest
+        'supports_vision' => false,
     ),
 ),
 ```
@@ -117,6 +122,8 @@ You can use the OpenAI engine with compatible endpoints (e.g., Open-WebUI, Local
 ### Image Input Support
 
 Multi-turn conversations can include image payloads on user messages by adding an `images` array to a user history entry.
+
+The configured engine must implement `iAIVisionEngine` and its `supports_vision` configuration value must be `true`. If `supports_vision` is `false`, ai-base rejects an image-bearing turn locally; it does not silently omit the images or downgrade the turn to text. Set the value according to the selected model, not only the provider name.
 
 Each image entry must contain raw base64 data and a MIME media type:
 
@@ -193,13 +200,43 @@ $aImages[] = array(
 );
 ```
 
-Image input is available only for engines implementing `iAIVisionEngine`. The current vision-capable engines are `OpenAI` and `AnthropicAI`. Engines that do not implement that interface, such as `MistralAI` and `OllamaAI`, fail locally before any provider request with this configuration error:
+For a single image request, pass the images as the third argument of `GetCompletion()`:
+
+```php
+$sAnswer = $oService->GetCompletion(
+    'Describe this image.',
+    '',
+    array(
+        array(
+            'data' => $sBase64ImageData,
+            'media_type' => 'image/png',
+        ),
+    )
+);
+```
+
+Image input requires both a provider adapter implementing `iAIVisionEngine` and `supports_vision => true` in `ai_engine.configuration`. The flag describes the configured model, not only the provider engine. Keep it `false` for text-only models. `MistralAI` and `OllamaAI` support the adapter, but vision remains model-dependent and must be explicitly enabled only for a model that supports image input.
+
+Mistral uses the OpenAI-compatible LLPhant vision payload. Enable `supports_vision` only when the configured Mistral model supports image input; LLPhant's documentation does not officially list Mistral vision support, but its `MistralAIChat` implementation inherits the OpenAI chat serialization used for multimodal messages.
 
 ```text
 The configured AI engine does not support image input.
 ```
 
-For OpenAI-compatible endpoints, ai-base can only verify that the selected engine adapter supports vision messages. It cannot know whether the configured backend model actually accepts images until the request is sent. If a text-only model rejects image input, responses such as `No endpoints found that support image input` are classified as `AIVisionUnsupportedException` with guidance to select a vision-capable model. Configure a vision-capable model when using image input.
+For example, an OpenAI configuration using a vision-capable model can opt in explicitly:
+
+```php
+'ai_engine.configuration' => array(
+    'url' => 'https://api.openai.com/v1',
+    'api_key' => 'your-api-key',
+    'model' => 'gpt-4o-mini',
+    'supports_vision' => true,
+),
+```
+
+The flag is a local declaration; it does not probe the provider. OpenAI-compatible image requests use the `auto` detail level to balance visual quality and input-token cost. If the declared model still rejects image input, responses such as `No endpoints found that support image input` are classified as `AIVisionUnsupportedException` with guidance to select a vision-capable model.
+
+Image entries are validated consistently before either provider payload is built. Empty, malformed, unsupported, or MIME-mismatched entries raise `AIInvalidImageException`; an image-bearing turn is never silently downgraded to text. `AIVisionUnsupportedException` is reserved for a configured model or endpoint that cannot process image input.
 
 ### Custom System Prompts Configuration
 
@@ -359,14 +396,15 @@ Downstream extensions that process untrusted content should also take care not t
 ### AIService::GetCompletion()
 
 ```php
-public function GetCompletion(string $sMessage, string $sSystemInstruction = ''): string
+public function GetCompletion(string $sMessage, string $sSystemInstruction = '', array $aImages = []): string
 ```
 
-Sends a user message to the AI and returns the response. Optionally includes a custom system prompt to guide the AI's behavior.
+Sends a user message to the AI and returns the response. Optionally includes a custom system prompt and raw base64 image inputs for a vision-capable model.
 
 **Parameters:**
 - `$sMessage`: The user's prompt/question
 - `$sSystemInstruction`: (Optional) Custom system prompt for the AI
+- `$aImages`: (Optional) Images with raw base64 `data` and a `media_type`; requires `supports_vision => true` and a provider adapter implementing `iAIVisionEngine`
 
 **Returns:** The AI's response as a string
 

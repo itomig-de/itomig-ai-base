@@ -24,9 +24,10 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
-use IssueLog;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
+use IssueLog;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\Vision\ImageQuality;
@@ -54,7 +55,18 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVis
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
+
+		return new self($url, $apiKey, $model, $supportsVision);
+	}
+
+	public function __construct(
+		string $url,
+		string $apiKey,
+		string $model,
+		bool $supportsVision = false
+	) {
+		parent::__construct($url, $apiKey, $model, $supportsVision);
 	}
 
 
@@ -107,23 +119,22 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVis
 
 	public function CreateVisionMessage(string $sContent, array $aImages): Message
 	{
+		$aImages = $this->NormalizeVisionImages($aImages);
 		$aImageSources = [];
 
 		foreach ($aImages as $aImage) {
-			$sData = trim((string) ($aImage['data'] ?? ''));
-
-			if ($sData === '') {
-				continue;
+			try {
+				$aImageSources[] = new ImageSource(
+					$aImage['data'],
+					ImageQuality::Auto
+				);
+			} catch (\InvalidArgumentException $e) {
+				throw new AIInvalidImageException(
+					'Unable to construct the OpenAI image payload.',
+					0,
+					$e
+				);
 			}
-
-			$aImageSources[] = new ImageSource(
-				$sData,
-				ImageQuality::High
-			);
-		}
-
-		if (count($aImageSources) === 0) {
-			return Message::user($sContent);
 		}
 
 		return VisionMessage::fromImages(

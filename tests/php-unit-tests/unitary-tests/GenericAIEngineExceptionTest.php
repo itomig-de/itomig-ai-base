@@ -37,7 +37,7 @@ class GenericAIEngineExceptionTest extends ItopTestCase
 		];
 
 		foreach ($aCases as [$iCode, $sMessage]) {
-			$oException = $this->buildEngine()->classifyForTest(new HttpException($sMessage, $iCode));
+			$oException = $this->buildEngine()->classifyForTest(new HttpException($sMessage, $iCode), true);
 
 			static::assertInstanceOf(AIVisionUnsupportedException::class, $oException, $sMessage);
 			static::assertSame($iCode, $oException->getCode());
@@ -111,9 +111,9 @@ class GenericAIEngineExceptionTest extends ItopTestCase
 				throw new \LogicException('Not used in this test.');
 			}
 
-			public function classifyForTest(HttpException $oException): AIEngineException
+			public function classifyForTest(HttpException $oException, bool $bVisionRequest = false): AIEngineException
 			{
-				return $this->classifyHttpException($oException);
+				return $this->classifyHttpException($oException, $bVisionRequest);
 			}
 		};
 	}

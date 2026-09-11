@@ -289,6 +289,7 @@ class ComposerStaticInitdf7ec70b2d744da1ced5beefd2c76634
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIContextWindowException' => __DIR__ . '/../..' . '/src/Exception/AIContextWindowException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIEngineException' => __DIR__ . '/../..' . '/src/Exception/AIEngineException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIGuardrailBlockedException' => __DIR__ . '/../..' . '/src/Exception/AIGuardrailBlockedException.php',
+        'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIInvalidImageException' => __DIR__ . '/../..' . '/src/Exception/AIInvalidImageException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AINetworkException' => __DIR__ . '/../..' . '/src/Exception/AINetworkException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIRateLimitException' => __DIR__ . '/../..' . '/src/Exception/AIRateLimitException.php',
         'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => __DIR__ . '/../..' . '/src/Exception/AIResponseException.php',

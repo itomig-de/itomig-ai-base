@@ -53,6 +53,11 @@ class ImageInputConversationTest extends ItopDataTestCase
 				throw new \LogicException('Not used in this test.');
 			}
 
+			public function SupportsVision(): bool
+			{
+				return true;
+			}
+
 			public function GetCompletion(string $message, string $systemInstruction = ''): string
 			{
 				throw new \LogicException('Not used in this test.');
@@ -88,6 +93,59 @@ class ImageInputConversationTest extends ItopDataTestCase
 
 		static::assertSame('The screenshots show an iTop ticket form.', $aResult['response']);
 		static::assertSame($aImages, $aResult['history'][0]['images']);
+	}
+
+	public function testContinueConversationRejectsImagesWhenVisionIsDisabledByConfiguration(): void
+	{
+		$oEngine = new class implements iAIEngineInterface, iAIVisionEngine {
+			public static function GetEngineName(): string
+			{
+				return 'NonVisionConfiguredEngine';
+			}
+
+			public static function GetEngine(array $configuration): iAIEngineInterface
+			{
+				throw new \LogicException('Not used in this test.');
+			}
+
+			public function SupportsVision(): bool
+			{
+				return false;
+			}
+
+			public function GetCompletion(string $message, string $systemInstruction = ''): string
+			{
+				throw new \LogicException('Not used in this test.');
+			}
+
+			public function CreateVisionMessage(string $sContent, array $aImages): Message
+			{
+				throw new \LogicException('Vision message creation must not be called.');
+			}
+
+			public function GetNextTurn(array $aHistory, array $aTools = []): string|array
+			{
+				throw new \LogicException('The engine must not be called.');
+			}
+		};
+
+		$oAIService = new AIService($oEngine);
+
+		$this->expectException(AIConfigurationException::class);
+		$this->expectExceptionMessage('Image input is not enabled for the configured AI model.');
+
+		$oAIService->ContinueConversation([
+			[
+				'role' => 'user',
+				'content' => 'Describe this screenshot.',
+				'images' => [
+					[
+						'data' => base64_encode('png-bytes'),
+						'media_type' => 'image/png',
+					],
+				],
+			],
+		]);
 	}
 
 	public function testContinueConversationRejectsImagesWhenEngineDoesNotSupportVision(): void

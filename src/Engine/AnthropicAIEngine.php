@@ -26,6 +26,7 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 use GuzzleHttp\Exception\ConnectException;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\Anthropic\AnthropicImage;
 use LLPhant\Chat\Anthropic\AnthropicImageType;
@@ -52,7 +53,8 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, i
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
+		return new self($url, $apiKey, $model, $supportsVision);
 	}
 
 	/**
@@ -95,32 +97,22 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, i
 
 	public function CreateVisionMessage(string $sContent, array $aImages): Message
 	{
+		$aImages = $this->NormalizeVisionImages($aImages);
 		$aAnthropicImages = [];
 
 		foreach ($aImages as $aImage) {
-			if (!is_array($aImage)) {
-				continue;
-			}
-
-			$sData = trim((string) ($aImage['data'] ?? ''));
-			$sMediaType = trim((string) ($aImage['media_type'] ?? ''));
-
-			if ($sData === '' || $sMediaType === '') {
-				continue;
-			}
-
 			try {
 				$aAnthropicImages[] = new AnthropicImage(
-					AnthropicImageType::from($sMediaType),
-					$sData
+					AnthropicImageType::from($aImage['media_type']),
+					$aImage['data']
 				);
 			} catch (\ValueError|\InvalidArgumentException $e) {
-				continue;
+				throw new AIInvalidImageException(
+					'Unable to construct the Anthropic image payload.',
+					0,
+					$e
+				);
 			}
-		}
-
-		if ($aAnthropicImages === []) {
-			return Message::user($sContent);
 		}
 
 		return new AnthropicVisionMessage(

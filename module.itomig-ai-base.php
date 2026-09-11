@@ -6,7 +6,7 @@
 
 SetupWebPage::AddModule(
 	__FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-	'itomig-ai-base/26.3.97',
+	'itomig-ai-base/26.3.98',
 	[
 		// Identification
 		//
@@ -51,6 +51,7 @@ SetupWebPage::AddModule(
 				'url' => 'http://127.0.0.1:11434/api/',
 				'api_key' => 'your-api-key',
 				'model' => 'qwen2.5:14b',
+				'supports_vision' => false,
 			],
 			'ai_engine.name' => 'OllamaAI',
 		],

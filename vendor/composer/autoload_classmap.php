@@ -148,6 +148,7 @@ return array(
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIContextWindowException' => $baseDir . '/src/Exception/AIContextWindowException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIEngineException' => $baseDir . '/src/Exception/AIEngineException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIGuardrailBlockedException' => $baseDir . '/src/Exception/AIGuardrailBlockedException.php',
+    'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIInvalidImageException' => $baseDir . '/src/Exception/AIInvalidImageException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AINetworkException' => $baseDir . '/src/Exception/AINetworkException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIRateLimitException' => $baseDir . '/src/Exception/AIRateLimitException.php',
     'Itomig\\iTop\\Extension\\AIBase\\Exception\\AIResponseException' => $baseDir . '/src/Exception/AIResponseException.php',

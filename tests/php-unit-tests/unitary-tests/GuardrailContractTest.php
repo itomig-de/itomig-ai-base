@@ -10,10 +10,12 @@ namespace Itomig\iTop\AiBase\Test;
 
 use Combodo\iTop\Test\UnitTest\ItopDataTestCase;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIGuardrail;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Engine\iAIEngineInterface;
 use Itomig\iTop\Extension\AIBase\Exception\AIGuardrailBlockedException;
 use Itomig\iTop\Extension\AIBase\Result\GuardrailVerdict;
 use Itomig\iTop\Extension\AIBase\Service\AIService;
+use LLPhant\Chat\Message;
 
 class GuardrailContractTest extends ItopDataTestCase
 {
@@ -258,6 +260,73 @@ class GuardrailContractTest extends ItopDataTestCase
 		static::assertSame(iAIGuardrail::DIRECTION_INPUT, $oGuardrail->aCalls[0]['direction']);
 		static::assertSame('Final answer', $oGuardrail->aCalls[1]['content']);
 		static::assertSame(iAIGuardrail::DIRECTION_OUTPUT, $oGuardrail->aCalls[1]['direction']);
+	}
+
+	/**
+	 * Image content is intentionally outside the current guardrail contract; only
+	 * the accompanying user text is screened for an image-bearing turn.
+	 */
+	public function testContinueConversationScreensTextButNotImageData(): void
+	{
+		$oGuardrail = $this->MakeRecordingGuardrail([iAIGuardrail::DIRECTION_INPUT]);
+		AIService::SetGuardrailsForTest([$oGuardrail]);
+
+		$oEngine = new class implements iAIEngineInterface, iAIVisionEngine {
+			/** @var array<int, array{data: string, media_type: string}> */
+			public array $aReceivedImages = [];
+
+			public static function GetEngineName(): string
+			{
+				return 'VisionGuardrailTestEngine';
+			}
+
+			public static function GetEngine(array $configuration): iAIEngineInterface
+			{
+				throw new \LogicException('Not used in this test.');
+			}
+
+			public function SupportsVision(): bool
+			{
+				return true;
+			}
+
+			public function GetCompletion(string $message, string $systemInstruction = ''): string
+			{
+				throw new \LogicException('Not used in this test.');
+			}
+
+			public function CreateVisionMessage(string $sContent, array $aImages): Message
+			{
+				$this->aReceivedImages = $aImages;
+
+				return Message::user($sContent);
+			}
+
+			public function GetNextTurn(array $aHistory, array $aTools = []): string|array
+			{
+				return 'Final answer';
+			}
+		};
+		$aImages = [
+			[
+				'data' => base64_encode('private-image-content'),
+				'media_type' => 'image/png',
+			],
+		];
+
+		$oResult = (new AIService($oEngine))->ContinueConversation([
+			[
+				'role' => 'user',
+				'content' => 'Describe this screenshot.',
+				'images' => $aImages,
+			],
+		]);
+
+		static::assertSame('Final answer', $oResult->response);
+		static::assertSame($aImages, $oEngine->aReceivedImages);
+		static::assertCount(1, $oGuardrail->aCalls);
+		static::assertSame('Describe this screenshot.', $oGuardrail->aCalls[0]['content']);
+		static::assertStringNotContainsString($aImages[0]['data'], $oGuardrail->aCalls[0]['content']);
 	}
 
 	/**
