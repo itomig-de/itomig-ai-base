@@ -22,11 +22,13 @@
 
 namespace Itomig\iTop\Extension\AIBase\Helper;
 
+use AttributeCustomFields;
 use AttributeEnum;
 use AttributeExternalField;
 use AttributeExternalKey;
 use AttributeLinkedSet;
 use DBObject;
+use ormCustomFieldsValue;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
@@ -156,6 +158,9 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 * GetFilteredAttributeValues() — neither call site re-implements the check, so a
 	 * caller reading attributes through either path cannot forget to apply it.
 	 *
+	 * Non-scalar values are flattened readably: custom fields (AttributeCustomFields)
+	 * render as their "label: value" list instead of crashing on the string cast.
+	 *
 	 * @param DBObject $oObject The object to read the attribute from.
 	 * @param string $sAttCode The attribute code. Must be valid for $oObject's class.
 	 * @return string The attribute value, or an empty string if it is credential-bearing.
@@ -184,6 +189,28 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 					. get_class($oAttDef) . ') from the caller.',
 				AIBaseHelper::MODULE_CODE
 			);
+
+			return '';
+		}
+
+		// Custom fields (Request Templates: service_details on UserRequest & co.)
+		// yield an ormCustomFieldsValue object, which is not string-castable — the
+		// plain cast below threw "Object of class ormCustomFieldsValue could not be
+		// converted to string" for every ticket with a request template
+		// (itomig-de/itomig-ai-base#76, surfaced via itomig-de/itomig-ai-diagnostics#11).
+		// Preserve the structure instead: the handler renders the field data as a
+		// readable "label: value" list, keeping it usable as LLM context.
+		if ($oAttDef instanceof AttributeCustomFields) {
+			$oValue = $oObject->Get($sAttCode);
+			if ($oValue instanceof ormCustomFieldsValue) {
+				try {
+					return $oValue->GetForTemplate('');
+				} catch (\Exception $e) {
+					// Same fallback the core AttributeCustomFields::GetForTemplate uses:
+					// a misbehaving handler must not take the whole read down.
+					return 'Custom field error: '.$e->getMessage();
+				}
+			}
 
 			return '';
 		}
