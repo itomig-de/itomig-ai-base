@@ -47,6 +47,11 @@ use MetaModel;
  *
  * SECURITY NOTE: Only read-only methods are exposed. Write operations
  * (Set, ApplyStimulus, DBWrite) are intentionally not included.
+ *
+ * Credential filtering has a single authority here: IsAttributeSafeForAI() is
+ * the public entry point for any extension that builds AI prompts from
+ * attribute lists — it resolves external fields and withholds credential-
+ * bearing attributes (see SENSITIVE_ATTRIBUTE_TYPES).
  */
 class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 {
@@ -342,7 +347,11 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	/**
 	 * Whether an attribute's value must be withheld from the model.
 	 *
-	 * @param \AttributeDefinition $oAttDef The attribute definition to check.
+	 * @param \AttributeDefinition $oAttDef The attribute definition to check. Must
+	 *                                      already be resolved (external fields
+	 *                                      resolved to their final att def) — use
+	 *                                      IsAttributeSafeForAI() for the
+	 *                                      resolution-aware public entry point.
 	 * @return bool True if the attribute is credential-bearing.
 	 */
 	private static function IsSensitiveAttribute(\AttributeDefinition $oAttDef): bool
@@ -354,6 +363,32 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 		}
 
 		return false;
+	}
+
+	/**
+	 * Whether an attribute's value is safe to hand to the model — the single
+	 * authority for credential filtering, usable by any extension reading
+	 * attribute values for AI prompts.
+	 *
+	 * Resolves external fields to their final attribute definition first, so a
+	 * field pointing at a credential-bearing attribute on another class is
+	 * correctly recognized (MailInboxOAuth::client_secret → OAuthClient password).
+	 * An unknown attribute code throws, mirroring GetAttributeDef().
+	 *
+	 * @param DBObject $oObject The object whose class the attribute is read from.
+	 * @param string $sAttCode The attribute code to check.
+	 * @return bool True if the attribute value may be included in an AI prompt.
+	 * @throws \Exception if $sAttCode is not a valid attribute of $oObject's class.
+	 */
+	public static function IsAttributeSafeForAI(DBObject $oObject, string $sAttCode): bool
+	{
+		$oAttDef = MetaModel::GetAttributeDef(get_class($oObject), $sAttCode);
+
+		if ($oAttDef instanceof AttributeExternalField) {
+			$oAttDef = $oAttDef->GetFinalAttDef();
+		}
+
+		return !self::IsSensitiveAttribute($oAttDef);
 	}
 
 	/**
