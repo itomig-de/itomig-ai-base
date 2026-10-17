@@ -709,6 +709,9 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 **Security:**
 - Updated `guzzlehttp/guzzle`, `guzzlehttp/psr7` and `guzzlehttp/promises`, clearing 11 security advisories (1 high: CVE-2026-69246) in the committed `vendor/` tree.
 
+**Fixed:**
+- #76: `GetFilteredAttributeValues()` / `get_attribute()` crashed with "Object of class ormCustomFieldsValue could not be converted to string" on any object carrying an `AttributeCustomFields` attribute (Request Templates: `service_details` on `UserRequest` & co.). Custom fields now render via `GetForJSON()` as a JSON string with the same structure the REST GetObject path produces (`{"template_id": …, "values": {…}}`), and `MapAttributeType()` reports the type as `CustomFields` — surfaced via itomig-ai-diagnostics#11 (Object Explorer HTTP 500).
+
 **Updated:**
 - `theodo-group/llphant` from `^0.10.1` to `^1.0` (locked `1.0.1`).
 

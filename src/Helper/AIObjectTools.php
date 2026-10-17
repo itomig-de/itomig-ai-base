@@ -22,11 +22,13 @@
 
 namespace Itomig\iTop\Extension\AIBase\Helper;
 
+use AttributeCustomFields;
 use AttributeEnum;
 use AttributeExternalField;
 use AttributeExternalKey;
 use AttributeLinkedSet;
 use DBObject;
+use ormCustomFieldsValue;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIContextAwareToolProvider;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIToolProvider;
@@ -156,6 +158,10 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 * GetFilteredAttributeValues() — neither call site re-implements the check, so a
 	 * caller reading attributes through either path cannot forget to apply it.
 	 *
+	 * Custom fields (AttributeCustomFields) render as a JSON string holding the same
+	 * structure the core REST GetObject path produces ({"template_id": ..., "values":
+	 * {...}}) — instead of crashing on the string cast.
+	 *
 	 * @param DBObject $oObject The object to read the attribute from.
 	 * @param string $sAttCode The attribute code. Must be valid for $oObject's class.
 	 * @return string The attribute value, or an empty string if it is credential-bearing.
@@ -184,6 +190,32 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 					. get_class($oAttDef) . ') from the caller.',
 				AIBaseHelper::MODULE_CODE
 			);
+
+			return '';
+		}
+
+		// Custom fields (Request Templates: service_details on UserRequest & co.)
+		// yield an ormCustomFieldsValue object, which is not string-castable — the
+		// plain cast below threw "Object of class ormCustomFieldsValue could not be
+		// converted to string" for every ticket with a request template
+		// (itomig-de/itomig-ai-base#76, surfaced via itomig-de/itomig-ai-diagnostics#11).
+		// GetForJSON() is what the core's own REST GetObject path uses for these
+		// attributes (ObjectResult::MakeResultValue → AttributeCustomFields::GetForJSON),
+		// so the model sees the SAME structure here as from GetTicketData() / the
+		// REST API: {"template_id": ..., "values": {...}}. A readable text rendering
+		// (GetForTemplate) would flatten that structure and diverge from the rest
+		// of the stack.
+		if ($oAttDef instanceof AttributeCustomFields) {
+			$oValue = $oObject->Get($sAttCode);
+			if ($oValue instanceof ormCustomFieldsValue) {
+				try {
+					return (string) json_encode($oValue->GetForJSON(), JSON_UNESCAPED_UNICODE);
+				} catch (\Exception $e) {
+					// Same fallback the core AttributeCustomFields::GetForJSON uses:
+					// a misbehaving handler must not take the whole read down.
+					return 'Custom field error: '.$e->getMessage();
+				}
+			}
 
 			return '';
 		}
@@ -336,6 +368,7 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			$oAttDef instanceof \AttributeLinkedSet => 'LinkedSet',
 			$oAttDef instanceof \AttributeExternalKey => 'ExternalKey',
 			$oAttDef instanceof \AttributeExternalField => 'ExternalField',
+			$oAttDef instanceof AttributeCustomFields => 'CustomFields',
 			$oAttDef instanceof \AttributeEnum => 'Enum',
 			$oAttDef instanceof \AttributeBoolean => 'Boolean',
 			$oAttDef instanceof \AttributeInteger => 'Integer',
