@@ -691,6 +691,11 @@ If adding additional response processing, add it to the `AIBaseHelper` class.
 
 ## Version History
 
+### 26.4.0 (TBD)
+
+**New:**
+- `AIObjectTools::IsAttributeSafeForAI(DBObject $oObject, string $sAttCode): bool` — a `public static` single authority for credential filtering, for extensions building AI prompts from attribute lists. Resolves external fields to their final attribute definition (so a field pointing at a password on another class is recognized) and returns whether the value may be included in a prompt. Complements `GetFilteredAttributeValues()` (which reads *values*) with a check-only variant for callers that filter *lists* of attribute codes.
+
 ### 26.3.0 (TBD)
 
 **Breaking changes:**
