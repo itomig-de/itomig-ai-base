@@ -42,6 +42,12 @@ interface iAIEngineInterface
 	public static function GetEngine(array $configuration) : iAIEngineInterface;
 
 	/**
+	 * Whether the configured model supports image input.
+	 * @return bool
+	 */
+	public function SupportsVision(): bool;
+
+	/**
 	 * Perform prompt and return result
 	 * @param string $message
 	 * @param string $systemInstruction
