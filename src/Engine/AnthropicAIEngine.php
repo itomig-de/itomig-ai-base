@@ -40,14 +40,40 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	}
 
 	/**
+	 * Base URL that LLPhant appends "/v1/messages" to.
+	 */
+	private const DEFAULT_BASE_URL = 'https://api.anthropic.com';
+
+	/**
+	 * LLPhant appends "/v1/messages" to whatever base URL it is given, so a
+	 * configuration that still carries the full endpoint path has to be reduced
+	 * to its base. Configurations written before the LLPhant 1.0.10 upgrade use
+	 * 'https://api.anthropic.com/v1/messages'.
+	 *
 	 * @inheritDoc
 	 */
 	public static function GetEngine(array $configuration): AnthropicAIEngine
 	{
-		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
+		$url = self::ToBaseUrl($configuration['url'] ?? self::DEFAULT_BASE_URL);
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
 		return new self($url, $apiKey, $model);
+	}
+
+	/**
+	 * Strips a trailing "/v1/messages" (and any trailing slash) from a configured
+	 * endpoint so that it can be handed to LLPhant as a base URL.
+	 *
+	 * @param string $sUrl configured URL, with or without the Messages API path
+	 * @return string the base URL without the Messages API path
+	 */
+	private static function ToBaseUrl(string $sUrl): string
+	{
+		$sUrl = rtrim($sUrl, '/');
+		if (str_ends_with($sUrl, '/v1/messages')) {
+			$sUrl = substr($sUrl, 0, -strlen('/v1/messages'));
+		}
+		return $sUrl;
 	}
 
 	/**
@@ -83,7 +109,13 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	protected function createChatInstance(): ChatInterface
 	{
 		// TODO: maxTokens (4096) should be configurable (see Post-Implementation notes in plan)
-		$oConfig = new AnthropicConfig($this->model, 4096, array(), $this->apiKey);
+		$oConfig = new AnthropicConfig(
+			$this->model,
+			4096,
+			array(),
+			$this->apiKey,
+			url: $this->url === '' ? null : $this->url
+		);
 		$oChat = new AnthropicChat($oConfig);
 		return $oChat;
 	}

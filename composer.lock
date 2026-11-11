@@ -1410,16 +1410,16 @@
         },
         {
             "name": "theodo-group/llphant",
-            "version": "1.0.1",
+            "version": "1.0.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LLPhant/LLPhant.git",
-                "reference": "0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74"
+                "reference": "d0a94b301dad628765a7e543abef9016f81ee387"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74",
-                "reference": "0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74",
+                "url": "https://api.github.com/repos/LLPhant/LLPhant/zipball/d0a94b301dad628765a7e543abef9016f81ee387",
+                "reference": "d0a94b301dad628765a7e543abef9016f81ee387",
                 "shasum": ""
             },
             "require": {
