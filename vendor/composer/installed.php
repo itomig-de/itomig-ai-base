@@ -224,9 +224,9 @@
             'dev_requirement' => false,
         ),
         'theodo-group/llphant' => array(
-            'pretty_version' => '1.0.1',
-            'version' => '1.0.1.0',
-            'reference' => '0d90d8b8ba7983ee8c8b09acbb695239c3dc4b74',
+            'pretty_version' => '1.0.10',
+            'version' => '1.0.10.0',
+            'reference' => 'd0a94b301dad628765a7e543abef9016f81ee387',
             'type' => 'library',
             'install_path' => __DIR__ . '/../theodo-group/llphant',
             'aliases' => array(),
