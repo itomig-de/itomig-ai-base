@@ -81,11 +81,17 @@ Configuration is done in the iTop configuration file (`config-itop.php`). The co
     'ai_engine.name' => 'AnthropicAI',
     'ai_engine.configuration' => array(
         'api_key' => '***',
-        'url' => 'https://api.anthropic.com/v1/messages',
+        'url' => 'https://api.anthropic.com',
         'model' => 'claude-3-5-sonnet-latest',
     ),
 ),
 ```
+
+`url` is the **base** URL; LLPhant appends `/v1/messages` itself. Point it at an
+Anthropic-compatible gateway (LiteLLM, oMLX, vLLM, an egress proxy) to use your own
+models or to run in a network-isolated setup. A full endpoint such as
+`https://api.anthropic.com/v1/messages` is tolerated for backward compatibility and
+reduced to its base URL.
 
 ### Ollama Configuration
 
