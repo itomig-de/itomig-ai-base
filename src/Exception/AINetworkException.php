@@ -22,8 +22,11 @@
 namespace Itomig\iTop\Extension\AIBase\Exception;
 
 /**
- * Thrown for transport-level failures: connection refused, DNS errors,
- * network timeouts, or any unclassified AI engine error.
+ * Thrown for transport-level failures: connection refused, DNS errors, network timeouts.
+ *
+ * It is deliberately narrow. Errors that reach the engine but cannot be classified
+ * are reported as {@see AIEngineUnclassifiedException}, so that a caller rendering
+ * "network error" does not hide a model or configuration problem behind it.
  */
 class AINetworkException extends AIEngineException
 {

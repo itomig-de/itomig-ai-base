@@ -25,8 +25,10 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Exception\AIAuthException;
+use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Exception\AIContextWindowException;
 use Itomig\iTop\Extension\AIBase\Exception\AIEngineException;
+use Itomig\iTop\Extension\AIBase\Exception\AIEngineUnclassifiedException;
 use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use Itomig\iTop\Extension\AIBase\Exception\AIRateLimitException;
@@ -61,14 +63,29 @@ abstract class GenericAIEngine implements iAIEngineInterface
 
 	protected bool $supportsVision = false;
 
+	protected int $maxVisionImages = self::DEFAULT_MAX_VISION_IMAGES;
+
 	protected const MAX_VISION_IMAGE_BYTES = 5 * 1024 * 1024;
 
-	public function __construct(string $url, string $apiKey, string $model, bool $supportsVision = false)
-	{
+	/**
+	 * Upper bound of images accepted in a single turn unless configured otherwise.
+	 */
+	protected const DEFAULT_MAX_VISION_IMAGES = 30;
+
+	public function __construct(
+		string $url,
+		string $apiKey,
+		string $model,
+		bool $supportsVision = false,
+		?int $maxVisionImages = null
+	) {
 		$this->url = $url;
 		$this->apiKey = $apiKey;
 		$this->model = $model;
 		$this->supportsVision = $supportsVision;
+		if ($maxVisionImages !== null) {
+			$this->maxVisionImages = $maxVisionImages;
+		}
 	}
 
 	public function SupportsVision(): bool
@@ -84,16 +101,63 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	}
 
 	/**
+	 * Reads the image count limit from the engine configuration.
+	 *
+	 * Absent means "use the built-in default". Zero is a legitimate value: it
+	 * disables image input for this engine. Negative values are a configuration
+	 * error and are rejected rather than silently replaced by the default.
+	 *
+	 * @param array<string, mixed> $configuration the ai_engine.configuration array
+	 * @return int|null the configured limit, or null when none is configured
+	 * @throws AIConfigurationException if the configured value is not a non-negative integer
+	 */
+	protected static function GetConfiguredMaxVisionImages(array $configuration): ?int
+	{
+		if (!array_key_exists('max_vision_images', $configuration)) {
+			return null;
+		}
+
+		$value = $configuration['max_vision_images'];
+		if (is_string($value) && preg_match('/^\d+$/', trim($value)) === 1) {
+			$value = (int) trim($value);
+		}
+		if (!is_int($value) || $value < 0) {
+			throw new AIConfigurationException(
+				'max_vision_images must be a non-negative integer, got ' . var_export($configuration['max_vision_images'], true) . '.'
+			);
+		}
+
+		return $value;
+	}
+
+	/**
 	 * Validates and normalizes the shared base64 image payload contract.
 	 *
 	 * @param array<int, mixed> $aImages
 	 * @return array<int, array{data: string, media_type: string}>
 	 * @throws AIInvalidImageException
+	 * @throws AIVisionUnsupportedException if image input is disabled by max_vision_images = 0
 	 */
 	protected function NormalizeVisionImages(array $aImages): array
 	{
 		if ($aImages === []) {
 			throw new AIInvalidImageException('At least one valid image is required for image input.');
+		}
+
+		// Checked before decoding anything: rejecting 100 images only after base64-decoding
+		// all of them would defeat the purpose of the limit.
+		if (count($aImages) > $this->maxVisionImages) {
+			if ($this->maxVisionImages === 0) {
+				throw new AIVisionUnsupportedException(
+					'Image input is disabled for this AI engine because max_vision_images is 0.'
+					. ' Set max_vision_images to a positive value to allow images.'
+				);
+			}
+			throw new AIInvalidImageException(sprintf(
+				'Too many images in one turn: %d given, at most %d allowed.',
+				count($aImages),
+				$this->maxVisionImages
+			));
 		}
 
 		$aNormalizedImages = [];
@@ -211,15 +275,23 @@ abstract class GenericAIEngine implements iAIEngineInterface
 				return new AIContextWindowException($sMsg, $iCode, $e);
 			}
 		}
-		if ($bVisionRequest && $this->isVisionUnsupportedMessage($sMsg)) {
+		// A provider that answered at all did not fail at the transport layer, so the
+		// fallback below must not claim a network error. Vision requests are treated
+		// separately: a rejected vision request almost always means the model cannot
+		// process images or the image was refused, and reporting "network error" would
+		// hide exactly the hint the operator needs.
+		if ($bVisionRequest) {
+			$sHint = $this->isVisionUnsupportedMessage($sMsg)
+				? 'The configured AI model or endpoint does not support image input. Select a vision-capable model.'
+				: 'The image request was rejected by the AI engine. Check that the model supports image input and that the images are within the provider limits.';
 			return new AIVisionUnsupportedException(
-				'The configured AI model or endpoint does not support image input. Select a vision-capable model. Provider response: '.$sMsg,
+				$sHint.' Provider response: '.$sMsg,
 				$iCode,
 				$e
 			);
 		}
 
-		return new AINetworkException($sMsg, $iCode, $e);
+		return new AIEngineUnclassifiedException($sMsg, $iCode, $e);
 	}
 
 	private function isVisionUnsupportedMessage(string $sMessage): bool
@@ -318,7 +390,7 @@ abstract class GenericAIEngine implements iAIEngineInterface
 		} catch (\GuzzleHttp\Exception\ConnectException $e) {
 			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
 		} catch (\Throwable $e) {
-			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+			throw new AIEngineUnclassifiedException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
 		}
 
 		if (is_string($result)) {

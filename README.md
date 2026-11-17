@@ -200,20 +200,22 @@ $aImages[] = array(
 );
 ```
 
-For a single image request, pass the images as the third argument of `GetCompletion()`:
+Images are always passed through the conversation history, never as a separate argument to
+`GetCompletion()`. For a single image, send a one-turn conversation:
 
 ```php
-$sAnswer = $oService->GetCompletion(
-    'Describe this image.',
-    '',
+$oResult = $oService->ContinueConversation(array(
     array(
-        array(
-            'data' => $sBase64ImageData,
-            'media_type' => 'image/png',
-        ),
-    )
-);
+        'role' => 'user',
+        'content' => 'Describe this image.',
+        'images' => $aImages,
+    ),
+));
+$sAnswer = $oResult->response;
 ```
+
+`GetCompletion()` itself stays text-only: it takes a prompt and a system instruction and
+cannot carry images. Use `ContinueConversation()` whenever a turn contains an image.
 
 Image input requires both a provider adapter implementing `iAIVisionEngine` and `supports_vision => true` in `ai_engine.configuration`. The flag describes the configured model, not only the provider engine. Keep it `false` for text-only models. `MistralAI` and `OllamaAI` support the adapter, but vision remains model-dependent and must be explicitly enabled only for a model that supports image input.
 
@@ -396,15 +398,16 @@ Downstream extensions that process untrusted content should also take care not t
 ### AIService::GetCompletion()
 
 ```php
-public function GetCompletion(string $sMessage, string $sSystemInstruction = '', array $aImages = []): string
+public function GetCompletion(string $sMessage, string $sSystemInstruction = ''): string
 ```
 
-Sends a user message to the AI and returns the response. Optionally includes a custom system prompt and raw base64 image inputs for a vision-capable model.
+Sends a user message to the AI and returns the response. Optionally includes a custom system prompt.
+
+This method is text-only. To send image input, use `ContinueConversation()` with an `images` list on the user turn — see [Image Input Support](#image-input-support).
 
 **Parameters:**
 - `$sMessage`: The user's prompt/question
 - `$sSystemInstruction`: (Optional) Custom system prompt for the AI
-- `$aImages`: (Optional) Images with raw base64 `data` and a `media_type`; requires `supports_vision => true` and a provider adapter implementing `iAIVisionEngine`
 
 **Returns:** The AI's response as a string
 

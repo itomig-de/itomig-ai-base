@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Itomig\iTop\Extension\AIBase\Exception\AIEngineUnclassifiedException;
 use GuzzleHttp\Exception\ConnectException;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use IssueLog;
@@ -56,8 +57,9 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVis
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$apiKey = $configuration['api_key'] ?? '';
 		$supportsVision = self::GetConfiguredVisionSupport($configuration);
+		$maxVisionImages = self::GetConfiguredMaxVisionImages($configuration);
 
-		return new self($url, $apiKey, $model, $supportsVision);
+		return new self($url, $apiKey, $model, $supportsVision, $maxVisionImages);
 	}
 
 	public function __construct(
@@ -91,7 +93,7 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVis
 		} catch (ConnectException $e) {
 			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
 		} catch (\Throwable $e) {
-			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+			throw new AIEngineUnclassifiedException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
 		}
 		IssueLog::Debug(__METHOD__);
 		IssueLog::Debug($response);

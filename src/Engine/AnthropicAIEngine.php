@@ -23,6 +23,7 @@
 
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
+use Itomig\iTop\Extension\AIBase\Exception\AIEngineUnclassifiedException;
 use GuzzleHttp\Exception\ConnectException;
 use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
@@ -54,7 +55,8 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, i
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
 		$supportsVision = self::GetConfiguredVisionSupport($configuration);
-		return new self($url, $apiKey, $model, $supportsVision);
+		$maxVisionImages = self::GetConfiguredMaxVisionImages($configuration);
+		return new self($url, $apiKey, $model, $supportsVision, $maxVisionImages);
 	}
 
 	/**
@@ -75,7 +77,7 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, i
 		} catch (ConnectException $e) {
 			throw new AINetworkException('AI engine unreachable: ' . $e->getMessage(), 0, $e);
 		} catch (\Throwable $e) {
-			throw new AINetworkException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
+			throw new AIEngineUnclassifiedException('Unexpected AI engine error: ' . $e->getMessage(), 0, $e);
 		}
 		\IssueLog::Debug(__METHOD__);
 		\IssueLog::Debug($response);
