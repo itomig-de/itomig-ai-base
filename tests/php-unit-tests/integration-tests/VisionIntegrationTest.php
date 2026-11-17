@@ -67,7 +67,7 @@ class VisionIntegrationTest extends ItopTestCase
 
 		$aConfig = [];
 		$sConfiguredEngine = 'OpenAI';
-		if (class_exists('\MetaModel')) {
+		if (self::IsMetaModelBooted()) {
 			$aConfig = (array) \MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.configuration', []);
 			$sConfiguredEngine = (string) \MetaModel::GetModuleSetting('itomig-ai-base', 'ai_engine.name', 'OpenAI');
 		}
@@ -80,6 +80,23 @@ class VisionIntegrationTest extends ItopTestCase
 		];
 
 		return self::$aSettings;
+	}
+
+	/**
+	 * Tells whether the meta model is loaded, not merely autoloadable.
+	 *
+	 * The class is available as soon as the iTop autoloader is registered, so
+	 * class_exists() is not enough: without a boot, MetaModel::$m_oConfig stays
+	 * null and GetModuleSetting() fails on a null property access. Only test
+	 * bases that start the model (ItopCustomDatamodelTestCase, ItopDataTestCase)
+	 * provide a booted meta model; this suite deliberately stays on ItopTestCase
+	 * and therefore falls back to the environment outside of those.
+	 *
+	 * @return bool true when module settings can be read safely
+	 */
+	private static function IsMetaModelBooted(): bool
+	{
+		return class_exists('\MetaModel') && \MetaModel::GetConfig() !== null;
 	}
 
 	/**
