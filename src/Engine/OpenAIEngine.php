@@ -49,7 +49,8 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$aModelOptions = self::ReadModelOptions($configuration);
+		return new self($url, $apiKey, $model, $aModelOptions);
 	}
 
 
@@ -96,6 +97,9 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		if (!empty($this->model)) {
 			$oConfig->model = $this->model;
 		}
+		// Passed through verbatim into the chat completion request body
+		// (temperature, max_completion_tokens, reasoning_effort, ...), #86/#41.
+		$oConfig->modelOptions = $this->aModelOptions;
 		$oChat = new OpenAIChat($oConfig);
 		return $oChat;
 	}
