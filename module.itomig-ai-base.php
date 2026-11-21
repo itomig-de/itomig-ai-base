@@ -50,6 +50,8 @@ SetupWebPage::AddModule(
 				'url' => 'http://127.0.0.1:11434/api/',
 				'api_key' => 'your-api-key',
 				'model' => 'qwen2.5:14b',
+				'model_options' => array (
+				),
 			),
 			'ai_engine.name' => 'OllamaAI',
 		),

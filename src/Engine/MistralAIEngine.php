@@ -49,7 +49,9 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$model = $configuration['model'] ?? 'mistral-large-latest';
 		$apiKey = $configuration['api_key'] ?? '';
 
-		return new self($url, $apiKey, $model);
+		$aModelOptions = self::ReadModelOptions($configuration);
+
+		return new self($url, $apiKey, $model, $aModelOptions);
 	}
 
 	/**
@@ -88,6 +90,9 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$oConfig->apiKey = $this->apiKey;
 		$oConfig->url = $this->url;
 		$oConfig->model = $this->model;
+		// Passed through verbatim into the chat completion request body
+		// (temperature, max_tokens, ...), #86/#41.
+		$oConfig->modelOptions = $this->aModelOptions;
 		$oChat = new MistralAIChat($oConfig);
 		return $oChat;
 	}

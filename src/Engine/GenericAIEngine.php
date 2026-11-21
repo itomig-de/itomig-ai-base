@@ -25,6 +25,7 @@ namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Exception\AIAuthException;
+use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Exception\AIContextWindowException;
 use Itomig\iTop\Extension\AIBase\Exception\AIEngineException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
@@ -55,11 +56,48 @@ abstract class GenericAIEngine implements iAIEngineInterface
 	 */
 	protected $model;
 
-	public function __construct(string $url, string $apiKey, string $model)
+	/**
+	 * Provider-level model options (e.g. temperature, num_ctx, reasoning_effort),
+	 * keyed by the provider's own parameter names and passed through verbatim to
+	 * the chat implementation in createChatInstance() (#86, consolidating #41).
+	 *
+	 * @var array $aModelOptions
+	 */
+	protected $aModelOptions;
+
+	public function __construct(string $url, string $apiKey, string $model, array $aModelOptions = [])
 	{
 		$this->url = $url;
 		$this->apiKey = $apiKey;
 		$this->model = $model;
+		$this->aModelOptions = $aModelOptions;
+	}
+
+	/**
+	 * Reads and validates the 'model_options' entry of an ai_engine.configuration
+	 * setting.
+	 *
+	 * The options are NOT validated against a list of known parameters on
+	 * purpose: providers keep adding parameters, and silently dropping an
+	 * unknown key would hide configuration errors from the operator. Only the
+	 * container itself is checked; a non-array value is a configuration mistake
+	 * and must fail loudly, not degrade into "no options configured".
+	 *
+	 * @param array $configuration The ai_engine.configuration module setting.
+	 * @return array The model options, an empty array when unset.
+	 * @throws AIConfigurationException
+	 */
+	protected static function ReadModelOptions(array $configuration): array
+	{
+		$aModelOptions = $configuration['model_options'] ?? [];
+
+		if (!is_array($aModelOptions)) {
+			throw new AIConfigurationException(
+				'ai_engine.configuration: model_options must be an array of provider parameter names and values, e.g. array(\'temperature\' => 0.2).'
+			);
+		}
+
+		return $aModelOptions;
 	}
 
 	/**

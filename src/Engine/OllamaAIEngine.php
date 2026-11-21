@@ -47,8 +47,9 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
 		$apiKey = $configuration['api_key'] ?? '';
+		$aModelOptions = self::ReadModelOptions($configuration);
 
-		return new self($url, $apiKey, $model);
+		return new self($url, $apiKey, $model, $aModelOptions);
 	}
 
 	/**
@@ -88,6 +89,13 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		//$oConfig->apiKey = $this->apiKey;  // Ollama doesn't need API key
 		$oConfig->url = $this->url;
 		$oConfig->model = $this->model;
+		// Passed through verbatim onto the /api/chat payload (#86/#41).
+		// Note the Ollama API shape: numeric model parameters (num_ctx,
+		// temperature, ...) belong under the 'options' key, so they must be
+		// configured nested: model_options = array('options' => array('num_ctx' => 16384, ...)),
+		// while top-level request fields (template, keep_alive, ...) are direct
+		// model_options entries.
+		$oConfig->modelOptions = $this->aModelOptions;
 
 		$oChat = new OllamaChat($oConfig);
 		return $oChat;

@@ -114,6 +114,36 @@ You can use the OpenAI engine with compatible endpoints (e.g., Open-WebUI, Local
 ),
 ```
 
+### Model Options Configuration
+
+Every engine passes the `model_options` array verbatim to the provider, so any parameter the provider's chat API accepts is configurable without a code change (#86). Values are not validated against a list of known parameters: a typo surfaces as a provider-side error instead of being silently ignored.
+
+```php
+'itomig-ai-base' => array(
+    'ai_engine.name' => 'OpenAI',
+    'ai_engine.configuration' => array(
+        'api_key' => '***',
+        'model' => 'gpt-4o-mini',
+        'model_options' => array(
+            'temperature' => 0.2,
+            'max_completion_tokens' => 2048,
+        ),
+    ),
+),
+```
+
+Provider specifics:
+
+- **OpenAI / Mistral / OpenAI-compatible**: entries go directly into the chat completion request body (`temperature`, `max_completion_tokens`, `reasoning_effort`, ...).
+- **Anthropic**: entries go directly into the message request body (e.g. `thinking`). `max_tokens` is a first-class request field the library sets itself, so it is configured as a separate `max_tokens` entry (default `4096`), not inside `model_options`:
+
+```php
+        'max_tokens' => 16384,
+```
+
+- **Ollama**: numeric model parameters must be nested under the `options` key of the Ollama chat API, so they are configured as `'options' => array('num_ctx' => 16384, 'temperature' => 0.4)`. Top-level Ollama request fields (`template`, `keep_alive`, ...) are direct `model_options` entries.
+
+
 ### Custom System Prompts Configuration
 
 The extension comes with default system prompts for common tasks. You can override these with custom instructions to influence the behavior of your chosen AI engine and LLM:

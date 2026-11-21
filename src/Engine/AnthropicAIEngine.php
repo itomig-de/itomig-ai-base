@@ -24,6 +24,7 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Exception\AIConfigurationException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
@@ -31,6 +32,24 @@ use LLPhant\Chat\ChatInterface;
 
 class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 {
+	/**
+	 * The max_tokens value of the Anthropic request. Configurable through the
+	 * 'max_tokens' entry of ai_engine.configuration (#86); its own request
+	 * field takes precedence over model_options entries of the same name.
+	 *
+	 * @var int $iMaxTokens
+	 */
+	private $iMaxTokens;
+
+	/**
+	 * @inheritDoc
+	 */
+	public function __construct(string $url, string $apiKey, string $model, array $aModelOptions = [], int $iMaxTokens = 4096)
+	{
+		$this->iMaxTokens = $iMaxTokens;
+		parent::__construct($url, $apiKey, $model, $aModelOptions);
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -47,7 +66,20 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.anthropic.com/v1/messages';
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$aModelOptions = self::ReadModelOptions($configuration);
+
+		// The Anthropic API takes max_tokens as a first-class request field with
+		// no provider default we could rely on, so it is a dedicated setting
+		// rather than a model_options entry (which the request builder would
+		// override with this value anyway).
+		$iMaxTokens = $configuration['max_tokens'] ?? 4096;
+		if (!is_int($iMaxTokens) && !ctype_digit((string) $iMaxTokens)) {
+			throw new AIConfigurationException(
+				'ai_engine.configuration: max_tokens must be a positive integer, got: '.var_export($iMaxTokens, true)
+			);
+		}
+
+		return new self($url, $apiKey, $model, $aModelOptions, (int) $iMaxTokens);
 	}
 
 	/**
@@ -82,8 +114,8 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 	 */
 	protected function createChatInstance(): ChatInterface
 	{
-		// TODO: maxTokens (4096) should be configurable (see Post-Implementation notes in plan)
-		$oConfig = new AnthropicConfig($this->model, 4096, array(), $this->apiKey);
+		// maxTokens is configurable through the 'max_tokens' setting (#86).
+		$oConfig = new AnthropicConfig($this->model, $this->iMaxTokens, $this->aModelOptions, $this->apiKey);
 		$oChat = new AnthropicChat($oConfig);
 		return $oChat;
 	}
