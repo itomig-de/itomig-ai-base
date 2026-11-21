@@ -27,6 +27,7 @@ use AttributeEnum;
 use AttributeExternalField;
 use AttributeExternalKey;
 use AttributeLinkedSet;
+use AttributeTagSet;
 use DBObject;
 use ormCustomFieldsValue;
 use IssueLog;
@@ -167,9 +168,18 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 	 * structure the core REST GetObject path produces ({"template_id": ..., "values":
 	 * {...}}) — instead of crashing on the string cast.
 	 *
+	 * Link sets (AttributeLinkedSet / AttributeLinkedSetIndirect) and tag sets
+	 * (AttributeTagSet) render the same way the core REST/JSON export does: an
+	 * array of per-link entries resp. an array of tag codes (see
+	 * MakeResultValueAsArray). Their string cast is unusable for a prompt — an
+	 * empty string resp. a lossy ", "-join — and collapsed into the same value
+	 * callers use to recognize withheld credentials (#85).
+	 *
 	 * @param DBObject $oObject The object to read the attribute from.
 	 * @param string $sAttCode The attribute code. Must be valid for $oObject's class.
-	 * @return string The attribute value, or an empty string if it is credential-bearing.
+	 * @return string The attribute value. Renderable structures are returned as
+	 *                JSON strings ('[]' for an empty link set, NOT ''). An empty
+	 *                string means — and only means — credential-bearing.
 	 * @throws \Exception if $sAttCode is not a valid attribute of $oObject's class.
 	 */
 	private static function ResolveFilteredAttributeValue(DBObject $oObject, string $sAttCode): string
@@ -225,8 +235,115 @@ class AIObjectTools implements iAIToolProvider, iAIContextAwareToolProvider
 			return '';
 		}
 
+		// Tag sets (AttributeTagSet, e.g. domains on FAQ): Get() yields an ormTagSet
+		// whose string cast joins the tag codes with ", " — boundaries are lost, a
+		// tag containing a space becomes indistinguishable from two tags, and an
+		// EMPTY set casts to a single space ' ', not '' (#85, Case 3).
+		// GetForJSON() is what the core's own REST/JSON export uses for these
+		// attributes (ObjectResult::MakeResultValue → AttributeTagSet::GetForJSON),
+		// so the model receives a JSON array of tag codes — unambiguous both ways.
+		if ($oAttDef instanceof AttributeTagSet) {
+			return self::EncodeAsJSON($oAttDef->GetForJSON($oObject->Get($sAttCode)));
+		}
+
+		// Link sets (AttributeLinkedSet / AttributeLinkedSetIndirect, e.g.
+		// functionalcis_list on UserRequest): Get() yields an ormLinkSet whose
+		// __toString() returns '' regardless of its content, so the field was
+		// indistinguishable from a withheld credential value and callers screening
+		// with ($value !== '') discarded it (#85, Case 2).
+		// Rendered like the core's own REST/JSON export (see MakeResultValueAsArray
+		// below), so the model receives the same per-link structure the REST API
+		// would produce, with the back-references to the host object skipped.
+		if ($oAttDef instanceof AttributeLinkedSet) {
+			return self::EncodeAsJSON(self::MakeResultValueAsArray($oObject, $sAttCode));
+		}
+
 		return (string) $oObject->Get($sAttCode);
 	}
+
+	/**
+	 * JSON-encodes a rendered structure, or the JSON literal "null" should the
+	 * encoder fail.
+	 *
+	 * ResolveFilteredAttributeValue() MUST never return '' for a representable
+	 * value: '' is reserved for "withheld because credential-bearing", and a
+	 * caller cannot tell the two apart (#85). json_encode() returns false on
+	 * failure, which a cast would turn into exactly that ambiguous empty string.
+	 *
+	 * @param mixed $aData A structure built with the core's REST/JSON semantics.
+	 * @return string The JSON encoding of $aData, or 'null'.
+	 */
+	private static function EncodeAsJSON($aData): string
+	{
+		$sJson = json_encode($aData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+		return ($sJson === false) ? 'null' : $sJson;
+	}
+
+	/**
+	 * Builds the REST/JSON representation of an attribute value, mirroring the
+	 * core's ObjectResult::MakeResultValue() in core/restservices.class.inc.php
+	 * with its default (non-extended) output mode.
+	 *
+	 * Own semantics, copied deliberately instead of re-invented:
+	 *  - link sets (AttributeLinkedSet, incl. AttributeLinkedSetIndirect) get a
+	 *    dedicated recursive branch: an array of per-link {attcode => value}
+	 *    entries, in which attributes pointing back to the host object are
+	 *    skipped (the external key itself, and any external field resolving to
+	 *    it). Link sets therefore never go through GetForJSON() — the core does
+	 *    the same, because ormLinkSet cannot be serialised that way.
+	 *  - everything else goes through the attribute definition's GetForJSON(),
+	 *    i.e. exactly the representation the REST/JSON API produces for the
+	 *    same object: tag sets become arrays of tag codes, case logs become
+	 *    {entries: [...]}, custom fields keep their {template_id, values}
+	 *    structure, scalars stay scalars.
+	 *
+	 * A model prompt built from this rendering is therefore consistent with
+	 * what the same caller would obtain from the REST API for the same object.
+	 *
+	 * @param DBObject $oObject The object to read the attribute from.
+	 * @param string $sAttCode The attribute code. Must be valid for $oObject's class.
+	 * @return mixed The JSON-encodable representation of the attribute value.
+	 */
+	private static function MakeResultValueAsArray(DBObject $oObject, string $sAttCode)
+	{
+		if ($sAttCode === 'id') {
+			return $oObject->GetKey();
+		}
+
+		$oAttDef = MetaModel::GetAttributeDef(get_class($oObject), $sAttCode);
+		if ($oAttDef instanceof AttributeLinkedSet) {
+			// Iterate on the set and build an array of array of attcode => value
+			$value = array();
+			$oSet = $oObject->Get($sAttCode);
+			$sLinkedClass = $oAttDef->GetLinkedClass();
+			$sExtKeyToMe = $oAttDef->GetExtKeyToMe();
+			while ($oLnk = $oSet->Fetch()) {
+				$aLnkValues = array();
+				foreach (MetaModel::ListAttributeDefs($sLinkedClass) as $sLnkAttCode => $oLnkAttDef) {
+					// Skip attributes pointing to the current object (redundant data)
+					if ($sLnkAttCode == $sExtKeyToMe) {
+						continue;
+					}
+					// Skip any attribute of the link that points to the current object
+					$oLnkAttDef = MetaModel::GetAttributeDef($sLinkedClass, $sLnkAttCode);
+					if (method_exists($oLnkAttDef, 'GetKeyAttCode')) {
+						if ($oLnkAttDef->GetKeyAttCode() == $sExtKeyToMe) {
+							continue;
+						}
+					}
+
+					$aLnkValues[$sLnkAttCode] = self::MakeResultValueAsArray($oLnk, $sLnkAttCode);
+				}
+				$value[] = $aLnkValues;
+			}
+
+			return $value;
+		}
+
+		return $oAttDef->GetForJSON($oObject->Get($sAttCode));
+	}
+
 
 	/**
 	 * Returns string values for several attributes of an object, withholding
