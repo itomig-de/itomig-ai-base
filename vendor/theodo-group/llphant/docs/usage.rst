@@ -42,17 +42,60 @@ replace it with any Atlas Cloud model identifier available in your account.
 Gemini
 ------
 
-We support Gemini through its OpenAI API compatibility. Here is an example:
+We support Gemini through its OpenAI-compatible API with a dedicated chat class.
+Use ``GeminiAIChat`` together with ``GeminiOpenAIConfig``.
 
 .. code-block:: php
 
     $config = new GeminiOpenAIConfig();
     $config->apiKey = "your_api_key";
     $config->model = 'gemini-2.0-flash';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
     $response = $chat->generateText('what is one + one ?');
 
 If you do not specify an api key, the ``GeminiOpenAIConfig`` tries to read it from the ``GEMINI_API_KEY`` environment variable.
+
+Heabsy
+------
+
+`Heabsy <https://heabsy.com/platform>`_ serves open models through an OpenAI-compatible LLM API,
+so you can use it through ``OpenAIChat`` with the dedicated ``HeabsyConfig`` helper.
+
+.. code-block:: php
+
+    $config = new HeabsyConfig();
+    $config->apiKey = 'your_heabsy_api_key';
+    $config->model = 'qwen38';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``HeabsyConfig`` tries to read it from the
+``HEABSY_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://api.heabsy.com/v1`` and the default model is
+``qwen38``, which you can change with the ``HEABSY_MODEL`` environment variable or
+replace with any model id from the `Heabsy model catalog <https://heabsy.com/models>`_.
+Heabsy does not provide an embeddings endpoint.
+
+Gisoo
+-----
+
+`Gisoo <https://gisoo.pro/docs>`_ is a multi-model gateway with an OpenAI-compatible API,
+so you can use it through ``OpenAIChat`` and an OpenAI embedding generator such as
+``OpenAI3SmallEmbeddingGenerator`` with the dedicated ``GisooConfig`` helper.
+
+.. code-block:: php
+
+    $config = new GisooConfig();
+    $config->apiKey = 'your_gisoo_api_key';
+    $config->model = 'gpt-5-mini';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``GisooConfig`` tries to read it from the
+``GISOO_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://gisoo.pro/api/v1`` and the default model is
+``gpt-5-mini``, which you can change with the ``GISOO_MODEL`` environment variable or replace with
+any model id from the `Gisoo model catalog <https://gisoo.pro/docs/models>`_.
 
 Mistral
 -------
@@ -77,6 +120,23 @@ If you want to use Ollama, you can just specify the model to use using the ``Oll
     $config->model = 'llama2';
     $chat = new OllamaChat($config);
 
+llmman
+------
+
+`llmman <https://github.com/llmmanorg/llmman>`_ is a local model runner that serves the Ollama API
+on port 17434, so you can use it through ``OllamaChat`` and ``OllamaEmbeddingGenerator`` with
+``LlmmanConfig``.
+
+.. code-block:: php
+
+    $config = new LlmmanConfig();
+    $config->model = 'gemma4';
+    $chat = new OllamaChat($config);
+    $embeddings = new OllamaEmbeddingGenerator(new LlmmanConfig());
+
+The default base URL is ``http://localhost:17434/api/``; override the host with the
+``LLMMAN_HOST`` environment variable (``[host][:port]``).
+
 Anthropic
 ---------
 
@@ -85,6 +145,28 @@ To call Anthropic models you have to provide an API key . You can set the ANTHRO
 .. code-block:: bash
 
     export ANTHROPIC_API_KEY=XXXXXX
+
+By default, requests use ``https://api.anthropic.com`` and API version
+``2023-06-01``. To use an Anthropic-compatible gateway or self-hosted endpoint,
+set ``ANTHROPIC_BASE_URL`` to its base URL (the Messages API path
+``/v1/messages`` is appended automatically). You can also override the API version
+with ``ANTHROPIC_API_VERSION``.
+
+.. code-block:: bash
+
+    export ANTHROPIC_BASE_URL=https://gateway.example
+    export ANTHROPIC_API_VERSION=2024-01-01
+
+Alternatively, pass ``url`` and ``apiVersion`` to ``AnthropicConfig``. Explicit
+configuration values take precedence over their environment variables.
+
+.. code-block:: php
+
+    $config = new AnthropicConfig(
+        url: 'https://gateway.example',
+        apiVersion: '2024-01-01',
+    );
+    $chat = new AnthropicChat($config);
 
 You also have to specify the model to use using the ``AnthropicConfig`` object and pass it to the ``AnthropicChat``.
 
@@ -97,6 +179,34 @@ Creating a chat with no configuration will use a CLAUDE_3_HAIKU model.
 .. code-block:: php
 
     $chat = new AnthropicChat();
+
+To use `Anthropic prompt caching <https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching>`_,
+set ``promptCaching`` to ``true``. The system message and the tool definitions
+are then sent with an ephemeral cache breakpoint, so repeated requests that
+share them are cheaper and faster. Note that Anthropic only caches prefixes
+longer than a model-specific minimum number of tokens.
+
+.. code-block:: php
+
+    $chat = new AnthropicChat(new AnthropicConfig(promptCaching: true));
+    $chat->setSystemMessage($longInstructions);
+
+You can check whether the cache is actually used with ``AnthropicChat::getCacheTotalTokens()``.
+It returns the cumulative number of tokens that were written to the cache
+(``cache_creation_input_tokens``) or read from it (``cache_read_input_tokens``)
+by all the calls made so far. These tokens are also included in ``getTotalTokens()``,
+so ``getTotalTokens()`` minus ``getCacheTotalTokens()`` is the number of tokens
+that were not involved in caching.
+
+.. code-block:: php
+
+    $chat->generateText('what is one + one ?');   // writes the system message to the cache
+    $chat->generateText('what is two + one ?');   // reads the system message from the cache
+    printf("Total tokens: %d\n", $chat->getTotalTokens());
+    printf("Cache tokens: %d\n", $chat->getCacheTotalTokens());
+
+If ``getCacheTotalTokens()`` stays at ``0``, the prompt is probably shorter than
+the minimum cacheable length of the model, so Anthropic silently ignores the cache breakpoint.
 
 OpenAI compatible APIs like LocalAI
 ------------------------------------
@@ -130,7 +240,7 @@ The API to generate text using OpenAI will only be from the chat API.
 So even if you want to generate a completion for a simple question under the hood it will use the chat API.
 This is why this class is called OpenAIChat.
 
-You can use the ``OpenAIChat``, ``MistralAIChat`` or ``OllamaChat`` to generate text or to create a chat.
+You can use ``OpenAIChat``, ``GeminiAIChat``, ``MistralAIChat`` or ``OllamaChat`` to generate text or to create a chat.
 
 We can use it to simply generate text from a prompt.
 This will ask directly an answer from the LLM.

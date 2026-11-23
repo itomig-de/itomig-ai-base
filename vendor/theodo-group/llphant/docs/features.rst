@@ -43,6 +43,13 @@ Comparison Table of all supported Language Models
      - ℹ️
      - ❌
      - ❌
+   * - llmman (via Ollama API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
    * - OpenAI
      - ✅
      - ✅
@@ -64,6 +71,20 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
      - ✅
+   * - Heabsy (via OpenAI API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
+   * - Gisoo (via OpenAI API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ✅
+     - ❌
    * - VoyageAI (via OpenAI API)
      - ✅
      - ✅
