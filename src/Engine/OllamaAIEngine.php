@@ -24,12 +24,17 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\Vision\ImageSource;
+use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\OllamaConfig;
 use LLPhant\Chat\OllamaChat;
 
-class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
+class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 	/**
 	 * @inheritDoc
@@ -47,8 +52,9 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.openai.com/v1/chat/completions';
 		$model = $configuration['model'] ?? 'gpt-3.5-turbo';
 		$apiKey = $configuration['api_key'] ?? '';
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
 
-		return new self($url, $apiKey, $model);
+		return new self($url, $apiKey, $model, $supportsVision);
 	}
 
 	/**
@@ -91,5 +97,28 @@ class OllamaAIEngine extends GenericAIEngine implements iAIEngineInterface
 
 		$oChat = new OllamaChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aImages = $this->NormalizeVisionImages($aImages);
+		$aImageSources = [];
+
+		foreach ($aImages as $aImage) {
+			try {
+				$aImageSources[] = new ImageSource($aImage['data']);
+			} catch (\InvalidArgumentException $e) {
+				throw new AIInvalidImageException(
+					'Unable to construct the Ollama image payload.',
+					0,
+					$e
+				);
+			}
+		}
+
+		return VisionMessage::fromImages(
+			$aImageSources,
+			$sContent
+		);
 	}
 }

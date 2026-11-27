@@ -24,13 +24,19 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use IssueLog;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\Vision\ImageQuality;
+use LLPhant\Chat\Vision\ImageSource;
+use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\OpenAIConfig;
 use LLPhant\Chat\OpenAIChat;
 
-class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
+class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 
 	/**
@@ -49,7 +55,18 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? '';
 		$model = $configuration['model'] ?? 'gpt-4o-mini';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
+
+		return new self($url, $apiKey, $model, $supportsVision);
+	}
+
+	public function __construct(
+		string $url,
+		string $apiKey,
+		string $model,
+		bool $supportsVision = false
+	) {
+		parent::__construct($url, $apiKey, $model, $supportsVision);
 	}
 
 
@@ -98,5 +115,31 @@ class OpenAIEngine extends GenericAIEngine implements iAIEngineInterface
 		}
 		$oChat = new OpenAIChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aImages = $this->NormalizeVisionImages($aImages);
+		$aImageSources = [];
+
+		foreach ($aImages as $aImage) {
+			try {
+				$aImageSources[] = new ImageSource(
+					$aImage['data'],
+					ImageQuality::Auto
+				);
+			} catch (\InvalidArgumentException $e) {
+				throw new AIInvalidImageException(
+					'Unable to construct the OpenAI image payload.',
+					0,
+					$e
+				);
+			}
+		}
+
+		return VisionMessage::fromImages(
+			$aImageSources,
+			$sContent
+		);
 	}
 }

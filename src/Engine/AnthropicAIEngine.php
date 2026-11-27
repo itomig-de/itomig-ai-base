@@ -24,12 +24,18 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use LLPhant\AnthropicConfig;
+use LLPhant\Chat\Anthropic\AnthropicImage;
+use LLPhant\Chat\Anthropic\AnthropicImageType;
+use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
 
-class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
+class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 	/**
 	 * @inheritDoc
@@ -57,7 +63,8 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = self::ToBaseUrl($configuration['url'] ?? self::DEFAULT_BASE_URL);
 		$model = $configuration['model'] ?? 'claude-3-5-sonnet-latest';
 		$apiKey = $configuration['api_key'] ?? '';
-		return new self($url, $apiKey, $model);
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
+		return new self($url, $apiKey, $model, $supportsVision);
 	}
 
 	/**
@@ -118,5 +125,31 @@ class AnthropicAIEngine extends GenericAIEngine implements iAIEngineInterface
 		);
 		$oChat = new AnthropicChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aImages = $this->NormalizeVisionImages($aImages);
+		$aAnthropicImages = [];
+
+		foreach ($aImages as $aImage) {
+			try {
+				$aAnthropicImages[] = new AnthropicImage(
+					AnthropicImageType::from($aImage['media_type']),
+					$aImage['data']
+				);
+			} catch (\ValueError|\InvalidArgumentException $e) {
+				throw new AIInvalidImageException(
+					'Unable to construct the Anthropic image payload.',
+					0,
+					$e
+				);
+			}
+		}
+
+		return new AnthropicVisionMessage(
+			$aAnthropicImages,
+			$sContent
+		);
 	}
 }

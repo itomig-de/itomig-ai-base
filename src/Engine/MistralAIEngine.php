@@ -24,12 +24,18 @@
 namespace Itomig\iTop\Extension\AIBase\Engine;
 
 use GuzzleHttp\Exception\ConnectException;
+use Itomig\iTop\Extension\AIBase\Contracts\iAIVisionEngine;
+use Itomig\iTop\Extension\AIBase\Exception\AIInvalidImageException;
 use Itomig\iTop\Extension\AIBase\Exception\AINetworkException;
 use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\Vision\ImageQuality;
+use LLPhant\Chat\Vision\ImageSource;
+use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\MistralAIConfig;
 use LLPhant\Chat\MistralAIChat;
 
-class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
+class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface, iAIVisionEngine
 {
 
 	/**
@@ -48,8 +54,9 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$url = $configuration['url'] ?? 'https://api.mistral.ai/v1/chat/completions';
 		$model = $configuration['model'] ?? 'mistral-large-latest';
 		$apiKey = $configuration['api_key'] ?? '';
+		$supportsVision = self::GetConfiguredVisionSupport($configuration);
 
-		return new self($url, $apiKey, $model);
+		return new self($url, $apiKey, $model, $supportsVision);
 	}
 
 	/**
@@ -90,5 +97,31 @@ class MistralAIEngine extends GenericAIEngine implements iAIEngineInterface
 		$oConfig->model = $this->model;
 		$oChat = new MistralAIChat($oConfig);
 		return $oChat;
+	}
+
+	public function CreateVisionMessage(string $sContent, array $aImages): Message
+	{
+		$aImages = $this->NormalizeVisionImages($aImages);
+		$aImageSources = [];
+
+		foreach ($aImages as $aImage) {
+			try {
+				$aImageSources[] = new ImageSource(
+					$aImage['data'],
+					ImageQuality::Auto
+				);
+			} catch (\InvalidArgumentException $e) {
+				throw new AIInvalidImageException(
+					'Unable to construct the Mistral image payload.',
+					0,
+					$e
+				);
+			}
+		}
+
+		return VisionMessage::fromImages(
+			$aImageSources,
+			$sContent
+		);
 	}
 }
